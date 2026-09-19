@@ -14,7 +14,7 @@ so that **tôi giữ được lịch đặt sân của mình và không phải n
 ## Acceptance criteria
 
 1. Given tôi đang ở trang `/register` và email `hoa.nguyen@gmail.com` chưa có trong hệ
-   thống, when tôi nhập email đó cùng mật khẩu `sanbong2026` (12 ký tự) và họ tên
+   thống, when tôi nhập email đó cùng mật khẩu `sanbong2026` (11 ký tự) và họ tên
    `Nguyễn Thị Hoa` rồi bấm Đăng ký, then tài khoản được tạo, tôi được chuyển sang
    `/login`, và một email xác thực được gửi tới `hoa.nguyen@gmail.com`.
 
