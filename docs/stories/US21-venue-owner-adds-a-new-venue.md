@@ -1,5 +1,11 @@
 # US21 - Venue owner adds a new venue
 
+- **Issue:** #21
+- **Priority:** P0
+- **Points:** 5
+- **Owner:** @PhunghoaAI
+- **Screen:** `/owner/venues/new`
+
 ## User story
 
 As a **chủ sân bóng (venue owner)**, I want **thêm một sân bóng mới vào hệ thống kèm đầy đủ thông tin (tên sân, địa chỉ, giá thuê, hình ảnh)** so that **khách hàng có thể tìm kiếm và đặt sân của tôi trên nền tảng**.
