@@ -33,11 +33,11 @@ As a **chủ sân bóng (venue owner)**, I want **thêm một sân bóng mới v
 
 ## Tasks
 
-- [ ] Màn hình `/owner/venues/new` chứa form nhập thông tin: Tên sân, Địa chỉ, Giá/giờ, Upload hình ảnh - @PhunghoaAI
-- [ ] Validation phía client cho các trường bắt buộc và định dạng giá thuê - @PhunghoaAI
-- [ ] API backend `POST /api/venues` kiểm tra quyền `venue_owner` và lưu thông tin sân bóng - @PhunghoaAI
-- [ ] Xử lý lưu trữ và hiển thị hình ảnh sân bóng - @PhunghoaAI
-- [ ] Test tự động cho các trường hợp: Tạo sân thành công, Bỏ trống trường giá thuê, Báo lỗi phân quyền - @PhunghoaAI
+- [ ] Màn hình `/owner/venues/new` chứa form nhập thông tin: Tên sân, Địa chỉ, Giá/giờ, Upload hình ảnh 
+- [ ] Validation phía client cho các trường bắt buộc và định dạng giá thuê 
+- [ ] API backend `POST /api/venues` kiểm tra quyền `venue_owner` và lưu thông tin sân bóng 
+- [ ] Xử lý lưu trữ và hiển thị hình ảnh sân bóng 
+- [ ] Test tự động cho các trường hợp: Tạo sân thành công, Bỏ trống trường giá thuê, Báo lỗi phân quyền 
 
 ## Ghi chú
 
