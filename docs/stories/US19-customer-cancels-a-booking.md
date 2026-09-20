@@ -10,7 +10,6 @@
 
 As a **khách hàng (customer)**, I want **hủy một đơn đặt sân sắp tới (cancel an upcoming booking)** so that **tôi không bị mất tiền nếu kế hoạch thay đổi (avoid being charged if my plans change)**.
 
-*(Tiếng Anh: As a customer, I want to cancel an upcoming booking so that I can avoid being charged if my plans change.)*
 
 ## Acceptance criteria
 
