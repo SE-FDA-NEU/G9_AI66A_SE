@@ -52,7 +52,7 @@ stories: one file per story in `docs/stories/`, one branch and one Pull Request 
 |-------|--------|--------|------------------|
 | #12 [Chore] Refine backlog | - | Done - PR #26 | |
 | #14 Customer registration | 3 | Specified - PR #27 | |
-| #15 User login | 3 | Specified - PR #<TBD> | |
+| #15 User login | 3 | Specified - PR #39 | |
 | #16 Customer searches for venues | 5 | Specified - PR #30 | |
 | #17 Customer views venue details | 5 | Specified - PR #31 | |
 | #18 Customer books a venue | 8 | Specified - PR #29 | |
@@ -63,7 +63,7 @@ stories: one file per story in `docs/stories/`, one branch and one Pull Request 
 | #23 Venue owner views list of bookings | 3 | Specified - PR #38 | As above. |
 | #24 Venue owner sets peak-hour pricing | 5 | Specified - PR #28 | |
 | #25 Customer leaves a review and rating | 3 | Specified - PR #33 | |
-| #13 [Chore] Sprint 1 wrap-up | - | Done - PR #<TBD> | |
+| #13 [Chore] Sprint 1 wrap-up | - | Done - PR #40 | |
 
 **Completed: 0 points. Velocity this sprint: not applicable (requirements sprint).**
 
@@ -71,7 +71,7 @@ The first measurable velocity will be Sprint 3, when the team starts delivering 
 software.
 
 **Not finished: none.** All 12 stories were specified and merged into `main` before the
-deadline.
+deadline, and every Sprint 1 issue is closed with a linked Pull Request.
 
 ### Sprint Review
 
