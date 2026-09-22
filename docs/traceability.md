@@ -9,11 +9,11 @@ approved.
 |-------|---------|--------|----------|---------|-------------|-----|--------|
 | `/` | Home page, search by sport and area, entry to sign in and register | G | P0 | F1 Access | #16 | #30 | Spec done |
 | `/register` | Create a customer account | G | P0 | F1 Access | #14 | #27 | Spec done |
-| `/login` | Sign in, route by role | G | P0 | F1 Access | #15 | #<TBD> | Spec done |
+| `/login` | Sign in, route by role | G | P0 | F1 Access | #15 | #39 | Spec done |
 | `/search` | Search results, filter by sport, area, time slot and price | G | P0 | F2 Discovery | #16 | #30 | Spec done |
 | `/venues/{id}` | Venue detail: photos, price, facilities, free-slot grid, reviews | G | P0 | F2 Discovery | #17, #25 | #31, #33 | Spec done |
 | `/booking/{venueId}` | Confirm a booking: pick a slot, see the segmented price, confirm | U | P0 | F3 Booking | #18, #24 | #29, #28 | Spec done |
-| `/dashboard` | The customer's page after signing in | U | P1 | F4 Booking management | #15 | #<TBD> | Spec done |
+| `/dashboard` | The customer's page after signing in | U | P1 | F4 Booking management | #15 | #39 | Spec done |
 | `/my-bookings` | My bookings: upcoming, history, cancel, review after playing | U | P1 | F4 Booking management | #19, #20, #25 | #36, #35, #33 | Spec done |
 | `/owner/venues` | The owner's list of venues | U | P0 | F5 Venue management | #21 | #32 | Spec done |
 | `/owner/venues/new` | Add a new venue | U | P0 | F5 Venue management | #21 | #32 | Spec done |
