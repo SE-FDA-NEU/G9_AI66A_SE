@@ -10,13 +10,14 @@ one screen instead of keeping it in a paper notebook.
 | Name | GitHub username | Role |
 | --- | --- | --- |
 | Nguyen Khac Thu | [@thunopro](https://github.com/thunopro) | Leader · **Product Owner** |
-| Hoang Thi Ngoc Han | [@htngochan2802](https://github.com/htngochan2802) | **Scrum Master (Sprint 1)** |
-| Nguyen Khoi Nguyen | [@peng543](https://github.com/peng543) | Developer |
+| Nguyen Khoi Nguyen | [@peng543](https://github.com/peng543) | Developer · **Scrum Master (Sprint 2)** |
+| Hoang Thi Ngoc Han | [@htngochan2802](https://github.com/htngochan2802) | Developer · Scrum Master (Sprint 1) |
 | Nguyen Phung Hoa | [@PhunghoaAI](https://github.com/PhunghoaAI) | Developer |
 | Le Quang | [@lequangk2006-sys](https://github.com/lequangk2006-sys) | Developer |
 
 - **Product Owner:** @thunopro
-- **Scrum Master (Sprint 1):** @htngochan2802
+- **Scrum Master (Sprint 2):** @peng543
+- Scrum Master (Sprint 1): @htngochan2802
 
 ## Project board
 
@@ -47,7 +48,8 @@ Full version, including what Done is **not**:
 | File | Contents |
 |------|----------|
 | [`docs/requirements.md`](docs/requirements.md) | **Milestone 1** - vision, 3 personas, 2 scenarios, 12 user stories, BR1-BR19, 14 screens and the flow diagram |
-| [`docs/backlog.md`](docs/backlog.md) | Sprint 1 product backlog - priority, story points, prioritisation reasoning |
+| [`docs/design.md`](docs/design.md) | **Milestone 2** - architecture, data model, API design, walking skeleton, design decisions, changes since M1 |
+| [`docs/backlog.md`](docs/backlog.md) | Product backlog per sprint - priority, story points, owners, reasoning |
 | [`docs/stories/`](docs/stories/) | One specification file per user story |
 | [`docs/sprint-log.md`](docs/sprint-log.md) | Committed / completed / velocity, review and retrospective per sprint |
 | [`docs/traceability.md`](docs/traceability.md) | Every screen traced back to the feature and issue that built it |
@@ -61,10 +63,15 @@ Full version, including what Done is **not**:
 
 | Issue type | Branch pattern | Example |
 |---|---|---|
-| Story (label `story`) | `feature/<issue>-<slug>` | `feature/14-customer-registration` |
-| Chore (label `chore`) | `chore/<issue>-<slug>` | `chore/12-refine-backlog` |
-| Consolidated document | `docs/<slug>` | `docs/m1-requirements` |
+| Any issue (story, task, chore) | `<issue>-<short-english-slug>` | `44-database-schema-seed` |
 
+Sprint 1 branches used `feature/` and `chore/` prefixes; from Sprint 2 the team follows
+the course convention above.
+
+- **Everything on GitHub is written in English**: issues, branch names, commit messages
+  (subject and body), pull requests, review comments, code, comments and documentation
+- Commits: `<type>: <summary>` with type `feat`, `fix`, `test`, `docs`, `refactor` or
+  `chore`; 3-4 small commits per issue, committed on the day the work is done
 - PR title: `[#<issue>] <short imperative summary>`
 - PR body follows [`.github/pull_request_template.md`](.github/pull_request_template.md)
   and must contain the line `Closes #<number>` and an AI-assistance declaration
