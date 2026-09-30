@@ -52,3 +52,63 @@ Sprint 1 is a **requirements sprint**: the deliverable is `docs/requirements.md`
 running software. The points in the table above are therefore an **estimate used to plan
 Sprints 2-3**, and Sprint 1 records `Committed 0 · Completed 0 · Velocity: not
 applicable` in `docs/sprint-log.md`.
+
+---
+
+# Sprint 2 backlog - 21/09/2026 to 04/10/2026
+
+Agreed at Sprint 2 Planning (issue #42). Product Owner: @thunopro. Scrum Master: @peng543.
+
+**Sprint goal:** a new machine can clone the repository, follow `docs/SETUP.md`, and see
+a list of real venues read from a real database at `/search` - and `docs/design.md`
+explains how every later story will be built on top of it.
+
+Sprint 2 is a **design sprint** (Milestone 2). Its work items are tasks that build the
+walking skeleton and the design document, so they are estimated in points on the board
+like stories.
+
+| Issue | Work | Points | Owner | Reviewer |
+|-------|------|--------|-------|----------|
+| #42 | [Chore] Refine backlog for Sprint 2 | - | @thunopro | @peng543 |
+| #43 | Set up Flask project skeleton and CI tests | 3 | @peng543 | @thunopro |
+| #44 | Create database schema, ERD and seed 24 venues | 5 | @thunopro | @htngochan2802 |
+| #45 | Walking skeleton: /search reads venues from the database | 3 | @peng543 | @PhunghoaAI |
+| #46 | Design doc: architecture diagram and design decisions | 3 | @htngochan2802 | @lequangk2006-sys |
+| #47 | Design doc: API design | 3 | @htngochan2802 | @thunopro |
+| #48 | Write docs/SETUP.md and test it on a clean machine | 2 | @PhunghoaAI | @peng543 |
+| #49 | Traceability: Story, Screen, Endpoint, Table | 1 | @lequangk2006-sys | @htngochan2802 |
+| #50 | Design doc: what changed since M1 and Milestone 2 submission | 2 | @thunopro | @PhunghoaAI |
+| #51 | [Chore] Sprint 2 wrap-up | - | @peng543 | @lequangk2006-sys |
+
+**Committed: 22 points.** Chores carry no points.
+
+## Why this order
+
+- **#43 → #44 → #45 is the critical path.** The walking skeleton needs a Flask app (#43)
+  and a seeded database (#44) before `/search` (#45) can read from it. `docs/SETUP.md`
+  (#48) is written last because it describes what those three produce.
+- **#46 and #47 do not depend on code** and start as soon as this issue is merged.
+- **#49 waits for #47**, because the traceability table copies endpoint paths from the
+  API design.
+- **#50 and #51 close the sprint.**
+
+## Why this split
+
+The hardest task (#44: seven tables whose constraints must enforce the business rules)
+goes to the member with the most database experience; the next hardest (#43, #45, #46,
+#47) to the two members who built most of Sprint 1. The two newest members take small,
+well-defined documentation tasks (#48, #49) so every member still has an issue, a pull
+request and a review of their own this sprint.
+
+## Business-rule ranges (Sprint 1 retrospective action)
+
+New business rules found in Sprint 2 are numbered from each member's own range, so no
+two people ever write the same number:
+
+| Member | Range |
+|--------|-------|
+| @peng543 | BR20-BR29 |
+| @PhunghoaAI | BR30-BR39 |
+| @lequangk2006-sys | BR40-BR49 |
+| @htngochan2802 | BR50-BR59 |
+| @thunopro | BR60-BR69 |
