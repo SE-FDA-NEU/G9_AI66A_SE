@@ -1,0 +1,101 @@
+name: Board - In Review
+
+# Moves a project card to "In Review" as soon as its Pull Request is opened or
+# marked ready. The board's built-in workflows cover Todo and Done, but not the
+# review step - without this, a card sits in "In Progress" while it is actually
+# waiting on a teammate, and the mid-sprint check reads the wrong number.
+#
+# Requires the project's Status field to have an option spelled exactly
+# "In Review" (capital R, one space). The API match is case-sensitive.
+
+on:
+  pull_request_target:
+    types: [opened, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+env:
+  ORG: SE-FDA-NEU
+  PROJECT_NUMBER: 25
+  STATUS_FIELD: Status
+  TARGET_OPTION: In Review
+
+jobs:
+  move:
+    name: Move linked issues to In Review
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve project, field and option ids
+        id: meta
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          PROJECT_ID=$(gh api graphql -f query='
+            query($org:String!, $num:Int!) {
+              organization(login:$org) { projectV2(number:$num) { id } }
+            }' -f org="$ORG" -F num="$PROJECT_NUMBER" \
+            --jq '.data.organization.projectV2.id')
+
+          read -r FIELD_ID OPTION_ID < <(gh api graphql -f query='
+            query($pid:ID!) {
+              node(id:$pid) { ... on ProjectV2 {
+                field(name:"'"$STATUS_FIELD"'") {
+                  ... on ProjectV2SingleSelectField { id options { id name } }
+                } } }
+            }' -f pid="$PROJECT_ID" --jq \
+            '.data.node.field | "\(.id) \(.options[] | select(.name=="'"$TARGET_OPTION"'") | .id)"')
+
+          if [ -z "${OPTION_ID:-}" ]; then
+            echo "::error::The Status field has no option named exactly '$TARGET_OPTION'. Add it in the project settings."
+            exit 1
+          fi
+          {
+            echo "project_id=$PROJECT_ID"
+            echo "field_id=$FIELD_ID"
+            echo "option_id=$OPTION_ID"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Set Status = In Review on every issue this PR closes
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN || secrets.GITHUB_TOKEN }}
+          BODY: ${{ github.event.pull_request.body }}
+          PROJECT_ID: ${{ steps.meta.outputs.project_id }}
+          FIELD_ID: ${{ steps.meta.outputs.field_id }}
+          OPTION_ID: ${{ steps.meta.outputs.option_id }}
+        run: |
+          set -euo pipefail
+          NUMS=$(printf '%s' "$BODY" \
+            | grep -oiE '\b(close[sd]?|fix(e[sd])?|resolve[sd]?)[[:space:]]+#[0-9]+' \
+            | grep -oE '[0-9]+' | sort -u || true)
+
+          if [ -z "$NUMS" ]; then
+            echo "No closing keyword in the PR body - scrum-check already reports this."
+            exit 0
+          fi
+
+          for n in $NUMS; do
+            ITEM_ID=$(gh api graphql -f query='
+              query($owner:String!, $repo:String!, $num:Int!) {
+                repository(owner:$owner, name:$repo) {
+                  issue(number:$num) { projectItems(first:10) { nodes { id project { id } } } }
+                }
+              }' -f owner="${GITHUB_REPOSITORY%%/*}" -f repo="${GITHUB_REPOSITORY##*/}" -F num="$n" \
+              --jq ".data.repository.issue.projectItems.nodes[] | select(.project.id==\"$PROJECT_ID\") | .id" | head -1)
+
+            if [ -z "$ITEM_ID" ]; then
+              echo "Issue #$n is not on the board - skipping."
+              continue
+            fi
+
+            gh api graphql -f query='
+              mutation($p:ID!, $i:ID!, $f:ID!, $o:String!) {
+                updateProjectV2ItemFieldValue(input:{
+                  projectId:$p, itemId:$i, fieldId:$f, value:{singleSelectOptionId:$o}
+                }) { projectV2Item { id } }
+              }' -f p="$PROJECT_ID" -f i="$ITEM_ID" -f f="$FIELD_ID" -f o="$OPTION_ID" >/dev/null
+
+            echo "Issue #$n -> $TARGET_OPTION"
+          done

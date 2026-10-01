@@ -1,0 +1,153 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1820" height="1180" viewBox="0 0 1820 1180" font-family="DejaVu Sans, Arial, sans-serif">
+<rect width="1820" height="1180" fill="#ffffff"/>
+<defs><marker id="ar" markerWidth="10" markerHeight="10" refX="8.5" refY="3.4" orient="auto"><path d="M0,0 L8.5,3.4 L0,6.8 z" fill="#5a5a5a"/></marker></defs>
+<text x="30" y="46" font-size="22" font-weight="bold" fill="#111">Sports Venue Booking System &#8212; screen flow</text>
+<text x="30" y="68" font-size="13.5" fill="#666">Every screen in table 6.1 appears here and is reachable. Lanes show who may open the screen: G = guest, U = signed in, A = administrator.</text>
+<rect x="20" y="80" width="1780" height="230" rx="10" fill="#f6f9ff" stroke="#3b6fd4" stroke-width="1.2" stroke-opacity="0.35"/>
+<text x="42" y="106" font-size="13.5" font-weight="bold" fill="#3b6fd4" letter-spacing="1.4">GUEST</text>
+<rect x="20" y="330" width="1780" height="310" rx="10" fill="#f4fbf7" stroke="#2e8b57" stroke-width="1.2" stroke-opacity="0.35"/>
+<text x="42" y="356" font-size="13.5" font-weight="bold" fill="#2e8b57" letter-spacing="1.4">CUSTOMER</text>
+<rect x="20" y="660" width="1780" height="290" rx="10" fill="#fffaf2" stroke="#c2882e" stroke-width="1.2" stroke-opacity="0.35"/>
+<text x="42" y="686" font-size="13.5" font-weight="bold" fill="#c2882e" letter-spacing="1.4">VENUE OWNER</text>
+<rect x="20" y="970" width="1780" height="130" rx="10" fill="#fdf6f4" stroke="#c2553f" stroke-width="1.2" stroke-opacity="0.35"/>
+<text x="42" y="996" font-size="13.5" font-weight="bold" fill="#c2553f" letter-spacing="1.4">ADMIN</text>
+<path d="M 450,192 L 520,192" fill="none" stroke="#5a5a5a" stroke-width="2" stroke-linejoin="round" marker-end="url(#ar)"/>
+<rect x="453.6" y="127.5" width="62.8" height="17" rx="3" fill="#ffffff" opacity="0.96"/>
+<text x="485" y="140" font-size="12.8" fill="#3d3d3d" text-anchor="middle">register</text>
+<path d="M 770,192 L 840,192" fill="none" stroke="#5a5a5a" stroke-width="2" stroke-linejoin="round" marker-end="url(#ar)"/>
+<rect x="776.9" y="127.5" width="56.199999999999996" height="17" rx="3" fill="#ffffff" opacity="0.96"/>
+<text x="805" y="140" font-size="12.8" fill="#3d3d3d" text-anchor="middle">created</text>
+<path d="M 325,150 L 325,110 L 1285,110 L 1285,150" fill="none" stroke="#5a5a5a" stroke-width="2" stroke-linejoin="round" marker-end="url(#ar)"/>
+<rect x="743.9" y="90.5" width="122.19999999999999" height="17" rx="3" fill="#ffffff" opacity="0.96"/>
+<text x="805" y="103" font-size="12.8" fill="#3d3d3d" text-anchor="middle">search for venues</text>
+<path d="M 1410,192 L 1480,192" fill="none" stroke="#5a5a5a" stroke-width="2" stroke-linejoin="round" marker-end="url(#ar)"/>
+<rect x="1407.0" y="127.5" width="76.0" height="17" rx="3" fill="#ffffff" opacity="0.96"/>
+<text x="1445" y="140" font-size="12.8" fill="#3d3d3d" text-anchor="middle">open venue</text>
+<path d="M 965,235 L 965,360" fill="none" stroke="#5a5a5a" stroke-width="2" stroke-linejoin="round" marker-end="url(#ar)"/>
+<rect x="978" y="289.5" width="102.39999999999999" height="17" rx="3" fill="#ffffff" opacity="0.96"/>
+<text x="978" y="302" font-size="12.8" fill="#3d3d3d" text-anchor="start">customer (BR7)</text>
+<path d="M 840,215 L 800,215 L 800,727 L 840,727" fill="none" stroke="#5a5a5a" stroke-width="2" stroke-linejoin="round" marker-end="url(#ar)"/>
+<rect x="663.8" y="487.5" width="122.19999999999999" height="17" rx="3" fill="#ffffff" opacity="0.96"/>
+<text x="786" y="500" font-size="12.8" fill="#3d3d3d" text-anchor="end">venue owner (BR7)</text>
+<path d="M 1615,235 L 1615,360" fill="none" stroke="#5a5a5a" stroke-width="2" stroke-linejoin="round" marker-end="url(#ar)"/>
+<rect x="1628" y="289.5" width="82.6" height="17" rx="3" fill="#ffffff" opacity="0.96"/>
+<text x="1628" y="302" font-size="12.8" fill="#3d3d3d" text-anchor="start">pick a slot</text>
+<path d="M 1540,445 L 1540,478 L 1285,478 L 1285,510" fill="none" stroke="#5a5a5a" stroke-width="2" stroke-linejoin="round" marker-end="url(#ar)"/>
+<rect x="1387.2" y="457.5" width="49.599999999999994" height="17" rx="3" fill="#ffffff" opacity="0.96"/>
+<text x="1412" y="470" font-size="12.8" fill="#3d3d3d" text-anchor="middle">booked</text>
+<path d="M 965,435 L 965,558 L 1160,558" fill="none" stroke="#5a5a5a" stroke-width="2" stroke-linejoin="round" marker-end="url(#ar)"/>
+<rect x="1021.7" y="537.5" width="82.6" height="17" rx="3" fill="#ffffff" opacity="0.96"/>
+<text x="1063" y="550" font-size="12.8" fill="#3d3d3d" text-anchor="middle">my bookings</text>
+<path d="M 1410,545 L 1442,545 L 1442,288 L 1680,288 L 1680,235" fill="none" stroke="#5a5a5a" stroke-width="2" stroke-linejoin="round" marker-end="url(#ar)"/>
+<rect x="1233.2" y="387.5" width="194.79999999999998" height="17" rx="3" fill="#ffffff" opacity="0.96"/>
+<text x="1428" y="400" font-size="12.8" fill="#3d3d3d" text-anchor="end">review · cancel (BR18, BR15)</text>
+<path d="M 1090,727 L 1160,727" fill="none" stroke="#5a5a5a" stroke-width="2" stroke-linejoin="round" marker-end="url(#ar)"/>
+<rect x="1090.3" y="671.5" width="69.4" height="17" rx="3" fill="#ffffff" opacity="0.96"/>
+<text x="1125" y="684" font-size="12.8" fill="#3d3d3d" text-anchor="middle">new venue</text>
+<path d="M 965,690 L 965,662 L 1615,662 L 1615,690" fill="none" stroke="#5a5a5a" stroke-width="2" stroke-linejoin="round" marker-end="url(#ar)"/>
+<rect x="1235.5" y="642.5" width="109.0" height="17" rx="3" fill="#ffffff" opacity="0.96"/>
+<text x="1290" y="655" font-size="12.8" fill="#3d3d3d" text-anchor="middle">manage schedule</text>
+<path d="M 965,765 L 965,847 L 1160,847" fill="none" stroke="#5a5a5a" stroke-width="2" stroke-linejoin="round" marker-end="url(#ar)"/>
+<rect x="1008.5" y="826.5" width="109.0" height="17" rx="3" fill="#ffffff" opacity="0.96"/>
+<text x="1063" y="839" font-size="12.8" fill="#3d3d3d" text-anchor="middle">bookings by day</text>
+<path d="M 1040,765 L 1040,922 L 1615,922 L 1615,895" fill="none" stroke="#5a5a5a" stroke-width="2" stroke-linejoin="round" marker-end="url(#ar)"/>
+<rect x="1272.2" y="901.5" width="115.6" height="17" rx="3" fill="#ffffff" opacity="0.96"/>
+<text x="1330" y="914" font-size="12.8" fill="#3d3d3d" text-anchor="middle">set peak pricing</text>
+<path d="M 1750,192 L 1780,192 L 1780,1042 L 1750,1042" fill="none" stroke="#5a5a5a" stroke-width="2" stroke-linejoin="round" marker-end="url(#ar)"/>
+<rect x="1562.0" y="973.5" width="208.0" height="17" rx="3" fill="#ffffff" opacity="0.96"/>
+<text x="1770" y="986" font-size="12.8" fill="#3d3d3d" text-anchor="end">review reported 3 times (BR19)</text>
+<rect x="203" y="153" width="250" height="85" rx="9" fill="#000" opacity="0.055"/>
+<rect x="200" y="150" width="250" height="85" rx="9" fill="#e2ecff" stroke="#3b6fd4" stroke-width="2.2"/>
+<text x="213" y="175" font-size="15" font-weight="bold" fill="#141414" font-family="DejaVu Sans Mono, monospace">/</text>
+<text x="213" y="195" font-size="12.5" fill="#4a4a4a">Home page</text>
+<text x="213" y="211" font-size="12.5" fill="#4a4a4a">Search by sport and area</text>
+<rect x="394" y="212" width="46" height="16" rx="8" fill="#3b6fd4" opacity="0.15"/>
+<text x="417" y="224" font-size="11.5" font-weight="bold" fill="#3b6fd4" text-anchor="middle">G · P0</text>
+<rect x="523" y="153" width="250" height="85" rx="9" fill="#000" opacity="0.055"/>
+<rect x="520" y="150" width="250" height="85" rx="9" fill="#e2ecff" stroke="#3b6fd4" stroke-width="2.2"/>
+<text x="533" y="175" font-size="15" font-weight="bold" fill="#141414" font-family="DejaVu Sans Mono, monospace">/register</text>
+<text x="533" y="195" font-size="12.5" fill="#4a4a4a">Create a customer account</text>
+<rect x="714" y="212" width="46" height="16" rx="8" fill="#3b6fd4" opacity="0.15"/>
+<text x="737" y="224" font-size="11.5" font-weight="bold" fill="#3b6fd4" text-anchor="middle">G · P0</text>
+<rect x="843" y="153" width="250" height="85" rx="9" fill="#000" opacity="0.055"/>
+<rect x="840" y="150" width="250" height="85" rx="9" fill="#e2ecff" stroke="#3b6fd4" stroke-width="2.2"/>
+<text x="853" y="175" font-size="15" font-weight="bold" fill="#141414" font-family="DejaVu Sans Mono, monospace">/login</text>
+<text x="853" y="195" font-size="12.5" fill="#4a4a4a">Sign in</text>
+<text x="853" y="211" font-size="12.5" fill="#4a4a4a">Routed by role</text>
+<rect x="1034" y="212" width="46" height="16" rx="8" fill="#3b6fd4" opacity="0.15"/>
+<text x="1057" y="224" font-size="11.5" font-weight="bold" fill="#3b6fd4" text-anchor="middle">G · P0</text>
+<rect x="1163" y="153" width="250" height="85" rx="9" fill="#000" opacity="0.055"/>
+<rect x="1160" y="150" width="250" height="85" rx="9" fill="#e2ecff" stroke="#3b6fd4" stroke-width="2.2"/>
+<text x="1173" y="175" font-size="15" font-weight="bold" fill="#141414" font-family="DejaVu Sans Mono, monospace">/search</text>
+<text x="1173" y="195" font-size="12.5" fill="#4a4a4a">Search results</text>
+<text x="1173" y="211" font-size="12.5" fill="#4a4a4a">Filter and compare</text>
+<rect x="1354" y="212" width="46" height="16" rx="8" fill="#3b6fd4" opacity="0.15"/>
+<text x="1377" y="224" font-size="11.5" font-weight="bold" fill="#3b6fd4" text-anchor="middle">G · P0</text>
+<rect x="1483" y="153" width="270" height="85" rx="9" fill="#000" opacity="0.055"/>
+<rect x="1480" y="150" width="270" height="85" rx="9" fill="#e2ecff" stroke="#3b6fd4" stroke-width="2.2"/>
+<text x="1493" y="175" font-size="15" font-weight="bold" fill="#141414" font-family="DejaVu Sans Mono, monospace">/venues/{id}</text>
+<text x="1493" y="195" font-size="12.5" fill="#4a4a4a">Venue detail, free slots</text>
+<text x="1493" y="211" font-size="12.5" fill="#4a4a4a">Public reviews</text>
+<rect x="1694" y="212" width="46" height="16" rx="8" fill="#3b6fd4" opacity="0.15"/>
+<text x="1717" y="224" font-size="11.5" font-weight="bold" fill="#3b6fd4" text-anchor="middle">G · P0</text>
+<rect x="843" y="363" width="250" height="75" rx="9" fill="#000" opacity="0.055"/>
+<rect x="840" y="360" width="250" height="75" rx="9" fill="#d9f2e3" stroke="#2e8b57" stroke-width="2.2"/>
+<text x="853" y="385" font-size="15" font-weight="bold" fill="#141414" font-family="DejaVu Sans Mono, monospace">/dashboard</text>
+<text x="853" y="405" font-size="12.5" fill="#4a4a4a">Customer home</text>
+<rect x="1034" y="412" width="46" height="16" rx="8" fill="#2e8b57" opacity="0.15"/>
+<text x="1057" y="424" font-size="11.5" font-weight="bold" fill="#2e8b57" text-anchor="middle">U · P1</text>
+<rect x="1483" y="363" width="270" height="85" rx="9" fill="#000" opacity="0.055"/>
+<rect x="1480" y="360" width="270" height="85" rx="9" fill="#d9f2e3" stroke="#2e8b57" stroke-width="2.2"/>
+<text x="1493" y="385" font-size="15" font-weight="bold" fill="#141414" font-family="DejaVu Sans Mono, monospace">/booking/{venueId}</text>
+<text x="1493" y="405" font-size="12.5" fill="#4a4a4a">Confirm booking</text>
+<text x="1493" y="421" font-size="12.5" fill="#4a4a4a">Segmented price (BR12)</text>
+<rect x="1694" y="422" width="46" height="16" rx="8" fill="#2e8b57" opacity="0.15"/>
+<text x="1717" y="434" font-size="11.5" font-weight="bold" fill="#2e8b57" text-anchor="middle">U · P0</text>
+<rect x="1163" y="513" width="250" height="95" rx="9" fill="#000" opacity="0.055"/>
+<rect x="1160" y="510" width="250" height="95" rx="9" fill="#d9f2e3" stroke="#2e8b57" stroke-width="2.2"/>
+<text x="1173" y="535" font-size="15" font-weight="bold" fill="#141414" font-family="DejaVu Sans Mono, monospace">/my-bookings</text>
+<text x="1173" y="555" font-size="12.5" fill="#4a4a4a">Upcoming and history</text>
+<text x="1173" y="571" font-size="12.5" fill="#4a4a4a">Cancel · review</text>
+<rect x="1354" y="582" width="46" height="16" rx="8" fill="#2e8b57" opacity="0.15"/>
+<text x="1377" y="594" font-size="11.5" font-weight="bold" fill="#2e8b57" text-anchor="middle">U · P1</text>
+<rect x="843" y="693" width="250" height="75" rx="9" fill="#000" opacity="0.055"/>
+<rect x="840" y="690" width="250" height="75" rx="9" fill="#ffeed7" stroke="#c2882e" stroke-width="2.2"/>
+<text x="853" y="715" font-size="15" font-weight="bold" fill="#141414" font-family="DejaVu Sans Mono, monospace">/owner/venues</text>
+<text x="853" y="735" font-size="12.5" fill="#4a4a4a">My venues</text>
+<rect x="1034" y="742" width="46" height="16" rx="8" fill="#c2882e" opacity="0.15"/>
+<text x="1057" y="754" font-size="11.5" font-weight="bold" fill="#c2882e" text-anchor="middle">U · P0</text>
+<rect x="1163" y="693" width="250" height="75" rx="9" fill="#000" opacity="0.055"/>
+<rect x="1160" y="690" width="250" height="75" rx="9" fill="#ffeed7" stroke="#c2882e" stroke-width="2.2"/>
+<text x="1173" y="715" font-size="15" font-weight="bold" fill="#141414" font-family="DejaVu Sans Mono, monospace">/owner/venues/new</text>
+<text x="1173" y="735" font-size="12.5" fill="#4a4a4a">Add a new venue</text>
+<rect x="1354" y="742" width="46" height="16" rx="8" fill="#c2882e" opacity="0.15"/>
+<text x="1377" y="754" font-size="11.5" font-weight="bold" fill="#c2882e" text-anchor="middle">U · P0</text>
+<rect x="1483" y="693" width="270" height="85" rx="9" fill="#000" opacity="0.055"/>
+<rect x="1480" y="690" width="270" height="85" rx="9" fill="#ffeed7" stroke="#c2882e" stroke-width="2.2"/>
+<text x="1493" y="715" font-size="13.2" font-weight="bold" fill="#141414" font-family="DejaVu Sans Mono, monospace">/owner/venues/{id}/schedule</text>
+<text x="1493" y="735" font-size="12.5" fill="#4a4a4a">Block / unblock hours</text>
+<text x="1493" y="751" font-size="12.5" fill="#4a4a4a">(BR16, BR17)</text>
+<rect x="1694" y="752" width="46" height="16" rx="8" fill="#c2882e" opacity="0.15"/>
+<text x="1717" y="764" font-size="11.5" font-weight="bold" fill="#c2882e" text-anchor="middle">U · P1</text>
+<rect x="1163" y="813" width="250" height="75" rx="9" fill="#000" opacity="0.055"/>
+<rect x="1160" y="810" width="250" height="75" rx="9" fill="#ffeed7" stroke="#c2882e" stroke-width="2.2"/>
+<text x="1173" y="835" font-size="15" font-weight="bold" fill="#141414" font-family="DejaVu Sans Mono, monospace">/owner/bookings</text>
+<text x="1173" y="855" font-size="12.5" fill="#4a4a4a">Bookings by day (BR14)</text>
+<rect x="1354" y="862" width="46" height="16" rx="8" fill="#c2882e" opacity="0.15"/>
+<text x="1377" y="874" font-size="11.5" font-weight="bold" fill="#c2882e" text-anchor="middle">U · P1</text>
+<rect x="1483" y="813" width="270" height="85" rx="9" fill="#000" opacity="0.055"/>
+<rect x="1480" y="810" width="270" height="85" rx="9" fill="#ffeed7" stroke="#c2882e" stroke-width="2.2"/>
+<text x="1493" y="835" font-size="13.2" font-weight="bold" fill="#141414" font-family="DejaVu Sans Mono, monospace">/owner/venues/{id}/pricing</text>
+<text x="1493" y="855" font-size="12.5" fill="#4a4a4a">Peak / off-peak rates</text>
+<text x="1493" y="871" font-size="12.5" fill="#4a4a4a">(BR12)</text>
+<rect x="1694" y="872" width="46" height="16" rx="8" fill="#c2882e" opacity="0.15"/>
+<text x="1717" y="884" font-size="11.5" font-weight="bold" fill="#c2882e" text-anchor="middle">U · P2</text>
+<rect x="1483" y="1003" width="270" height="85" rx="9" fill="#000" opacity="0.055"/>
+<rect x="1480" y="1000" width="270" height="85" rx="9" fill="#fbe1db" stroke="#c2553f" stroke-width="2.2"/>
+<text x="1493" y="1025" font-size="15" font-weight="bold" fill="#141414" font-family="DejaVu Sans Mono, monospace">/admin</text>
+<text x="1493" y="1045" font-size="12.5" fill="#4a4a4a">Moderate reported reviews</text>
+<text x="1493" y="1061" font-size="12.5" fill="#4a4a4a">Suspend accounts</text>
+<rect x="1694" y="1062" width="46" height="16" rx="8" fill="#c2553f" opacity="0.15"/>
+<text x="1717" y="1074" font-size="11.5" font-weight="bold" fill="#c2553f" text-anchor="middle">A · P2</text>
+<text x="30" y="1158" font-size="12.5" fill="#777">Team 09 &#183; Milestone 1 &#183; section 6.2 &#183; source: docs/images/flow-diagram.svg</text>
+</svg>
