@@ -72,3 +72,16 @@ US03 is implemented.
   product owner asks for 30-minute badminton slots), one row per hour becomes one row per
   half-hour; if slots become arbitrary lengths, we would need a database with range
   exclusion constraints (PostgreSQL `EXCLUDE USING gist`).
+
+### ADR 3 - SQLite file, not PostgreSQL or MySQL
+
+- **Options:** SQLite file · PostgreSQL in Docker · MySQL installed locally.
+- **Chose:** SQLite.
+- **Why:** Nothing to install - `sqlite3` ships with Python. Our largest realistic
+  dataset (a few hundred venues, tens of thousands of booking hours) is far below
+  SQLite's limits. It supports every constraint ADR 2 relies on: `UNIQUE`, `CHECK`,
+  foreign keys (switched on per connection in `src/db.py`).
+- **What would change our mind:** SQLite allows one writer at a time. If the concurrency
+  test planned for Sprint 4 (20 simultaneous bookings of one hour) shows `database is
+  locked` errors reaching users, we move to PostgreSQL; the SQL is standard, so the move
+  is the connection code plus Docker in `SETUP.md`.
