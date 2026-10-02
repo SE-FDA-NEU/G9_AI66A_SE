@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Find a venue - Sports Venue Booking</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0; background: #f6f7f9; color: #1d2330; }
+  header { background: #152d53; color: #fff; padding: 14px 32px; }
+  header h1 { margin: 0; font-size: 20px; }
+  main { max-width: 1040px; margin: 24px auto; padding: 0 16px; }
+  form { display: flex; gap: 12px; align-items: end; background: #fff; padding: 16px;
+         border: 1px solid #dde1e7; border-radius: 8px; }
+  label { display: flex; flex-direction: column; font-size: 13px; gap: 4px; }
+  select, button { font-size: 14px; padding: 6px 10px; }
+  button { background: #1a6d88; color: #fff; border: 0; border-radius: 4px; cursor: pointer; }
+  table { width: 100%; border-collapse: collapse; margin-top: 16px; background: #fff; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #e5e8ec; }
+  th { background: #eef1f5; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .count { margin-top: 16px; font-size: 14px; }
+  .empty { margin-top: 16px; padding: 24px; background: #fff; border: 1px dashed #b9c0ca;
+           text-align: center; font-weight: 600; }
+  footer { font-size: 12px; color: #667; margin-top: 12px; }
+</style>
+</head>
+<body>
+<header><h1>Sports Venue Booking &middot; Find a venue</h1></header>
+<main>
+  <form method="get" action="/search">
+    <label>Sport
+      <select name="sport">
+        <option value="">Any sport</option>
+        {% for s in sports %}<option {% if s == sport %}selected{% endif %}>{{ s }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Area
+      <select name="area">
+        <option value="">Any area</option>
+        {% for a in areas %}<option {% if a == area %}selected{% endif %}>{{ a }}</option>{% endfor %}
+      </select>
+    </label>
+    <button type="submit">Search</button>
+  </form>
+
+  {% if venues %}
+  <p class="count"><strong>{{ venues|length }}</strong> venue(s) found</p>
+  <table>
+    <thead><tr><th>#</th><th>Venue</th><th>Sport</th><th>Area</th><th>Address</th>
+      <th>Opening hours</th><th style="text-align:right">Price / hour (VND)</th></tr></thead>
+    <tbody>
+    {% for v in venues %}
+      <tr><td>{{ v.id }}</td><td>{{ v.name }}</td><td>{{ v.sport }}</td><td>{{ v.area }}</td>
+        <td>{{ v.address }}</td><td>{{ '%02d:00' % v.open_hour }}&ndash;{{ '%02d:00' % v.close_hour }}</td>
+        <td class="num">{{ "{:,}".format(v.hourly_price) }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty">No venues found</div>
+  {% endif %}
+  <footer>Data source: table <code>venue</code> in SQLite ({{ total }} rows).</footer>
+</main>
+</body>
+</html>
