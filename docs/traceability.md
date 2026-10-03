@@ -47,9 +47,9 @@ sequence**. The full list with worked examples in real numbers is section 5 of
 | BR6 | A failed sign-in message must not reveal whether the email exists | `/login` | #15 |
 | BR7 | Where a user lands after signing in depends on their role | `/login` | #15 |
 | BR8 | A session expires after 30 minutes of inactivity | system-wide | #15 |
-| BR9 | Search matches sport and area at the same time; no match returns an explicit message | `/search` | #16 |
+| BR9 | Search matches sport and area at the same time, both chosen from fixed lists; no match returns an explicit message | `/search` | #16 |
 | BR10 | Availability is shown for exactly the date the customer selected | `/venues/{id}` | #17 |
-| BR11 | A slot holds exactly one active booking; availability is re-checked before confirming | `/booking/{venueId}` | #18 |
+| BR11 | A booking is 1-4 whole hours; each hour holds exactly one active booking; availability is re-checked before confirming | `/booking/{venueId}` | #18 |
 | BR12 | Prices are per hour in VND, slots are half-open `[start, end)`, crossings are split per segment, rules must not overlap, confirmed bookings keep their price | `/booking/{venueId}`, `/owner/venues/{id}/pricing` | #24 |
 | BR13 | Hourly price is 1,000-100,000,000 VND; venue name is required and 3-100 characters | `/owner/venues/new` | #21 |
 | BR14 | A user may only view and act on their own data; a violation returns 403 | `/my-bookings`, `/owner/bookings`, `/owner/venues/new` | #19, #20, #21, #23 |

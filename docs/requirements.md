@@ -289,18 +289,20 @@ have the time before I tell the group**.
 4. Given the slot I chose is `19:00-21:00`, which crosses the `20:00` pricing boundary,
    when the system calculates the total, then it is **1 hour at the peak rate + 1 hour at
    the standard rate**, displayed as two separate lines and not rounded up (BR12).
+5. Given a venue open 06:00-22:00, when I choose a start time, then only 06:00, 07:00 ...
+   21:00 are offered, and I cannot choose more than 4 hours (BR11).
 
 ---
 
 ### US06 - Venue owner adds a new venue · #21 · P0 · 5 points · `/owner/venues/new`
 
-As **Ms Lan**, I want **to add a new venue with its name, address, hourly price and
-photos** so that **customers can find and book my venue**.
+As **Ms Lan**, I want **to add a new venue with its name, sport, area, address, hourly
+price and photos** so that **customers can find and book my venue**.
 
 **Acceptance criteria**
 
-1. Given I am signed in as a venue owner, when I enter the name `San bong Thong Nhat`, the
-   address `123 Nguyen Trai, District 5`, the price `250,000` VND per hour, upload 1 photo
+1. Given I am signed in as a venue owner, when I enter the name `Thong Nhat Football Pitch`,
+   the address `12 Tran Thai Tong, Cau Giay`, the price `250,000` VND per hour, upload 1 photo
    and submit, then the system shows exactly **"Venue added successfully!"** and the venue
    appears in my list at `250,000` VND per hour.
 2. Given I enter a price of `0` or `-50,000`, when I submit, then the system refuses and
@@ -310,6 +312,9 @@ photos** so that **customers can find and book my venue**.
    (BR13).
 4. Given I am signed in as a customer, when I open the add-venue URL directly, then the
    system returns **403** with **"You do not have permission to access this page"** (BR14).
+5. Given I add a venue, when I choose its sport and area, then both come from drop-down
+   lists (Football / Badminton / Tennis / Pickleball; the districts of Hanoi) and cannot
+   be typed (BR9).
 
 ---
 
@@ -464,11 +469,11 @@ within each file, and this is the authoritative list that issues and tests cite.
 | **BR6** | A failed sign-in message must not reveal whether the email exists | Email does not exist → "Email or password is incorrect". Email exists but the password is wrong → **the same sentence**, not "Wrong password". |
 | **BR7** | Where a user lands after signing in depends on their role | Customer → the customer page. Venue owner → the venue management area. Administrator → the admin area. |
 | **BR8** | A session expires after 30 minutes of inactivity | Signed in at 19:00, last action 19:10 → the session expires at 19:40. Opening a page at 19:45 → returned to the login page. |
-| **BR9** | Search results must match the sport **and** the area at the same time; no match returns an explicit empty-state message | "Football" + "Cau Giay" → only football pitches in Cau Giay, not badminton courts in Cau Giay. "Football" + "Ba Vi" (0 venues) → shows "No venues found". |
+| **BR9** | Search results must match the sport **and** the area at the same time; sport and area are chosen from fixed lists, never typed; no match returns an explicit empty-state message | "Football" + "Cau Giay" → only football pitches in Cau Giay, not badminton courts in Cau Giay. "Football" + "Ba Vi" (0 venues) → shows "No venues found". |
 | **BR10** | Availability is always shown for exactly the date the customer selected | A venue open 06:00-22:00 has 16 slots a day. On 20/09 three are booked → 13 free + 3 booked. Switching to 21/09 recalculates for 21/09. |
-| **BR11** | A venue time slot holds exactly one active booking; the system re-checks availability immediately before confirming | Customer A confirms 18:00-19:00 on 20/09 at 14:00:00. Customer B presses confirm for the same slot at 14:00:03 → rejected with "This time slot is no longer available". Result: 1 booking, not 2. |
+| **BR11** | A booking covers 1 to 4 consecutive whole hours, each starting on the hour; each hour holds exactly one active booking; the system re-checks availability immediately before confirming | Customer A confirms 18:00-19:00 on 20/09 at 14:00:00. Customer B presses confirm for the same slot at 14:00:03 → rejected with "This time slot is no longer available". Result: 1 booking, not 2. |
 | **BR12** | Prices are per hour in VND; slots are half-open `[start, end)`; a booking crossing a boundary is split per segment and never rounded up; pricing rules must not overlap on the same venue and weekday; a confirmed booking keeps its original price | Standard 150,000, peak 250,000 for 17:00-20:00. Booking 19:00-21:00 → 1×250,000 + 1×150,000 = **400,000 VND**, not 500,000. A rule for 17:00-20:00 Tuesday exists; adding 18:00-21:00 Tuesday → rejected. |
-| **BR13** | The hourly price is an integer from 1,000 to 100,000,000 VND; the venue name is required and 3 to 100 characters long | Price `0` or `-50,000` → rejected. Price `250,000` → accepted. Name `Sa` (2 characters) → rejected. Name `San bong Thong Nhat` (19 characters) → accepted. |
+| **BR13** | The hourly price is an integer from 1,000 to 100,000,000 VND; the venue name is required and 3 to 100 characters long | Price `0` or `-50,000` → rejected. Price `250,000` → accepted. Name `Sa` (2 characters) → rejected. Name `Thong Nhat Football Pitch` (25 characters) → accepted. |
 | **BR14** | A user may only view and act on data that belongs to them: customers on their own bookings, owners on their own venues; a violation returns 403 | `userB` opens `BK-1002` belonging to `userA` → 403. Owner X opens `BK-000901` belonging to owner Y → 403. A `customer` account opens the add-venue page → 403. |
 | **BR15** | Cancellation has three tiers based on the distance to the start time: **≥ 24 h → 100% refund**, **2 h to under 24 h → 50% refund**, **< 2 h → cancellation refused** | A 300,000 VND booking plays at 18:00 on 25/09. Cancelled at 15:00 on 24/09 (27 h before) → 300,000 refunded. A 400,000 VND booking plays at 18:00, cancelled at 10:00 the same day (8 h before) → 200,000 refunded. A booking playing at 17:00, cancelled at 16:00 (1 h before) → refused. |
 | **BR16** | A slot blocked by the owner does not appear in search and cannot be booked; unblocking takes effect within 5 seconds | Blocked 18:00-19:00 on 25/09 at 09:00 → a customer arriving at 09:01 does not see it. Unblocked at 10:00:00 → a customer loading the page at 10:00:05 sees it again. |
