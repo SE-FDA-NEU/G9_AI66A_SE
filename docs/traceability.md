@@ -31,6 +31,21 @@ approved.
 > the Pull Request that merged the specification. A screen moves to **Done** when it runs
 > and passes all 8 items of the Definition of Done.
 
+## Story — Screen — Endpoint — Table
+
+Traces each P0 user story from the user-facing screen through its API endpoints to the database
+tables it reads or writes. Endpoints match [`docs/design.md`](design.md) section 3; tables
+match section 2.
+
+| Story | Screen | Endpoint | Table |
+|---|---|---|---|
+| US01 Customer registration (#14) | `/register` | `POST /api/auth/register`<br>`GET /api/auth/verify` | `user` |
+| US02 User login (#15) | `/login` | `POST /api/auth/login` | `user` |
+| US03 Customer searches for venues (#16) | `/search` | `GET /api/venues` | `venue` |
+| US04 Customer views venue details and availability (#17) | `/venues/{id}` | `GET /api/venues/{id}` | `venue`, `booking_slot`, `blocked_slot` |
+| US05 Customer books a venue (#18) | `/booking/{venueId}` | `POST /api/bookings` | `booking`, `booking_slot`, `user`, `venue`, `pricing_rule`, `blocked_slot` |
+| US06 Venue owner adds a new venue (#21) | `/owner/venues/new` | `POST /api/owner/venues` | `venue`, `user` |
+
 ## Business rules
 
 Numbered so that issues and tests can cite them. This is the **single project-wide
