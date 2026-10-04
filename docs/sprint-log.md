@@ -157,8 +157,6 @@ Agreed at Sprint 2 Planning (#42). Details and reasoning: `docs/backlog.md`.
 
 ### Result
 
-
-
 | Issue | Points | Status | PR | If not done, why |
 |-------|--------|--------|----|------------------|
 | #42 [Chore] Refine backlog | - | Done | #52 | |
@@ -178,8 +176,8 @@ Done on the board; an issue that is not merged counts 0 and is labelled `carried
 ### Sprint Review
 
 - **What we demonstrated:** The `/search` page running from a fresh clone (following `docs/SETUP.md`), the full `docs/design.md` with all six sections (architecture, data model, API design, walking skeleton, design decisions, what changed since M1), and the ERD showing all seven tables.
-- **Feedback received:** The instructor noted the design document was complete and the walking skeleton was working. Another team asked about how peak-hour pricing segments are enforced at the database level (answered with reference to `booking_slot` and `pricing_rule` in the ERD).
-- **Backlog changes as a result:** No new issues added. The open PR #59 for #47 received a change request; it will be reviewed and merged at the start of Sprint 3.
+- **Feedback received:** No feedback from the instructor yet; Milestone 1 feedback has not been returned. Inside the team, the review on #59 found leftover merge-conflict markers and a duplicated section 1 in docs/design.md; they were fixed before approval.
+- **Backlog changes as a result:** No new issues added. #59 (#47) needed one round of changes - unresolved merge conflicts in docs/design.md - and was merged on 04/10, before the deadline.
 
 ### Retrospective
 
