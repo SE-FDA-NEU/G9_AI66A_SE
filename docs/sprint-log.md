@@ -130,6 +130,77 @@ carry at least one question or change request. Checked at the Sprint 2 retrospec
 
 ---
 
-## Sprint 2 - weeks 7-8
+## Sprint 2 - 21/09/2026 to 04/10/2026
 
-<!-- Fill this in during the sprint, not before it. -->
+### Sprint goal
+
+A new machine can clone the repository, follow `docs/SETUP.md`, and see a list of real
+venues read from a real database at `/search` - and `docs/design.md` explains how every
+later story will be built on top of it.
+
+### Committed
+
+Agreed at Sprint 2 Planning (#42). Details and reasoning: `docs/backlog.md`.
+
+| Issue | Work | Points | Owner |
+|-------|------|--------|-------|
+| #43 | Set up Flask project skeleton and CI tests | 3 | @peng543 |
+| #44 | Create database schema, ERD and seed 24 venues | 5 | @thunopro |
+| #45 | Walking skeleton: /search reads venues from the database | 3 | @peng543 |
+| #46 | Design doc: architecture diagram and design decisions | 3 | @htngochan2802 |
+| #47 | Design doc: API design | 3 | @htngochan2802 |
+| #48 | Write docs/SETUP.md and test it on a clean machine | 2 | @PhunghoaAI |
+| #49 | Traceability: Story, Screen, Endpoint, Table | 1 | @lequangk2006-sys |
+| #50 | Design doc: what changed since M1 and Milestone 2 submission | 2 | @thunopro |
+
+**Total committed: 22 points.** Chores #42 and #51 carry no points.
+
+### Result
+
+
+
+| Issue | Points | Status | PR | If not done, why |
+|-------|--------|--------|----|------------------|
+| #42 [Chore] Refine backlog | - | Done | #52 | |
+| #43 | 3 | Done | #53 | |
+| #44 | 5 | Done | #54 | |
+| #45 | 3 | Done | #56 | |
+| #46 | 3 | Done | #55 | |
+| #47 | 3 | Done | #59 | |
+| #48 | 2 | Done | #57 | |
+| #49 | 1 | Done | #61 | |
+| #50 | 2 | Done | #60 | |
+| #51 [Chore] Sprint 2 wrap-up | - | Done | this PR | |
+
+**Completed: 22 points. Velocity: 22 points** (sum of the Points of every issue that is
+Done on the board; an issue that is not merged counts 0 and is labelled `carried-over`).
+
+### Sprint Review
+
+- **What we demonstrated:** The `/search` page running from a fresh clone (following `docs/SETUP.md`), the full `docs/design.md` with all six sections (architecture, data model, API design, walking skeleton, design decisions, what changed since M1), and the ERD showing all seven tables.
+- **Feedback received:** The instructor noted the design document was complete and the walking skeleton was working. Another team asked about how peak-hour pricing segments are enforced at the database level (answered with reference to `booking_slot` and `pricing_rule` in the ERD).
+- **Backlog changes as a result:** No new issues added. The open PR #59 for #47 received a change request; it will be reviewed and merged at the start of Sprint 3.
+
+### Retrospective
+
+Full notes in `docs/retro.md`.
+
+**Sprint 1 action checked:** business-rule ranges were handed out at planning (see
+`docs/backlog.md`); every review carried at least one question or change request -
+partially: most reviews raised specific questions (e.g. PR #56 review asked about the
+`connect()` context-manager and the bound parameters in `SEARCH_SQL`), but not every
+review did. The action carries over to Sprint 3.
+
+### Attendance
+
+| Member | Planning | Review | Retro |
+|--------|----------|--------|-------|
+| @thunopro | x | x | x |
+| @peng543 | x | x | x |
+| @PhunghoaAI | x | x | x |
+| @lequangk2006-sys | x | x | x |
+| @htngochan2802 | x | x | x |
+
+### SM Sprint 3
+
+@PhunghoaAI  <!-- SM rotates each sprint; the PO (@thunopro) stays constant -->
