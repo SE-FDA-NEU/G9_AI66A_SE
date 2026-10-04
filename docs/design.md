@@ -225,10 +225,10 @@ M1 stories as a database would, and three gaps showed up. Each change is already
 M1 implied one-hour slots - BR10's example counts 16 slots between 06:00 and 22:00, and
 every booking example in US05 is whole hours - but no rule said so, and nothing capped
 how long one booking could be. Designing `booking_slot` (ADR 2) forced the question: one
-row per _what_? **BR11 now reads: "A booking covers 1 to 4 consecutive whole hours, each
+row per *what*? **BR11 now reads: "A booking covers 1 to 4 consecutive whole hours, each
 starting on the hour; each hour holds exactly one active booking".** US05 gains
-acceptance criterion 5: _Given a venue open 06:00-22:00, when I choose a start time,
-then only 06:00, 07:00 ... 21:00 are offered, and I cannot choose more than 4 hours._
+acceptance criterion 5: *Given a venue open 06:00-22:00, when I choose a start time,
+then only 06:00, 07:00 ... 21:00 are offered, and I cannot choose more than 4 hours.*
 The 4-hour cap is a Product Owner decision, so that one account cannot hold a pitch for
 a whole evening.
 
@@ -239,9 +239,9 @@ an address, a price and photos - so no venue would ever carry the sport or the a
 customer searches for. Drawing the ERD exposed the gap: `venue` needs `sport` and `area`
 columns, and the search needs something to match exactly. Typed text would not be
 enough: "Cau Giay", "cau giay" and "Q. Cau Giay" would be three different areas, and
-Minh's search would miss two of them. **US06 gains acceptance criterion 5:** _Given I add a
+Minh's search would miss two of them. **US06 gains acceptance criterion 5:** *Given I add a
 venue, when I choose its sport and area, then both come from drop-down lists (Football /
-Badminton / Tennis / Pickleball; the districts of Hanoi) and cannot be typed._ BR9 now
+Badminton / Tennis / Pickleball; the districts of Hanoi) and cannot be typed.* BR9 now
 says sport and area are chosen from fixed lists. `venue.sport` enforces the sport list
 with a `CHECK`; the district list will live in code when the add-venue page is built, so
 adding a district does not need a schema change.

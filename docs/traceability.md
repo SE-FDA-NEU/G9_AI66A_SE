@@ -31,6 +31,21 @@ approved.
 > the Pull Request that merged the specification. A screen moves to **Done** when it runs
 > and passes all 8 items of the Definition of Done.
 
+## Story — Screen — Endpoint — Table
+
+Traces each P0 user story from the user-facing screen through its API endpoints to the database
+tables it reads or writes. Endpoints match [`docs/design.md`](design.md) section 3; tables
+match section 2.
+
+| Story | Screen | Endpoint | Table |
+|---|---|---|---|
+| US01 Customer registration (#14) | `/register` | `POST /api/auth/register`<br>`GET /api/auth/verify` | `user` |
+| US02 User login (#15) | `/login` | `POST /api/auth/login` | `user` |
+| US03 Customer searches for venues (#16) | `/search` | `GET /api/venues` | `venue` |
+| US04 Customer views venue details and availability (#17) | `/venues/{id}` | `GET /api/venues/{id}` | `venue`, `booking_slot`, `blocked_slot` |
+| US05 Customer books a venue (#18) | `/booking/{venueId}` | `POST /api/bookings` | `booking`, `booking_slot`, `user`, `venue`, `pricing_rule`, `blocked_slot` |
+| US06 Venue owner adds a new venue (#21) | `/owner/venues/new` | `POST /api/owner/venues` | `venue`, `user` |
+
 ## Business rules
 
 Numbered so that issues and tests can cite them. This is the **single project-wide
@@ -47,9 +62,9 @@ sequence**. The full list with worked examples in real numbers is section 5 of
 | BR6 | A failed sign-in message must not reveal whether the email exists | `/login` | #15 |
 | BR7 | Where a user lands after signing in depends on their role | `/login` | #15 |
 | BR8 | A session expires after 30 minutes of inactivity | system-wide | #15 |
-| BR9 | Search matches sport and area at the same time; no match returns an explicit message | `/search` | #16 |
+| BR9 | Search matches sport and area at the same time, both chosen from fixed lists; no match returns an explicit message | `/search` | #16 |
 | BR10 | Availability is shown for exactly the date the customer selected | `/venues/{id}` | #17 |
-| BR11 | A slot holds exactly one active booking; availability is re-checked before confirming | `/booking/{venueId}` | #18 |
+| BR11 | A booking is 1-4 whole hours; each hour holds exactly one active booking; availability is re-checked before confirming | `/booking/{venueId}` | #18 |
 | BR12 | Prices are per hour in VND, slots are half-open `[start, end)`, crossings are split per segment, rules must not overlap, confirmed bookings keep their price | `/booking/{venueId}`, `/owner/venues/{id}/pricing` | #24 |
 | BR13 | Hourly price is 1,000-100,000,000 VND; venue name is required and 3-100 characters | `/owner/venues/new` | #21 |
 | BR14 | A user may only view and act on their own data; a violation returns 403 | `/my-bookings`, `/owner/bookings`, `/owner/venues/new` | #19, #20, #21, #23 |
