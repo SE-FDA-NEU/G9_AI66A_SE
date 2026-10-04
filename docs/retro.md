@@ -32,6 +32,15 @@ review to carry at least one question or change request. Checked at the Sprint 2
 
 ---
 
-## Sprint 2 - weeks 7-8
+## Sprint 2 - 21/09/2026 to 04/10/2026
 
-<!-- Written at the Sprint 2 retrospective. -->
+**Velocity:** 22 points completed of 22 committed.
+
+| Keep | Stop | Try |
+|------|------|-----|
+| Using CI and automated checks to catch PR issues early (scrum-check.yml caught missing issue links immediately) | Working in isolation without daily standups (some PRs had no activity for days, then all merged on the last day) | Daily standup messages in the group chat every Wednesday so anyone who is stuck says so in time to reassign |
+
+**Action for Sprint 3 (owner: @PhunghoaAI):** as the new Scrum Master, post a short
+Wednesday standup prompt in the group chat every week of Sprint 3, and ensure every
+PR receives a review with at least one specific question or change request within 24 hours
+of opening. Checked at the Sprint 3 retrospective.
