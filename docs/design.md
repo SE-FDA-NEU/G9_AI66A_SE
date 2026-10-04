@@ -102,7 +102,35 @@ _Not written yet - owner @htngochan2802, issue #47._
 
 ## 4. Walking skeleton
 
-_Not written yet - owner @peng543, issue #45._
+| | |
+|---|---|
+| **Route** | `GET /search` (also served at `/`), with optional `?sport=` and `?area=` |
+| **Table read** | `venue` - **24 rows**, seeded from `data/venues.csv` by `python src/init_db.py` |
+| **Story it slices** | US03 Customer searches for venues (#16) - BR9 |
+| **Code** | `src/app.py` (route), `src/templates/search.html` (page), `src/db.py` (connection) |
+| **Test** | `tests/test_search.py` - 5 tests, including one that inserts a row *after* start-up and sees it on the page, which an array in the code could never do |
+
+**The query behind the page**
+
+```sql
+SELECT v.id, v.name, v.sport, v.area, v.address, v.hourly_price, v.open_hour, v.close_hour
+FROM venue v
+WHERE v.active = 1
+  AND (:sport = '' OR v.sport = :sport)
+  AND (:area  = '' OR v.area  = :area)
+ORDER BY v.area, v.sport, v.name;
+```
+
+Both filters must match at the same time (BR9); with no match the page shows exactly
+**"No venues found"**. Parameters are bound, never pasted into the SQL string.
+
+**Screenshot** - `http://localhost:5000/search`, all 24 venues:
+
+![Walking skeleton running](images/walking-skeleton.png)
+
+**Settings** live in `.env.example` (`PORT`, `DATABASE_PATH`, `SECRET_KEY`), which is
+committed; `.env` itself and `data/venues.db` are in `.gitignore`. Full install steps:
+[`docs/SETUP.md`](SETUP.md).
 
 ---
 
@@ -161,4 +189,47 @@ _Not written yet - owner @peng543, issue #45._
 
 ## 6. What changed since M1
 
-_Not written yet - owner @thunopro, issue #50._
+Milestone 1 feedback from the instructor has not been returned yet, so every change below
+comes from this sprint's design work: drawing the ERD and writing ADR 2 made us read the
+M1 stories as a database would, and three gaps showed up. Each change is already in
+[`requirements.md`](requirements.md) and in the story file, so the two documents agree.
+
+### Change 1 - A booking is 1 to 4 whole hours, starting on the hour
+
+M1 implied one-hour slots - BR10's example counts 16 slots between 06:00 and 22:00, and
+every booking example in US05 is whole hours - but no rule said so, and nothing capped
+how long one booking could be. Designing `booking_slot` (ADR 2) forced the question: one
+row per *what*? **BR11 now reads: "A booking covers 1 to 4 consecutive whole hours, each
+starting on the hour; each hour holds exactly one active booking".** US05 gains
+acceptance criterion 5: *Given a venue open 06:00-22:00, when I choose a start time,
+then only 06:00, 07:00 ... 21:00 are offered, and I cannot choose more than 4 hours.*
+The 4-hour cap is a Product Owner decision, so that one account cannot hold a pitch for
+a whole evening.
+
+### Change 2 - The owner gives each venue a sport and an area, from fixed lists
+
+US03 searches by sport **and** area (BR9), but in M1 US06 the owner entered only a name,
+an address, a price and photos - so no venue would ever carry the sport or the area a
+customer searches for. Drawing the ERD exposed the gap: `venue` needs `sport` and `area`
+columns, and the search needs something to match exactly. Typed text would not be
+enough: "Cau Giay", "cau giay" and "Q. Cau Giay" would be three different areas, and
+Minh's search would miss two of them. **US06 gains acceptance criterion 5:** *Given I add a
+venue, when I choose its sport and area, then both come from drop-down lists (Football /
+Badminton / Tennis / Pickleball; the districts of Hanoi) and cannot be typed.* BR9 now
+says sport and area are chosen from fixed lists. `venue.sport` enforces the sport list
+with a `CHECK`; the district list will live in code when the add-venue page is built, so
+adding a district does not need a schema change.
+
+The example in US06 criterion 1 and in BR13 changed with it: `San bong Thong Nhat` at
+`123 Nguyen Trai, District 5` was a Ho Chi Minh City address and a Vietnamese name, while
+every seeded venue is in Hanoi. It is now `Thong Nhat Football Pitch` at
+`12 Tran Thai Tong, Cau Giay`, the same venue as the first row of `data/venues.csv`.
+
+### Change 3 - Email verification will be stubbed until Sprint 3
+
+BR4 (an unverified account cannot book) is unchanged. Sending real email, however, needs
+an SMTP account and a password in `.env`, which would add a step to `SETUP.md` that the
+instructor cannot complete on a clean machine. When registration is built, the
+verification link will be printed to the Flask console instead of sent; the data model
+already has `user.email_verified_at`, so switching to real email later changes one
+function and nothing in the schema.

@@ -16,6 +16,8 @@ As a **customer**, I want **to book a venue for a specific time slot** so that *
 2. Given another customer has just booked the selected `18:00-19:00` time slot, when I try to proceed, then the booking is rejected and I see the exact message **"This time slot is no longer available"**.
 
 3. Given that the venue has no more slots available, when I try to book a slot, then the booking is rejected and I see the exact message **"This venue is no longer available"**.
+
+4. Given a venue open `06:00-22:00`, when I choose a start time, then only `06:00`, `07:00` ... `21:00` are offered, and I cannot choose more than 4 hours (BR11 in `requirements.md`). *Added in Milestone 2 - see `design.md` section 6, change 1.*
 ## Related business rules
 
 | ID  | Rule                                                                       | Example with concrete values                                                                     |
