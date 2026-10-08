@@ -10,13 +10,14 @@ one screen instead of keeping it in a paper notebook.
 | Name | GitHub username | Role |
 | --- | --- | --- |
 | Nguyen Khac Thu | [@thunopro](https://github.com/thunopro) | Leader · **Product Owner** |
-| Nguyen Khoi Nguyen | [@peng543](https://github.com/peng543) | Developer · **Scrum Master (Sprint 2)** |
+| Nguyen Khoi Nguyen | [@peng543](https://github.com/peng543) | Developer · Scrum Master (Sprint 2) |
 | Hoang Thi Ngoc Han | [@htngochan2802](https://github.com/htngochan2802) | Developer · Scrum Master (Sprint 1) |
-| Nguyen Phung Hoa | [@PhunghoaAI](https://github.com/PhunghoaAI) | Developer |
+| Nguyen Phung Hoa | [@PhunghoaAI](https://github.com/PhunghoaAI) | Developer · **Scrum Master (Sprint 3)** |
 | Le Quang | [@lequangk2006-sys](https://github.com/lequangk2006-sys) | Developer |
 
 - **Product Owner:** @thunopro
-- **Scrum Master (Sprint 2):** @peng543
+- **Scrum Master (Sprint 3):** @PhunghoaAI
+- Scrum Master (Sprint 2): @peng543
 - Scrum Master (Sprint 1): @htngochan2802
 
 ## Project board
@@ -50,6 +51,7 @@ Full version, including what Done is **not**:
 |------|----------|
 | [`docs/requirements.md`](docs/requirements.md) | **Milestone 1** - vision, 3 personas, 2 scenarios, 12 user stories, BR1-BR19, 14 screens and the flow diagram |
 | [`docs/design.md`](docs/design.md) | **Milestone 2** - architecture, data model, API design, walking skeleton, design decisions, changes since M1 |
+| [`docs/ui.md`](docs/ui.md) | **Milestone 3** - P0 stories and their status, wireframes, error messages, changes since M2 |
 | [`docs/backlog.md`](docs/backlog.md) | Product backlog per sprint - priority, story points, owners, reasoning |
 | [`docs/stories/`](docs/stories/) | One specification file per user story |
 | [`docs/sprint-log.md`](docs/sprint-log.md) | Committed / completed / velocity, review and retrospective per sprint |
