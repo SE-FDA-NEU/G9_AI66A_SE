@@ -112,3 +112,62 @@ two people ever write the same number:
 | @lequangk2006-sys | BR40-BR49 |
 | @htngochan2802 | BR50-BR59 |
 | @thunopro | BR60-BR69 |
+
+---
+
+# Sprint 3 backlog - 05/10/2026 to 18/10/2026
+
+Agreed at Sprint 3 Planning (issue #63). Product Owner: @thunopro. Scrum Master: @PhunghoaAI.
+
+**Sprint goal:** a person who has never seen the app can complete every P0 story (US01-US06)
+through the interface, with real data from the database, and every broken business rule
+shows a clear message on screen - and `docs/ui.md` (Milestone 3) shows the screens, their
+states and their error messages.
+
+Sprint 3 is a **build sprint**. The six P0 stories specified in Sprint 1 (#14-#18, #21)
+are implemented one issue each; the walking skeleton from Sprint 2 is their foundation.
+
+| Issue | Work | Points | Owner | Reviewer |
+|-------|------|--------|-------|----------|
+| #63 | [Chore] Refine backlog for Sprint 3 | - | @thunopro | @PhunghoaAI |
+| #64 | US02 User login: role routing, lockout and session timeout | 3 | @peng543 | @thunopro |
+| #65 | US01 Customer registration with email verification | 3 | @htngochan2802 | @peng543 |
+| #66 | US03 Search from fixed lists and narrowing while typing | 2 | @PhunghoaAI | @lequangk2006-sys |
+| #67 | US04 Venue detail page with availability for a chosen date | 5 | @peng543 | @htngochan2802 |
+| #68 | US05 Book a venue with per-segment pricing | 8 | @thunopro | @peng543 |
+| #69 | US06 Owner adds a venue and sees their venue list | 5 | @htngochan2802 | @thunopro |
+| #70 | docs/ui.md sections 1-3: P0 status, wireframes, error messages | 3 | @lequangk2006-sys | @htngochan2802 |
+| #71 | docs/ui.md section 4 and design.md update | 2 | @thunopro | @lequangk2006-sys |
+| #72 | README first screen, SETUP.md test accounts and re-test | 1 | @PhunghoaAI | @thunopro |
+| #73 | [Chore] Sprint 3 wrap-up | - | @PhunghoaAI | @lequangk2006-sys |
+
+**Committed: 32 points.** Chores carry no points. US03 is re-estimated from 5 to 2 points
+because the walking skeleton (#45) already built the search page; the remaining work is
+the fixed area list, the error message for an unknown value and narrowing while typing.
+
+## Why this order
+
+- **#64 comes first.** It adds what every other story needs: the shared page layout,
+  the `BusinessRuleError` that turns a broken rule into a message, the signed-in user
+  and the role check (BR7, BR14).
+- **#65 and #66 run in parallel** after #64 - they touch different files.
+- **#67 waits for #66** (the search results link to the venue page), and **#68 and #69
+  wait for #67** (booking starts from the free-slot grid; the add-venue form uploads the
+  photos that the venue page shows). #68 also needs #65, because an unverified account
+  cannot book (BR4). #68 and #69 run in parallel.
+- **#70 and #71 describe what was built**, so they start when the story they document is
+  merged; #72 and #73 close the sprint.
+
+## Why this split
+
+The hardest story (#68: booking, 8 points, BR11 and BR12 in one transaction) goes to the
+Product Owner; the next hardest (#64, #65, #67, #69) to the two members who built most of
+Sprint 2. The two members newer to the stack take a small story (#66) and the
+documentation of the interface (#70, #72), so every member still has an issue, a pull
+request and a review of their own.
+
+## Business-rule ranges
+
+New rules found in Sprint 3 keep using each member's range from Sprint 2 (@peng543
+BR20-29, @PhunghoaAI BR30-39, @lequangk2006-sys BR40-49, @htngochan2802 BR50-59,
+@thunopro BR60-69).
