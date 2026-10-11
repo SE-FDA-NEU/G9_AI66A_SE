@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Create an account{% endblock %}
+{% macro field(name, label, type="text", hint="", autocomplete="") -%}
+  <label>{{ label }}
+    <input type="{{ type }}" name="{{ name }}" autocomplete="{{ autocomplete }}"
+           {% if type != "password" %}value="{{ form.get(name, '') }}"{% endif %}
+           {% if errors.get(name) %}aria-invalid="true" aria-describedby="{{ name }}-error"{% endif %} required>
+    {% if errors.get(name) %}<span class="field-error" id="{{ name }}-error">{{ errors[name] }}</span>
+    {% elif hint %}<span class="hint">{{ hint }}</span>{% endif %}
+  </label>
+{%- endmacro %}
+{% block content %}
+<div class="card narrow">
+  <h1>Create an account</h1>
+  {% if errors %}<div class="flash error" role="alert">Please fix the {{ errors|length }} field(s) marked below.</div>{% endif %}
+  <form class="stack" method="post" action="/register" novalidate>
+    {{ field("email", "Email", "email", autocomplete="email") }}
+    {{ field("password", "Password", "password", "At least 8 characters, with a letter and a digit", "new-password") }}
+    {{ field("full_name", "Full name", autocomplete="name") }}
+    {{ field("phone", "Phone number", "tel", "10 digits, starting with 0 - for example 0912345678", "tel") }}
+    <button type="submit">Create account</button>
+  </form>
+  <p class="muted">Already have an account? <a href="/login">Sign in</a></p>
+</div>
+{% endblock %}
