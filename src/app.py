@@ -1,5 +1,7 @@
 """Flask web app - Sports Venue Booking System.
 
+Walking skeleton (Sprint 2): GET /search reads the venue table and renders it.
+Sprint 3: feature routes live in src/routes/ as blueprints.
 Run from the repository root:  python src/app.py
 Pages live in src/routes/ (one module per group of screens); business rules live in the
 service modules (src/auth.py, ...). This file only wires them together.

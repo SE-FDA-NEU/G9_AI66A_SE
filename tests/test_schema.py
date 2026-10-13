@@ -13,7 +13,7 @@ def count(db, table):
 
 def test_seed_row_counts(db):
     assert count(db, "venue") == 24
-    assert count(db, "user") == 6
+    assert count(db, "user") == 7    # 6 verified + 1 unverified customer (BR4)
     assert count(db, "booking") == 5
 
 

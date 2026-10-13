@@ -12,7 +12,8 @@ approved.
 | `/login` | Sign in, route by role | G | P0 | F1 Access | #15 | #39 | Done |
 | `/search` | Search results, filter by sport, area, time slot and price | G | P0 | F2 Discovery | #16 | #30 | In progress |
 | `/venues/{id}` | Venue detail: photos, price, facilities, free-slot grid, reviews | G | P0 | F2 Discovery | #17, #25 | #31, #33 | Spec done |
-| `/booking/{venueId}` | Confirm a booking: pick a slot, see the segmented price, confirm | U | P0 | F3 Booking | #18, #24 | #29, #28 | Spec done |
+| `/booking/{venueId}` | Confirm a booking: pick a slot, see the segmented price, confirm | U | P0 | F3 Booking | #18, #24, #68 | #29, #28, #75 | Done |
+| `/bookings/{code}` | Booking confirmation: code, time and the stored price lines (own bookings only) | U | P0 | F3 Booking | #68 | #75 | Done |
 | `/dashboard` | The customer's page after signing in | U | P1 | F4 Booking management | #15 | #39 | Done |
 | `/my-bookings` | My bookings: upcoming, history, cancel, review after playing | U | P1 | F4 Booking management | #19, #20, #25 | #36, #35, #33 | Spec done |
 | `/owner/venues` | The owner's list of venues | U | P0 | F5 Venue management | #21 | #32 | Spec done |
@@ -43,7 +44,7 @@ match section 2.
 | US02 User login (#15) | `/login` | `POST /api/auth/login` | `user` |
 | US03 Customer searches for venues (#16) | `/search` | `GET /api/venues` | `venue` |
 | US04 Customer views venue details and availability (#17) | `/venues/{id}` | `GET /api/venues/{id}` | `venue`, `booking_slot`, `blocked_slot` |
-| US05 Customer books a venue (#18) | `/booking/{venueId}` | `POST /api/bookings` | `booking`, `booking_slot`, `user`, `venue`, `pricing_rule`, `blocked_slot` |
+| US05 Customer books a venue (#18) | `/booking/{venueId}`<br>`/bookings/{code}` | `POST /api/bookings` | `booking`, `booking_slot`, `user`, `venue`, `pricing_rule`, `blocked_slot` |
 | US06 Venue owner adds a new venue (#21) | `/owner/venues/new` | `POST /api/owner/venues` | `venue`, `user` |
 
 ## Business rules
@@ -67,9 +68,9 @@ sequence**. The full list with worked examples in real numbers is section 5 of
 | BR11 | A booking is 1-4 whole hours; each hour holds exactly one active booking; availability is re-checked before confirming | `/booking/{venueId}` | #18 |
 | BR12 | Prices are per hour in VND, slots are half-open `[start, end)`, crossings are split per segment, rules must not overlap, confirmed bookings keep their price | `/booking/{venueId}`, `/owner/venues/{id}/pricing` | #24 |
 | BR13 | Hourly price is 1,000-100,000,000 VND; venue name is required and 3-100 characters | `/owner/venues/new` | #21 |
-| BR14 | A user may only view and act on their own data; a violation returns 403 | `/my-bookings`, `/owner/bookings`, `/owner/venues/new` | #19, #20, #21, #23 |
+| BR14 | A user may only view and act on their own data; a violation returns 403 | `/bookings/{code}`, `/my-bookings`, `/owner/bookings`, `/owner/venues/new` | #19, #20, #21, #23, #68 |
 | BR15 | Cancellation tiers: >= 24 h refunds 100%, 2-24 h refunds 50%, < 2 h is refused | `/my-bookings` | #19 |
-| BR16 | A blocked slot is hidden from search; unblocking takes effect within 5 seconds | `/owner/venues/{id}/schedule`, `/search` | #22 |
+| BR16 | A blocked slot is hidden from search; unblocking takes effect within 5 seconds | `/owner/venues/{id}/schedule`, `/search`, `/booking/{venueId}` | #22, #68 |
 | BR17 | A slot that already holds an uncancelled booking cannot be blocked | `/owner/venues/{id}/schedule` | #22 |
 | BR18 | Only a completed booking can be reviewed; one review per booking; 1-5 stars; comment <= 1,000 characters | `/my-bookings`, `/venues/{id}` | #25 |
 | BR19 | A review with 3 valid abuse reports is hidden automatically pending moderation | `/venues/{id}`, `/admin` | #25 |

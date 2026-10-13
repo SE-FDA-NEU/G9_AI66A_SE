@@ -78,11 +78,11 @@ One command:
 python src/init_db.py
 ```
 
-Expected output - **24 venues**, 50 rows in total:
+Expected output - **24 venues**, 51 rows in total:
 
 ```
 Created data/venues.db
-  user            6 rows
+  user            7 rows
   venue          24 rows
   pricing_rule    4 rows
   blocked_slot    2 rows
