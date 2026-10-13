@@ -22,7 +22,11 @@ USERS = [
     ("minh@example.com",       "Pham Duc Minh",   "0901234567", "customer"),
     ("trang@example.com",      "Do Thu Trang",    "0976543210", "customer"),
     ("admin@example.com",      "Admin",           "0900000000", "admin"),
+    ("khoa@example.com",       "Vu Minh Khoa",    "0945678901", "customer"),
 ]
+
+# Has not clicked the verification link yet - cannot book (BR4)
+UNVERIFIED = {"khoa@example.com"}
 
 # (venue name, weekday 0=Mon, start_hour, end_hour, price) - peak evenings, BR12
 PRICING = [
@@ -56,8 +60,8 @@ def seed(conn):
     for email, name, phone, role in USERS:
         conn.execute(
             "INSERT INTO user (email, password_hash, full_name, phone, role, email_verified_at)"
-            " VALUES (?, ?, ?, ?, ?, datetime('now'))",
-            (email, pw, name, phone, role),
+            " VALUES (?, ?, ?, ?, ?, CASE WHEN ? THEN NULL ELSE datetime('now') END)",
+            (email, pw, name, phone, role, email in UNVERIFIED),
         )
     user_id = {r["email"]: r["id"] for r in conn.execute("SELECT id, email FROM user")}
 

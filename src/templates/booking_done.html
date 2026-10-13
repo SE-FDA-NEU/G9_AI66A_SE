@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Booking {{ booking.code if booking else "" }} - Sports Venue Booking</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0; background: #f6f7f9; color: #1d2330; }
+  header { background: #152d53; color: #fff; padding: 14px 32px; }
+  header h1 { margin: 0; font-size: 20px; }
+  main { max-width: 760px; margin: 24px auto; padding: 0 16px; }
+  .card { background: #fff; padding: 16px; border: 1px solid #dde1e7; border-radius: 8px; margin-top: 16px; }
+  .code { font-size: 28px; font-weight: 700; letter-spacing: 1px; }
+  .error { margin-top: 16px; padding: 12px 16px; background: #fdecea; border: 1px solid #f5b5ad;
+           color: #8a1c10; border-radius: 6px; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #e5e8ec; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.total td { font-weight: 700; border-bottom: 0; }
+  .muted { color: #667; font-size: 13px; }
+</style>
+</head>
+<body>
+<header><h1>Sports Venue Booking &middot; Booking</h1></header>
+<main>
+{% if not booking %}
+  <div class="error" role="alert">{{ error }}</div>
+{% else %}
+  <div class="card">
+    <p class="muted">Booking code</p>
+    <p class="code">{{ booking.code }}</p>
+    <p><strong>{{ booking.venue_name }}</strong> &middot; {{ booking.address }}</p>
+    <p>{{ booking.start_at[8:10] }}/{{ booking.start_at[5:7] }}/{{ booking.start_at[:4] }},
+       {{ booking.start_at[11:] }}&ndash;{{ booking.end_at[11:] }} &middot; status: {{ booking.status }}</p>
+    <table>
+      <thead><tr><th>Time</th><th class="num">Hours</th><th class="num">Price / hour (VND)</th>
+        <th class="num">Amount (VND)</th></tr></thead>
+      <tbody>
+      {% for s in segments %}
+        <tr><td>{{ s['from'] }}&ndash;{{ s['to'] }}</td><td class="num">{{ s.hours }}</td>
+          <td class="num">{{ "{:,}".format(s.price_per_hour) }}</td>
+          <td class="num">{{ "{:,}".format(s.price) }}</td></tr>
+      {% endfor %}
+        <tr class="total"><td colspan="3">Total</td>
+          <td class="num">{{ "{:,}".format(booking.total_price) }}</td></tr>
+      </tbody>
+    </table>
+  </div>
+{% endif %}
+  <p><a href="/search">Back to search</a></p>
+</main>
+</body>
+</html>
