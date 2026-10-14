@@ -1,4 +1,5 @@
 """Accounts: registration and email verification (US01), signing in (US02).
+"""Accounts: signing in (US02).
 
 Every rule about accounts lives here, not in the routes. Functions take the database
 connection and the current time, so a test can check BR5 without waiting 15 minutes.

@@ -20,19 +20,26 @@
       <form method="post" action="/logout"><button class="link" type="submit">Sign out</button></form>
     {% else %}
       <a href="/login">Sign in</a>
+<<<<<<< HEAD
       <a href="/register">Register</a>
+=======
+>>>>>>> 8d3356025f0430661626780a50adddaa16162095
     {% endif %}
   </nav>
 </header>
 <main>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% for category, message in messages %}
+<<<<<<< HEAD
       {% if category == "verify-link" %}
       <div class="flash" role="status">No email server is set up on this machine, so here is the
         link we just sent: <a href="{{ message }}">Verify my email</a></div>
       {% else %}
       <div class="flash {{ category }}" role="status">{{ message }}</div>
       {% endif %}
+=======
+      <div class="flash {{ category }}" role="status">{{ message }}</div>
+>>>>>>> 8d3356025f0430661626780a50adddaa16162095
     {% endfor %}
   {% endwith %}
   {% block content %}{% endblock %}

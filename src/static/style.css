@@ -1,0 +1,47 @@
+/* Shared look of every page. Styles used by one page only live in that template. */
+* { box-sizing: border-box; }
+body { font-family: system-ui, sans-serif; margin: 0; background: #f6f7f9; color: #1d2330; }
+a { color: #1a6d88; }
+
+header.top { background: #152d53; color: #fff; padding: 12px 24px; display: flex;
+             align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+header.top a { color: #fff; text-decoration: none; }
+header.top .brand { font-weight: 700; font-size: 18px; }
+header.top nav { display: flex; align-items: center; gap: 16px; font-size: 14px; }
+header.top .who { font-weight: 600; padding-left: 12px; border-left: 1px solid #4a6286; }
+header.top form { margin: 0; }
+header.top button.link { background: none; border: 0; color: #fff; text-decoration: underline;
+                         cursor: pointer; font-size: 14px; padding: 0; }
+
+main { max-width: 1040px; margin: 24px auto; padding: 0 16px; }
+h1 { font-size: 24px; margin: 0 0 16px; }
+h2 { font-size: 18px; margin: 24px 0 12px; }
+
+.flash { padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; font-size: 14px;
+         border: 1px solid #b9d7e2; background: #e9f4f8; }
+.flash.error { border-color: #e3b1ad; background: #fbeceb; color: #8a1f17; }
+.flash.success { border-color: #a9d5b5; background: #eaf6ed; color: #1d5b2e; }
+
+.card { background: #fff; border: 1px solid #dde1e7; border-radius: 8px; padding: 20px; }
+.narrow { max-width: 440px; margin: 0 auto; }
+
+form.stack { display: flex; flex-direction: column; gap: 14px; }
+form.stack label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; font-weight: 600; }
+input, select, textarea { font: inherit; font-weight: 400; padding: 8px 10px; border: 1px solid #b9c0ca;
+                          border-radius: 4px; background: #fff; }
+input[aria-invalid="true"], select[aria-invalid="true"] { border-color: #c0392b; }
+.field-error { color: #a12a1f; font-size: 13px; font-weight: 600; }
+.hint { color: #5b6573; font-size: 13px; font-weight: 400; }
+
+button, .button { font: inherit; font-size: 14px; padding: 8px 16px; background: #1a6d88; color: #fff;
+                  border: 0; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; }
+button.secondary, .button.secondary { background: #e7ebf0; color: #1d2330; }
+
+table { width: 100%; border-collapse: collapse; background: #fff; font-size: 14px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #e5e8ec; }
+th { background: #eef1f5; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.empty { padding: 24px; background: #fff; border: 1px dashed #b9c0ca; border-radius: 8px;
+         text-align: center; font-weight: 600; }
+.muted { color: #5b6573; font-size: 13px; }
