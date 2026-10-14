@@ -4,7 +4,7 @@ Run from the repository root:  python src/init_db.py
 Running it again drops every table and starts from the same seed - safe to repeat.
 """
 import csv
-from datetime import date
+from datetime import date, timedelta
 
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash
@@ -22,11 +22,7 @@ USERS = [
     ("minh@example.com",       "Pham Duc Minh",   "0901234567", "customer"),
     ("trang@example.com",      "Do Thu Trang",    "0976543210", "customer"),
     ("admin@example.com",      "Admin",           "0900000000", "admin"),
-    ("khoa@example.com",       "Vu Minh Khoa",    "0945678901", "customer"),
 ]
-
-# Has not clicked the verification link yet - cannot book (BR4)
-UNVERIFIED = {"khoa@example.com"}
 
 # (venue name, weekday 0=Mon, start_hour, end_hour, price) - peak evenings, BR12
 PRICING = [
@@ -36,19 +32,35 @@ PRICING = [
     ("My Dinh Football Pitch",     5, 7, 11, 500000),
 ]
 
+# Booking dates are counted from the day the script runs, so on any machine and any day
+# the seeded bookings are in the future and the availability grid shows booked hours.
+TODAY = date.today()
+
+
+def next_weekday(weekday):
+    """The first date after today that falls on `weekday` (0 = Monday)."""
+    return TODAY + timedelta(days=(weekday - TODAY.weekday() - 1) % 7 + 1)
+
+
+TUESDAY = next_weekday(1).isoformat()          # Thong Nhat has a peak rule on Tuesdays
+SATURDAY = next_weekday(5).isoformat()         # My Dinh has a peak rule on Saturday mornings
+WEDNESDAY = (next_weekday(1) + timedelta(days=1)).isoformat()
+
 # (venue name, slot start) - maintenance, BR16
 BLOCKS = [
-    ("Thong Nhat Football Pitch", "2026-10-06 06:00"),
-    ("Thong Nhat Football Pitch", "2026-10-06 07:00"),
+    ("Thong Nhat Football Pitch", f"{WEDNESDAY} 06:00"),
+    ("Thong Nhat Football Pitch", f"{WEDNESDAY} 07:00"),
 ]
 
 # (code, customer email, venue name, date, start_hour, hours, status)
+# On TUESDAY, Thong Nhat has 3 of its 16 hours booked: 13 free + 3 booked (US04 criterion 2).
 BOOKINGS = [
-    ("BK-000101", "minh@example.com",  "Thong Nhat Football Pitch",   "2026-09-24", 18, 2, "completed"),
-    ("BK-000102", "trang@example.com", "Lan Anh Badminton Court",  "2026-09-25", 19, 1, "completed"),
-    ("BK-000103", "minh@example.com",  "Thong Nhat Football Pitch",   "2026-10-06", 19, 2, "confirmed"),
-    ("BK-000104", "trang@example.com", "Chua Boc Badminton Court", "2026-10-07", 20, 1, "confirmed"),
-    ("BK-000105", "minh@example.com",  "My Dinh Football Pitch",      "2026-10-10", 8,  2, "confirmed"),
+    ("BK-000101", "minh@example.com",  "Thong Nhat Football Pitch", (TODAY - timedelta(days=14)).isoformat(), 18, 2, "completed"),
+    ("BK-000102", "trang@example.com", "Lan Anh Badminton Court",   (TODAY - timedelta(days=13)).isoformat(), 19, 1, "completed"),
+    ("BK-000103", "minh@example.com",  "Thong Nhat Football Pitch", TUESDAY, 19, 2, "confirmed"),
+    ("BK-000104", "trang@example.com", "Chua Boc Badminton Court",  (TODAY + timedelta(days=2)).isoformat(), 20, 1, "confirmed"),
+    ("BK-000105", "minh@example.com",  "My Dinh Football Pitch",    SATURDAY, 8, 2, "confirmed"),
+    ("BK-000106", "trang@example.com", "Thong Nhat Football Pitch", TUESDAY, 17, 1, "confirmed"),
 ]
 
 REVIEWS = [("BK-000101", 5, "New turf, bright lights, friendly owner.")]
@@ -60,8 +72,8 @@ def seed(conn):
     for email, name, phone, role in USERS:
         conn.execute(
             "INSERT INTO user (email, password_hash, full_name, phone, role, email_verified_at)"
-            " VALUES (?, ?, ?, ?, ?, CASE WHEN ? THEN NULL ELSE datetime('now') END)",
-            (email, pw, name, phone, role, email in UNVERIFIED),
+            " VALUES (?, ?, ?, ?, ?, datetime('now'))",
+            (email, pw, name, phone, role),
         )
     user_id = {r["email"]: r["id"] for r in conn.execute("SELECT id, email FROM user")}
 
@@ -109,7 +121,7 @@ def seed(conn):
     conn.commit()
 
 
-TABLES = ["user", "venue", "pricing_rule", "blocked_slot", "booking", "booking_slot", "review"]
+TABLES = ["user", "venue", "venue_photo", "pricing_rule", "blocked_slot", "booking", "booking_slot", "review"]
 
 
 def main():
