@@ -9,7 +9,7 @@ from db import connect
 
 HOA = {"email": "hoa.nguyen@gmail.com", "password": "sanbong2026",
        "full_name": "Nguyen Thi Hoa", "phone": "0912345678"}
-
+TOO_SHORT = "sanbong"
 
 def register(client, **changes):
     return client.post("/register", data={**HOA, **changes})
@@ -46,7 +46,7 @@ def test_same_email_twice_is_refused(client, db):
 
 def test_short_password_keeps_the_other_fields(client):
     # US01 criterion 3, BR2
-    page = register(client, password="sanbong").get_data(as_text=True)
+    page = register(client, **{"password": TOO_SHORT}).get_data(as_text=True)
     assert "Password must be at least 8 characters" in page
     assert 'value="Nguyen Thi Hoa"' in page
     assert 'value="hoa.nguyen@gmail.com"' in page
