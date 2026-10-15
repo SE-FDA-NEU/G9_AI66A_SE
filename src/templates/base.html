@@ -1,48 +1,45 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{% block title %}{% endblock %} - Sports Venue Booking</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-{% block style %}{% endblock %}
-</head>
-<body>
-<header class="top">
-  <a class="brand" href="/search">Sports Venue Booking</a>
-  <nav>
-    <a href="/search">Find a venue</a>
-    {% if g.user %}
-      {% if g.user.role == 'customer' %}<a href="/dashboard">My page</a>
-      {% elif g.user.role == 'owner' %}<a href="/owner/venues">My venues</a>
-      {% else %}<a href="/admin">Administration</a>{% endif %}
-      <span class="who">{{ g.user.full_name }}</span>
-      <form method="post" action="/logout"><button class="link" type="submit">Sign out</button></form>
-    {% else %}
-      <a href="/login">Sign in</a>
-<<<<<<< HEAD
-      <a href="/register">Register</a>
-=======
->>>>>>> 8d3356025f0430661626780a50adddaa16162095
-    {% endif %}
-  </nav>
-</header>
-<main>
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% for category, message in messages %}
-<<<<<<< HEAD
-      {% if category == "verify-link" %}
-      <div class="flash" role="status">No email server is set up on this machine, so here is the
-        link we just sent: <a href="{{ message }}">Verify my email</a></div>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}{% endblock %} - Sports Venue Booking</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    {% block style %}{% endblock %}
+  </head>
+  <body>
+    <header class="top">
+      <a class="brand" href="/search">Sports Venue Booking</a>
+      <nav>
+        <a href="/search">Find a venue</a>
+        {% if g.user %} {% if g.user.role == 'customer' %}<a href="/dashboard"
+          >My page</a
+        >
+        {% elif g.user.role == 'owner' %}<a href="/owner/venues">My venues</a>
+        {% else %}<a href="/admin">Administration</a>{% endif %}
+        <span class="who">{{ g.user.full_name }}</span>
+        <form method="post" action="/logout">
+          <button class="link" type="submit">Sign out</button>
+        </form>
+        {% else %}
+        <a href="/login">Sign in</a>
+        <a href="/register">Register</a>
+        {% endif %}
+      </nav>
+    </header>
+    <main>
+      {% with messages = get_flashed_messages(with_categories=true) %} {% for
+      category, message in messages %} {% if category == "verify-link" %}
+      <div class="flash" role="status">
+        No email server is set up on this machine, so here is the link we just
+        sent: <a href="{{ message }}">Verify my email</a>
+      </div>
       {% else %}
       <div class="flash {{ category }}" role="status">{{ message }}</div>
-      {% endif %}
-=======
-      <div class="flash {{ category }}" role="status">{{ message }}</div>
->>>>>>> 8d3356025f0430661626780a50adddaa16162095
-    {% endfor %}
-  {% endwith %}
-  {% block content %}{% endblock %}
-</main>
-</body>
+      {% endif %} {% endfor %} {% endwith %} {% block content %}{% endblock %}
+    </main>
+  </body>
 </html>

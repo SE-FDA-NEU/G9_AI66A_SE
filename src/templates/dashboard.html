@@ -1,17 +1,14 @@
-{% extends "base.html" %}
-{% block title %}My page{% endblock %}
-{% block content %}
+{% extends "base.html" %} {% block title %}My page{% endblock %} {% block
+content %}
 <h1>Hello, {{ g.user.full_name }}</h1>
-<<<<<<< HEAD
 {% if not g.user.email_verified_at %}
 <div class="flash error" role="alert">
-  Please verify your email before booking. We sent a link to {{ g.user.email }} when you registered.
-  <form method="post" action="/verify/resend" style="margin-top:8px">
+  Please verify your email before booking. We sent a link to {{ g.user.email }}
+  when you registered.
+  <form method="post" action="/verify/resend" style="margin-top: 8px">
     <button type="submit" class="secondary">Send a new link</button>
   </form>
 </div>
 {% endif %}
-=======
->>>>>>> 8d3356025f0430661626780a50adddaa16162095
 <p><a class="button" href="/search">Find a venue to book</a></p>
 {% endblock %}
