@@ -1,25 +1,14 @@
-<<<<<<< HEAD
 """Register and verify the email (US01), sign in and sign out (US02): pages and JSON API."""
 import os
 from datetime import datetime
 
 from flask import (Blueprint, current_app, flash, g, jsonify, redirect, render_template, request,
                    session, url_for)
-=======
-"""Sign in and sign out (US02): the /login page and its JSON API."""
-from datetime import datetime
-
-from flask import Blueprint, flash, g, jsonify, redirect, render_template, request, session
->>>>>>> 8d3356025f0430661626780a50adddaa16162095
 
 import auth
 from db import get_db
 from errors import BusinessRuleError
-<<<<<<< HEAD
 from guards import login_required, start_session
-=======
-from guards import start_session
->>>>>>> 8d3356025f0430661626780a50adddaa16162095
 
 bp = Blueprint("auth", __name__)
 
@@ -29,7 +18,6 @@ def safe_next(target):
     return target if target and target.startswith("/") and not target.startswith("//") else None
 
 
-<<<<<<< HEAD
 def send_verification_link(email, user_id):
     """Email the verification link (BR4). Sprint 3 has no email server: the link is printed
     in the terminal running the app, and shown on screen while SHOW_VERIFICATION_LINK=1."""
@@ -82,8 +70,6 @@ def resend_verification():
     return redirect(auth.LANDING_PAGE[g.user["role"]])
 
 
-=======
->>>>>>> 8d3356025f0430661626780a50adddaa16162095
 @bp.get("/login")
 def login_page():
     if g.user:
@@ -111,7 +97,6 @@ def logout():
     return redirect("/search")
 
 
-<<<<<<< HEAD
 @bp.post("/api/auth/register")
 def api_register():
     data = request.get_json(silent=True) or request.form
@@ -128,8 +113,6 @@ def api_verify():
     return jsonify(user_id=user_id, verified=True)
 
 
-=======
->>>>>>> 8d3356025f0430661626780a50adddaa16162095
 @bp.post("/api/auth/login")
 def api_login():
     data = request.get_json(silent=True) or request.form
