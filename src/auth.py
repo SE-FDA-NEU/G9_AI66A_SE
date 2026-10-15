@@ -1,5 +1,5 @@
 """Accounts: registration and email verification (US01), signing in (US02).
-"""Accounts: signing in (US02).
+Accounts: signing in (US02).
 
 Every rule about accounts lives here, not in the routes. Functions take the database
 connection and the current time, so a test can check BR5 without waiting 15 minutes.
@@ -105,13 +105,17 @@ def _serializer(secret_key):
 
 
 def make_verify_token(secret_key, user_id, now):
-    """A signed token holding the user id and the time it was made. Signing means nobody
-    can forge one for another account; the time lets verify_email() apply BR4's 24 hours."""
+    """A signed token holding the user id and the time it was made.
+
+    Signing means nobody can forge one for another account; the time lets
+    verify_email() apply the 24 hour limit (BR4).
+    """
     return _serializer(secret_key).dumps({"user": user_id, "at": now.strftime(TIME_FORMAT)})
 
 
 def verify_email(conn, secret_key, token, now):
-    """Mark the account as verified. Return its user id."""
+    """Mark the account as verified. Return its user id.
+    """
     try:
         data = _serializer(secret_key).loads(token)
     except BadSignature:

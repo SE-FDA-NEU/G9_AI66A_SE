@@ -1,9 +1,12 @@
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 import pytest
 
 from app import create_app
 from db import connect
 from init_db import seed
-
 
 @pytest.fixture
 def db(tmp_path):
