@@ -10,7 +10,7 @@ approved.
 | `/` | Home page, search by sport and area, entry to sign in and register | G | P0 | F1 Access | #16 | #30 | Spec done |
 | `/register` | Create a customer account | G | P0 | F1 Access | #14 | #27 | Spec done |
 | `/login` | Sign in, route by role | G | P0 | F1 Access | #15 | #39 | Done |
-| `/search` | Search results, filter by sport, area, time slot and price | G | P0 | F2 Discovery | #16 | #30 | In progress |
+| `/search` | Search results, filter by sport, area, time slot and price | G | P0 | F2 Discovery | #16 | #30 | Done |
 | `/venues/{id}` | Venue detail: photos, price, facilities, free-slot grid, reviews | G | P0 | F2 Discovery | #17, #25 | #31, #33 | Spec done |
 | `/booking/{venueId}` | Confirm a booking: pick a slot, see the segmented price, confirm | U | P0 | F3 Booking | #18, #24, #68 | #29, #28, #75 | Done |
 | `/bookings/{code}` | Booking confirmation: code, time and the stored price lines (own bookings only) | U | P0 | F3 Booking | #68 | #75 | Done |
