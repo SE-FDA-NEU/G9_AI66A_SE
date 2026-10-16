@@ -11,6 +11,21 @@ from errors import BusinessRuleError
 bp = Blueprint("venues", __name__)
 
 
+@bp.get("/")
+@bp.get("/search")
+def search_page():
+    sport = request.args.get("sport", "").strip()
+    area = request.args.get("area", "").strip()
+    q = request.args.get("q", "").strip()
+    conn = get_db()
+    matching_venues = venues.search(conn, sport, area, q)
+    total = conn.execute("SELECT COUNT(*) FROM venue WHERE active = 1").fetchone()[0]
+    areas = [row[0] for row in conn.execute(
+        "SELECT DISTINCT area FROM venue WHERE active = 1 ORDER BY area")]
+    return render_template("search.html", venues=matching_venues, sports=venues.SPORTS,
+                           areas=areas, sport=sport, area=area, q=q, total=total)
+
+
 @bp.get("/venues/<int:venue_id>")
 def venue_page(venue_id):
     conn = get_db()

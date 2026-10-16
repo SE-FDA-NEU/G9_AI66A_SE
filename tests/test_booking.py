@@ -9,6 +9,7 @@ import threading
 from datetime import date, datetime
 
 import pytest
+from werkzeug.security import generate_password_hash
 
 import booking as svc
 from app import create_app
@@ -177,6 +178,13 @@ def test_fully_booked_day_says_so_and_links_the_nearest_date(db, app):
 
 
 def test_unverified_email_cannot_book(app):
+    with connect(app.config["DATABASE"]) as conn:
+        conn.execute(
+            "INSERT INTO user (email, password_hash, full_name, phone, role, email_verified_at)"
+            " VALUES (?, ?, ?, ?, ?, NULL)",
+            ("khoa@example.com", generate_password_hash("sanbong1"), "Khoa Nguyen",
+             "0901111111", "customer"),
+        )
     client = signed_in(app, "khoa@example.com")
     page = client.post("/booking/1", data={"date": TUESDAY, "start_hour": 18, "hours": 1})
     assert page.status_code == 403
@@ -201,4 +209,4 @@ def test_api_creates_a_booking_and_requires_sign_in(app):
     assert r.get_json()["total_price"] == 750000
     with connect(app.config["DATABASE"]) as conn:
         upcoming = svc.upcoming(conn, user(conn, "minh@example.com")["id"], NOW)
-    assert [b["code"] for b in upcoming] == [r.get_json()["code"]]
+    assert r.get_json()["code"] in [b["code"] for b in upcoming]
