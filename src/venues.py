@@ -1,5 +1,5 @@
 """Venues: search (US03), venue detail and availability for one date (US04).
-"""Venues: search (US03).
+
 
 Sport and area come from the fixed lists below, never from typed text (BR9), so
 "Cau Giay", "cau giay" and "Q. Cau Giay" can never become three different areas.
