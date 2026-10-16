@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Verify your email{% endblock %}
+{% block content %}
+<div class="card narrow">
+  <h1>Verify your email</h1>
+  {% if error %}
+    <div class="flash error" role="alert">{{ error }}</div>
+    <p><a class="button" href="/login">Sign in</a></p>
+  {% else %}
+    <div class="flash success" role="status">Your email is verified. You can now book a venue.</div>
+    <p><a class="button" href="{{ '/search' if g.user else '/login' }}">{{ 'Find a venue' if g.user else 'Sign in' }}</a></p>
+  {% endif %}
+</div>
+{% endblock %}

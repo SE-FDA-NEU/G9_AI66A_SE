@@ -41,6 +41,7 @@
     {% for v in venues %}
       <tr data-text="{{ (v.name ~ ' ' ~ v.sport)|lower }}">
         <td>{{ v.id }}</td><td><a href="/venues/{{ v.id }}">{{ v.name }}</a></td><td>{{ v.sport }}</td><td>{{ v.area }}</td>
+        <td>{{ v.id }}</td><td>{{ v.name }}</td><td>{{ v.sport }}</td><td>{{ v.area }}</td>
         <td>{{ v.address }}</td><td>{{ '%02d:00' % v.open_hour }}&ndash;{{ '%02d:00' % v.close_hour }}</td>
         <td class="num">{{ "{:,}".format(v.hourly_price) }}</td></tr>
     {% endfor %}
