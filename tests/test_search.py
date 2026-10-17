@@ -6,6 +6,12 @@ def test_health_reports_seeded_venues(client):
     assert client.get("/health").get_json() == {"status": "ok", "venues": 24}
 
 
+def test_root_page_shows_venue_search(client):
+    response = client.get("/")
+    assert response.status_code == 200
+    assert "Find a venue" in response.get_data(as_text=True)
+
+
 def test_search_lists_all_seeded_venues(client):
     page = client.get("/search").get_data(as_text=True)
     assert 'id="count">24</strong> venue(s) found' in page

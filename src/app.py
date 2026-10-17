@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
 
 import routes
-from db import close_db, get_db
+from db import ROOT, close_db, get_db
 from errors import BusinessRuleError
 from guards import SESSION_TIMEOUT, load_user
 
@@ -28,6 +28,7 @@ def create_app(database=None):
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-only")
     app.config["DATABASE"] = database
     app.config["PERMANENT_SESSION_LIFETIME"] = SESSION_TIMEOUT        # BR8
+    app.config["UPLOAD_DIR"] = ROOT / "data" / "uploads"                # venue photos, git-ignored
 
     app.before_request(load_user)
     app.teardown_appcontext(close_db)
