@@ -26,6 +26,33 @@ https://github.com/orgs/SE-FDA-NEU/projects/25
 
 **New machine? Start with [`docs/SETUP.md`](docs/SETUP.md).**
 
+## Core Features & P0 Stories
+
+Every P0 story is implemented and testable in the browser interface:
+
+| Story | What it does | Starting screen | Test account |
+|---|---|---|---|
+| **US01** Customer registration (#14) | Register account, receive on-screen verification link (BR4) | [`/register`](http://localhost:5000/register) | Guest / New user |
+| **US02** User login (#15) | Sign in with role-based routing (customer → `/dashboard`, owner → `/owner/venues`) | [`/login`](http://localhost:5000/login) | Any test account below |
+| **US03** Customer searches for venues (#16) | Search & filter venues by sport, district area, or keyword | [`/search`](http://localhost:5000/search) (or `/`) | Guest / Anyone |
+| **US04** Customer views venue details (#17) | View venue photos, pricing, amenities, and hourly availability grid | [`/venues/1`](http://localhost:5000/venues/1) | Guest / Anyone |
+| **US05** Customer books a venue (#18) | Reserve time slots with segmented pricing & booking code confirmation | [`/booking/1`](http://localhost:5000/booking/1) | `minh@example.com` (Customer) |
+| **US06** Venue owner adds a new venue (#21) | View owned venues, manage venue schedule, add a new venue | [`/owner/venues`](http://localhost:5000/owner/venues) | `lan.owner@example.com` (Owner) |
+
+### Test Accounts
+
+All pre-seeded test accounts share the test password **`sanbong1`** (8 characters, letter + digit, enforcing BR2).
+
+| Role | Email | Name | Status / Purpose |
+|---|---|---|---|
+| Customer (verified) | `minh@example.com` | Pham Duc Minh | Verified customer; holds bookings `BK-000101`, `BK-000103`. Ready to book. |
+| Customer (verified) | `trang@example.com` | Do Thu Trang | Verified customer; holds bookings `BK-000102`, `BK-000104`. |
+| Customer (unverified) | `khoa@example.com` | Vu Minh Khoa | Unverified customer (`email_verified_at` NULL); verifies BR4 booking refusal. |
+| Venue owner | `lan.owner@example.com` | Nguyen Thi Lan | Owns *Thong Nhat Football Pitch*, *Lan Anh Badminton Court*. Lands on `/owner/venues`. |
+| Venue owner | `hung.owner@example.com` | Tran Van Hung | Owns *My Dinh Football Pitch*. |
+| Venue owner | `son.owner@example.com` | Le Hoang Son | Owns *Chua Boc Badminton Court*. |
+| Administrator | `admin@example.com` | Admin | Administrative role (`admin`). |
+
 ## Definition of Done
 
 A story is Done when **all** of the following are true. Not "mostly true". If one box is
