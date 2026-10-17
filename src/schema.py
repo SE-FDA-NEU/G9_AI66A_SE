@@ -10,6 +10,7 @@ SCHEMA = """
 PRAGMA foreign_keys = ON;
 
 DROP TABLE IF EXISTS review;
+DROP TABLE IF EXISTS venue_photo;
 DROP TABLE IF EXISTS booking_slot;
 DROP TABLE IF EXISTS booking;
 DROP TABLE IF EXISTS blocked_slot;
@@ -47,6 +48,15 @@ CREATE TABLE venue (
     active        INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0, 1)),
     created_at    TEXT    NOT NULL DEFAULT (datetime('now')),
     CHECK (open_hour < close_hour)
+);
+
+-- A venue's gallery (US04 criterion 3, US06 criterion 1). The file lives in data/uploads/
+-- under a random name; file_name never holds the name the browser sent.
+CREATE TABLE venue_photo (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    venue_id    INTEGER NOT NULL REFERENCES venue(id),                       -- BR14
+    file_name   TEXT    NOT NULL UNIQUE,
+    created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE TABLE pricing_rule (

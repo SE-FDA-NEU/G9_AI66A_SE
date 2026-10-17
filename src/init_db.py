@@ -109,7 +109,7 @@ def seed(conn):
     conn.commit()
 
 
-TABLES = ["user", "venue", "pricing_rule", "blocked_slot", "booking", "booking_slot", "review"]
+TABLES = ["user", "venue", "venue_photo", "pricing_rule", "blocked_slot", "booking", "booking_slot", "review"]
 
 
 def main():

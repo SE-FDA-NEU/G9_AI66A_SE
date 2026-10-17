@@ -62,3 +62,19 @@ def test_rating_must_be_one_to_five(db):
     # BR18
     with connect(db) as conn, pytest.raises(sqlite3.IntegrityError):
         conn.execute("INSERT INTO review (booking_id, rating) VALUES (2, 6)")
+
+
+def test_schema_has_the_eight_tables_of_the_erd(db):
+    # design.md section 2 and docs/images/erd.png list these 8 tables
+    with connect(db) as conn:
+        names = {r[0] for r in conn.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")}
+    assert names == {"user", "venue", "venue_photo", "pricing_rule", "blocked_slot",
+                     "booking", "booking_slot", "review"}
+
+
+def test_photo_file_name_is_unique(db):
+    # venue_photo.file_name is the random name under data/uploads/
+    with connect(db) as conn, pytest.raises(sqlite3.IntegrityError):
+        for _ in range(2):
+            conn.execute("INSERT INTO venue_photo (venue_id, file_name) VALUES (1, 'a1b2.jpg')")
