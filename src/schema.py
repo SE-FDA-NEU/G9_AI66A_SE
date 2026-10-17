@@ -110,4 +110,11 @@ CREATE TABLE review (
 
 CREATE INDEX idx_venue_sport_area ON venue (sport, area);                    -- BR9 search
 CREATE INDEX idx_booking_customer ON booking (customer_id);
+
+CREATE TABLE IF NOT EXISTS venue_photo (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    venue_id INTEGER NOT NULL,
+    file_name TEXT NOT NULL,
+    FOREIGN KEY (venue_id) REFERENCES venue (id)
+);
 """
