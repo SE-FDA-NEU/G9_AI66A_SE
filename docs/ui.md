@@ -57,7 +57,205 @@ same booking page after signing in.*
 
 ## 2. Wireframes
 
-_Not written yet - owner @lequangk2006-sys, issue #70._
+One wireframe per P0 screen, drawn before the screen was built, with a screenshot of the
+screen as built underneath. Every page has the same top bar, so the wireframes leave it
+out:
+
+```
++----------------------------------------------------------------------------+
+| Sports Venue Booking          Find a venue   Sign in   Register            |  guest
+| Sports Venue Booking          Find a venue   My page | Pham Duc Minh  Sign out | customer
++----------------------------------------------------------------------------+
+```
+
+**How pages talk to the server.** Forms are plain HTML forms posted to the page's own
+route; that route calls the same service function as the JSON endpoint in
+[`design.md`](design.md) section 3 (see section 4 below). "Calls" lists the endpoint whose
+data and rules the screen uses; "(form)" means it reaches it through the page route.
+
+### 2.1 Find a venue - `/` and `/search` (US03)
+
+"The user comes here to find a venue of one sport in one district."
+Calls: `GET /api/venues?sport=&area=&q=` (form, GET).
+
+```
+Find a venue
++------------------------------------------------------------------------+
+| Sport [Football  v]  Area [Cau Giay  v]  Name or sport contains [bad__] [Search] |
++------------------------------------------------------------------------+
+ 2 venue(s) found
+ # | Venue (link)               | Sport    | Area     | Address           | Hours       | Price/hour
+ 4 | Nghia Tan Football Pitch   | Football | Cau Giay | 3 Nghia Tan       | 06:00-22:00 |   280,000
+ 1 | Thong Nhat Football Pitch  | Football | Cau Giay | 12 Tran Thai Tong | 06:00-22:00 |   300,000
+ -- or, when nothing matches --
+ +--------------------------- No venues found ---------------------------+
+```
+
+![Find a venue as built](images/ui/search.png)
+
+### 2.2 Create an account - `/register` (US01)
+
+"The user comes here to create a customer account so they can book."
+Calls: `POST /api/auth/register` (form), then `GET /api/auth/verify?token=` from the link.
+
+```
++------------------- Create an account -------------------+
+| [! Please fix the 3 field(s) marked below.            ] |
+| Email         [minh@example.com      ]                  |
+|               This email is already in use              |
+| Password      [                      ]                  |
+|               Password must be at least 8 characters    |
+| Full name     [Nguyen Thi Hoa        ]  <- kept         |
+| Phone number  [091234567             ]                  |
+|               Phone number must be 10 digits            |
+| [ Create account ]          Already have an account? Sign in |
++---------------------------------------------------------+
+```
+
+![Create an account with three broken rules](images/ui/register-errors.png)
+![After registering: the login page with the verification link](images/ui/register-done.png)
+
+### 2.3 Sign in - `/login` (US02)
+
+"The user comes here to sign in and reach their own area."
+Calls: `POST /api/auth/login` (form).
+
+```
++------------- Sign in -------------+
+| [! Email or password is incorrect] |
+| Email     [minh@example.com   ]   |
+| Password  [                   ]   |
+| [ Sign in ]                       |
++-----------------------------------+
+  customer -> /dashboard   owner -> /owner/venues   admin -> /admin   (BR7)
+```
+
+![Sign in with a wrong password](images/ui/login-error.png)
+
+### 2.4 Venue detail - `/venues/{id}` (US04) - drawn in all four states
+
+"The user comes here to see a venue and which of its hours are free on one date."
+Calls: `GET /api/venues/{id}?date=YYYY-MM-DD` (JavaScript, again each time the date changes).
+
+The venue facts and photos are part of the page; the free-hour grid below them is loaded
+from the API, so it is the part that can be loading, fail, be empty or have data:
+
+```
+ Thong Nhat Football Pitch
+ +------------------------------------------------------------+
+ | Sport Football   Area Cau Giay   Address 12 Tran Thai Tong  |
+ | Opening hours 06:00-22:00   Standard price 300,000 VND/h    |
+ | [photo] [photo]           (or: No photos of this venue yet) |
+ +------------------------------------------------------------+
+ Free hours   Date [13/10/2026]
+
+ +- Loading -----------------------+   +- Error --------------------------------+
+ | (spinner) Loading free hours... |   | We can't reach the server. Check that  |
+ |                                 |   | the app is still running, then try     |
+ |                                 |   | again.              [ Try again ]      |
+ +---------------------------------+   +----------------------------------------+
+ +- Empty -------------------------+   +- Data ---------------------------------+
+ | No free hours on 27/10/2026 -   |   | 13/10/2026: 13 free, 3 booked          |
+ | every hour is booked, closed or |   | [06-07 free][07-08 free] ... [16-17]   |
+ | over. Try another date.         |   | [17-18 booked][18-19 free][19-20 booked]|
+ | (grid below shows why)          |   | [20-21 booked][21-22 free]             |
+ +---------------------------------+   +----------------------------------------+
+```
+
+| Loading | Error |
+| ------- | ----- |
+| ![Loading](images/ui/venue-loading.png) | ![Error](images/ui/venue-error.png) |
+| **Empty** | **Data** |
+| ![Empty](images/ui/venue-empty.png) | ![Data](images/ui/venue-data.png) |
+
+The error state also shows the server's own message, for example *"Please choose today or
+a later date."* when a date in the past is typed (BR10).
+
+### 2.5 Book - `/booking/{venueId}` (US05)
+
+"The user comes here to choose the time and length of a booking, see the exact price and
+confirm it."
+Calls: `GET /api/venues/{id}?date=` (the start-time list), `POST /api/bookings` (form).
+
+```
+ <- Back to Lan Anh Badminton Court
+ Book Lan Anh Badminton Court      45 Duy Tan, Cau Giay - open 06:00-22:00
+ +---------------------------------------------------------------------+
+ | Date [13/10/2026]  Start time [19:00 v]  Length [2 hours v]  [Show the price] |
+ +---------------------------------------------------------------------+
+ Price
+ Time         Hours   Price/hour   Amount
+ 19:00-20:00    1      120,000     120,000     <- peak (Tuesday 17:00-20:00)
+ 20:00-21:00    1       80,000      80,000     <- standard
+ Total for 13/10/2026              200,000
+ [ Confirm booking ]
+ -- or, when every hour of the day is taken --
+ +--- This venue is fully booked on 27/10/2026. The nearest date with free hours is 28/10/2026 ---+
+```
+
+![Book: the price split into two lines](images/ui/booking-price.png)
+![Book: a day with no free hour](images/ui/booking-fully-booked.png)
+
+### 2.6 Booking confirmed - `/bookings/{code}` (US05)
+
+"The user comes here to see the booking code and what they will pay."
+Calls: none - the page reads the booking it has just written.
+
+```
+ [ Booking confirmed. Your booking code is BK-000107. ]
+ Booking BK-000107
+ Lan Anh Badminton Court - 45 Duy Tan, Cau Giay
+ 13/10/2026, 19:00-21:00 - status: confirmed
+ 19:00-20:00  1  120,000  120,000
+ 20:00-21:00  1   80,000   80,000
+ Total                    200,000
+ [ My page ]  [ Book another venue ]
+```
+
+![Booking confirmed](images/ui/booking-confirmed.png)
+
+### 2.7 My venues - `/owner/venues` (US06)
+
+"The owner comes here to see every venue they manage and to add a new one."
+Calls: `GET /api/owner/venues`.
+
+```
+ [ Venue added successfully! ]
+ My venues                                        [ Add a venue ]
+ Venue (link)              | Sport    | Area     | Address          | Hours       | Price/hour | Photos
+ Thong Nhat Football Pitch | Football | Cau Giay | 12 Tran Thai Tong| 06:00-22:00 |    300,000 |      1
+ -- or, with no venue yet --
+ +-- You have no venues yet. Add your first venue so customers can find and book it. --+
+```
+
+![My venues](images/ui/owner-venues.png)
+
+### 2.8 Add a venue - `/owner/venues/new` (US06)
+
+"The owner comes here to put a new venue on the system so customers can find and book it."
+Calls: `POST /api/owner/venues` (form, with the photo upload).
+
+```
++------------------------- Add a venue -------------------------+
+| [! Please fix the 5 field(s) marked below.                  ] |
+| Venue name        [Sa                 ]  3 to 100 characters  |
+|                   Venue name must be 3 to 100 characters      |
+| Sport             [Choose a sport   v]  <- drop-down only (BR9)|
+| Area              [Choose an area   v]  <- 12 Hanoi districts |
+| Street address    [12 Tran Thai Tong ]                        |
+| Hourly price (VND)[0                 ]                        |
+|                   Hourly price must be at least 1,000 VND     |
+| Opens at [06:00 v]  Closes at [22:00 v]                       |
+| Photo (optional)  [Choose file]  JPG or PNG, at most 5 MB     |
+| [ Add venue ]                                                 |
++---------------------------------------------------------------+
+```
+
+![Add a venue with broken rules](images/ui/owner-venue-new-errors.png)
+
+A customer who opens this address directly gets the 403 page instead:
+
+![A customer opening the add-venue page](images/ui/owner-forbidden.png)
 
 ---
 
