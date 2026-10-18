@@ -10,14 +10,14 @@ approved.
 | `/` | Home page, search by sport and area, entry to sign in and register | G | P0 | F1 Access | #16 | #30 | Spec done |
 | `/register` | Create a customer account | G | P0 | F1 Access | #14 | #27 | Spec done |
 | `/login` | Sign in, route by role | G | P0 | F1 Access | #15 | #39 | Done |
-| `/search` | Search results, filter by sport, area, time slot and price | G | P0 | F2 Discovery | #16 | #30 | In progress |
+| `/search` | Search results, filter by sport, area, time slot and price | G | P0 | F2 Discovery | #16 | #30 | Done |
 | `/venues/{id}` | Venue detail: photos, price, facilities, free-slot grid, reviews | G | P0 | F2 Discovery | #17, #25 | #31, #33 | Spec done |
 | `/booking/{venueId}` | Confirm a booking: pick a slot, see the segmented price, confirm | U | P0 | F3 Booking | #18, #24, #68 | #29, #28, #75 | Done |
 | `/bookings/{code}` | Booking confirmation: code, time and the stored price lines (own bookings only) | U | P0 | F3 Booking | #68 | #75 | Done |
 | `/dashboard` | The customer's page after signing in | U | P1 | F4 Booking management | #15 | #39 | Done |
 | `/my-bookings` | My bookings: upcoming, history, cancel, review after playing | U | P1 | F4 Booking management | #19, #20, #25 | #36, #35, #33 | Spec done |
-| `/owner/venues` | The owner's list of venues | U | P0 | F5 Venue management | #21 | #32 | Spec done |
-| `/owner/venues/new` | Add a new venue | U | P0 | F5 Venue management | #21 | #32 | Spec done |
+| `/owner/venues` | The owner's list of venues | U | P0 | F5 Venue management | #21 | #32 | Done |
+| `/owner/venues/new` | Add a new venue | U | P0 | F5 Venue management | #21 | #32 | Done |
 | `/owner/venues/{id}/schedule` | Venue schedule: block and unblock hours for maintenance | U | P1 | F5 Venue management | #22 | #37 | Spec done |
 | `/owner/venues/{id}/pricing` | Configure peak and off-peak pricing | U | P2 | F6 Pricing | #24 | #28 | Spec done |
 | `/owner/bookings` | Day-by-day list of bookings across the owner's venues | U | P1 | F5 Venue management | #23 | #38 | Spec done |
@@ -44,7 +44,7 @@ match section 2.
 | US02 User login (#15) | `/login` | `POST /api/auth/login`<br>`POST /api/auth/logout` | `user` |
 | US03 Customer searches for venues (#16) | `/search` | `GET /api/venues` | `venue` |
 | US04 Customer views venue details and availability (#17) | `/venues/{id}` | `GET /api/venues/{id}` | `venue`, `venue_photo`, `booking_slot`, `blocked_slot` |
-| US05 Customer books a venue (#18) | `/booking/{venueId}`<br>`/bookings/{code}` | `POST /api/bookings` | `booking`, `booking_slot`, `user`, `venue`, `pricing_rule`, `blocked_slot` |
+| US05 Customer books a venue (#18) | `/booking/{venueId}`, `/bookings/{code}` | `POST /api/bookings` | `booking`, `booking_slot`, `user`, `venue`, `pricing_rule`, `blocked_slot` |
 | US06 Venue owner adds a new venue (#21) | `/owner/venues`, `/owner/venues/new` | `GET /api/owner/venues`<br>`POST /api/owner/venues` | `venue`, `venue_photo`, `user` |
 
 ## Business rules

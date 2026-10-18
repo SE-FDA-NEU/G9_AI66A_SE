@@ -1,0 +1,33 @@
+@startuml
+skinparam state {
+  BackgroundColor White
+  BorderColor Black
+}
+hide empty description
+
+state "Giao diện Khách Hàng (Customer Flow)" as CustomerFlow {
+  state "Màn 1: Trang chủ\n(/)" as UC1
+  state "Màn 2: Danh sách sân\n(/search)" as UC2
+  state "Màn 3: Chi tiết & Chọn Slot\n(/book)" as UC3
+  state "Màn 4: Thanh toán\n(/checkout)" as UC4
+  state "Màn 5: Vé & Mã QR\n(/ticket)" as UC5
+  
+  [*] -> UC1 : Mở web
+  UC1 --> UC2 : Nhập tìm kiếm
+  UC2 --> UC3 : Chọn 1 sân
+  UC3 --> UC4 : Đặt khung giờ
+  UC4 --> UC5 : Thanh toán thành công
+}
+
+state "Giao diện Chủ Sân (Owner Flow)" as OwnerFlow {
+  state "Màn 6: Quản lý lịch\n(/admin/schedule)" as UC6
+  state "Màn 7: Quét QR Check-in\n(/admin/checkin)" as UC7
+  
+  [*] -> UC6 : Đăng nhập Admin
+}
+
+' Các tương tác ẩn giữa 2 luồng
+UC6 -[dashed]-> UC2 : Hệ thống cập nhật\nlịch trống
+UC5 -[dashed]-> UC7 : Khách đưa vé QR\nđể quét
+
+@enduml

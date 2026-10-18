@@ -1,6 +1,41 @@
-{% extends "base.html" %}
-{% block title %}My venues{% endblock %}
-{% block content %}
+{% extends "base.html" %} {% block title %}My venues{% endblock %} {% block
+content %}
 <h1>My venues</h1>
-<div class="empty">This is your venue management area. Adding a venue arrives with US06.</div>
-{% endblock %}
+<p><a class="button" href="/owner/venues/new">Add a venue</a></p>
+{% if venues %}
+<table>
+  <thead>
+    <tr>
+      <th>Venue</th>
+      <th>Sport</th>
+      <th>Area</th>
+      <th>Address</th>
+      <th>Opening hours</th>
+      <th class="num">Price / hour (VND)</th>
+      <th class="num">Photos</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for v in venues %}
+    <tr>
+      <td><a href="/venues/{{ v.id }}">{{ v.name }}</a></td>
+      <td>{{ v.sport }}</td>
+      <td>{{ v.area }}</td>
+      <td>{{ v.address }}</td>
+      <td>
+        {{ '%02d:00' % v.open_hour }}&ndash;{{ '%02d:00' % v.close_hour }}
+      </td>
+      <td class="num">{{ "{:,}".format(v.hourly_price) }}</td>
+      <td class="num">
+        <a href="/venues/{{ v.id }}/photos/">{{ v.photo_count }}</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty">
+  You have no venues yet. Add your first venue so customers can find and book
+  it.
+</div>
+{% endif %} {% endblock %}

@@ -6,6 +6,7 @@
                  padding: 16px; border: 1px solid #dde1e7; border-radius: 8px; }
   form.filters label { display: flex; flex-direction: column; font-size: 13px; gap: 4px; }
   .count { margin: 16px 0 8px; font-size: 14px; }
+  [hidden] { display: none !important; }
 </style>
 {% endblock %}
 {% block content %}
@@ -23,24 +24,49 @@
       {% for a in areas %}<option {% if a == area %}selected{% endif %}>{{ a }}</option>{% endfor %}
     </select>
   </label>
+  <label>Name or sport contains
+    <input type="search" name="q" id="q" value="{{ q }}" placeholder="e.g. badminton" autocomplete="off">
+  </label>
   <button type="submit">Search</button>
 </form>
 
-{% if venues %}
-<p class="count"><strong>{{ venues|length }}</strong> venue(s) found</p>
-<table>
-  <thead><tr><th>#</th><th>Venue</th><th>Sport</th><th>Area</th><th>Address</th>
-    <th>Opening hours</th><th class="num">Price / hour (VND)</th></tr></thead>
-  <tbody>
-  {% for v in venues %}
-    <tr><td>{{ v.id }}</td><td>{{ v.name }}</td><td>{{ v.sport }}</td><td>{{ v.area }}</td>
-      <td>{{ v.address }}</td><td>{{ '%02d:00' % v.open_hour }}&ndash;{{ '%02d:00' % v.close_hour }}</td>
-      <td class="num">{{ "{:,}".format(v.hourly_price) }}</td></tr>
-  {% endfor %}
-  </tbody>
-</table>
-{% else %}
-<div class="empty">No venues found</div>
-{% endif %}
-<p class="muted">Data source: table <code>venue</code> in SQLite ({{ total }} rows).</p>
+{% if error %}<div class="flash error" role="alert" style="margin-top:16px">{{ error }}</div>{% endif %}
+
+<div id="results" {% if not venues %}hidden{% endif %}>
+  <p class="count"><strong id="count">{{ venues|length }}</strong> venue(s) found</p>
+  <table>
+    <thead><tr><th>#</th><th>Venue</th><th>Sport</th><th>Area</th><th>Address</th>
+      <th>Opening hours</th><th class="num">Price / hour (VND)</th></tr></thead>
+    <tbody>
+    {% for v in venues %}
+      <tr data-text="{{ (v.name ~ ' ' ~ v.sport)|lower }}">
+        <td>{{ v.id }}</td><td><a href="/venues/{{ v.id }}">{{ v.name }}</a></td><td>{{ v.sport }}</td><td>{{ v.area }}</td>
+        <td>{{ v.id }}</td><td>{{ v.name }}</td><td>{{ v.sport }}</td><td>{{ v.area }}</td>
+        <td>{{ v.address }}</td><td>{{ '%02d:00' % v.open_hour }}&ndash;{{ '%02d:00' % v.close_hour }}</td>
+        <td class="num">{{ "{:,}".format(v.hourly_price) }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+<div class="empty" id="no-match" {% if venues or error %}hidden{% endif %}>No venues found</div>
+<p class="muted">Data source: table <code>venue</code> in SQLite ({{ total }} active venues).</p>
+
+<script>
+// US03 criterion 3: from the 3rd character typed, narrow the list to venues whose name or
+// sport contains the text - without reloading the page. Fewer than 3 characters shows all.
+const q = document.getElementById("q");
+const rows = [...document.querySelectorAll("#results tbody tr")];
+q.addEventListener("input", () => {
+  const text = q.value.trim().toLowerCase();
+  let shown = 0;
+  for (const row of rows) {
+    const match = text.length < 3 || row.dataset.text.includes(text);
+    row.hidden = !match;
+    if (match) shown++;
+  }
+  document.getElementById("count").textContent = shown;
+  document.getElementById("results").hidden = shown === 0;
+  document.getElementById("no-match").hidden = shown !== 0;
+});
+</script>
 {% endblock %}

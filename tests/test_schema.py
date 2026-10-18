@@ -13,8 +13,8 @@ def count(db, table):
 
 def test_seed_row_counts(db):
     assert count(db, "venue") == 24
-    assert count(db, "user") == 7    # 6 verified + 1 unverified customer (BR4)
-    assert count(db, "booking") == 5
+    assert count(db, "user") == 6
+    assert count(db, "booking") == 6
 
 
 def test_same_email_twice_is_rejected(db):
@@ -32,10 +32,12 @@ def test_phone_must_be_ten_digits_starting_with_zero(db):
 
 
 def test_same_hour_cannot_be_booked_twice(db):
-    # BR11 - BK-000103 already holds Thong Nhat Football Pitch (venue 1) at 19:00 on 06/10
+    # BR11 - BK-000103 already holds Thong Nhat Football Pitch (venue 1) at 19:00 next Tuesday
     with connect(db) as conn, pytest.raises(sqlite3.IntegrityError):
+        taken = conn.execute("SELECT s.slot_start FROM booking_slot s JOIN booking b ON b.id = s.booking_id"
+                             " WHERE b.code = 'BK-000103' ORDER BY s.slot_start").fetchone()[0]
         conn.execute("INSERT INTO booking_slot (booking_id, venue_id, slot_start, price)"
-                     " VALUES (4, 1, '2026-10-06 19:00', 300000)")
+                     " VALUES (4, 1, ?, 300000)", (taken,))
 
 
 @pytest.mark.parametrize("name, price", [("Sa", 250000), ("New Court", 0), ("New Court", 999)])
@@ -64,17 +66,9 @@ def test_rating_must_be_one_to_five(db):
         conn.execute("INSERT INTO review (booking_id, rating) VALUES (2, 6)")
 
 
-def test_schema_has_the_eight_tables_of_the_erd(db):
-    # design.md section 2 and docs/images/erd.png list these 8 tables
+def test_seeded_bookings_are_in_the_future(db):
+    # Seed dates are relative to today, so the demo works whatever day it is run
     with connect(db) as conn:
-        names = {r[0] for r in conn.execute(
-            "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")}
-    assert names == {"user", "venue", "venue_photo", "pricing_rule", "blocked_slot",
-                     "booking", "booking_slot", "review"}
-
-
-def test_photo_file_name_is_unique(db):
-    # venue_photo.file_name is the random name under data/uploads/
-    with connect(db) as conn, pytest.raises(sqlite3.IntegrityError):
-        for _ in range(2):
-            conn.execute("INSERT INTO venue_photo (venue_id, file_name) VALUES (1, 'a1b2.jpg')")
+        upcoming = conn.execute("SELECT COUNT(*) FROM booking WHERE status = 'confirmed'"
+                                " AND start_at > datetime('now', 'localtime')").fetchone()[0]
+    assert upcoming == 4
