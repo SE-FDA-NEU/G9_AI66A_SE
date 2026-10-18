@@ -16,8 +16,8 @@ approved.
 | `/bookings/{code}` | Booking confirmation: code, time and the stored price lines (own bookings only) | U | P0 | F3 Booking | #68 | #75 | Done |
 | `/dashboard` | The customer's page after signing in | U | P1 | F4 Booking management | #15 | #39 | Done |
 | `/my-bookings` | My bookings: upcoming, history, cancel, review after playing | U | P1 | F4 Booking management | #19, #20, #25 | #36, #35, #33 | Spec done |
-| `/owner/venues` | The owner's list of venues | U | P0 | F5 Venue management | #21 | #32 | Spec done |
-| `/owner/venues/new` | Add a new venue | U | P0 | F5 Venue management | #21 | #32 | Spec done |
+| `/owner/venues` | The owner's list of venues | U | P0 | F5 Venue management | #21 | #32 | Done |
+| `/owner/venues/new` | Add a new venue | U | P0 | F5 Venue management | #21 | #32 | Done |
 | `/owner/venues/{id}/schedule` | Venue schedule: block and unblock hours for maintenance | U | P1 | F5 Venue management | #22 | #37 | Spec done |
 | `/owner/venues/{id}/pricing` | Configure peak and off-peak pricing | U | P2 | F6 Pricing | #24 | #28 | Spec done |
 | `/owner/bookings` | Day-by-day list of bookings across the owner's venues | U | P1 | F5 Venue management | #23 | #38 | Spec done |

@@ -41,3 +41,6 @@ document_nguyenkhacthu/
 sprint01/
 sprint02/
 sprint03/
+
+# Venue photos uploaded by owners (US06) - created at run time, never committed
+data/uploads/

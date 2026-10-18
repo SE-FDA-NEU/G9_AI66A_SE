@@ -29,6 +29,7 @@ def create_app(database=None):
     app.config["DATABASE"] = database
     app.config["PERMANENT_SESSION_LIFETIME"] = SESSION_TIMEOUT        # BR8
     app.config["UPLOAD_DIR"] = ROOT / "data" / "uploads"                # venue photos, git-ignored
+    app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024                   # largest photo upload: 5 MB
 
     app.before_request(load_user)
     app.teardown_appcontext(close_db)
@@ -47,6 +48,13 @@ def create_app(database=None):
         if wants_json():
             return jsonify(error="Not found"), 404
         return render_template("error.html", message=message), 404
+
+    @app.errorhandler(413)
+    def too_large(_err):
+        message = "The photo is larger than 5 MB. Choose a smaller photo and add the venue again."
+        if wants_json():
+            return jsonify(error=message), 413
+        return render_template("error.html", message=message), 413
 
     @app.route("/health")
     def health():
