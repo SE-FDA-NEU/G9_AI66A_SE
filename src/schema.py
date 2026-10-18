@@ -14,6 +14,7 @@ DROP TABLE IF EXISTS booking_slot;
 DROP TABLE IF EXISTS booking;
 DROP TABLE IF EXISTS blocked_slot;
 DROP TABLE IF EXISTS pricing_rule;
+DROP TABLE IF EXISTS venue_photo;
 DROP TABLE IF EXISTS venue;
 DROP TABLE IF EXISTS user;
 
@@ -47,6 +48,15 @@ CREATE TABLE venue (
     active        INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0, 1)),
     created_at    TEXT    NOT NULL DEFAULT (datetime('now')),
     CHECK (open_hour < close_hour)
+);
+
+-- Photos shown in the venue gallery (US04 criterion 3) and uploaded by the owner (US06).
+-- The file itself lives in data/uploads/, which is git-ignored; only its name is stored here.
+CREATE TABLE venue_photo (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    venue_id    INTEGER NOT NULL REFERENCES venue(id),                       -- BR14: belongs to one venue
+    file_name   TEXT    NOT NULL UNIQUE,
+    created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE TABLE pricing_rule (
@@ -110,11 +120,4 @@ CREATE TABLE review (
 
 CREATE INDEX idx_venue_sport_area ON venue (sport, area);                    -- BR9 search
 CREATE INDEX idx_booking_customer ON booking (customer_id);
-
-CREATE TABLE IF NOT EXISTS venue_photo (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    venue_id INTEGER NOT NULL,
-    file_name TEXT NOT NULL,
-    FOREIGN KEY (venue_id) REFERENCES venue (id)
-);
 """

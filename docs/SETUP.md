@@ -59,14 +59,15 @@ cp .env.example .env
 copy .env.example .env
 ```
 
-`.env` holds three values. The defaults work as they are; change them only if a step
+`.env` holds configuration values. The defaults work as they are; change them only if a step
 below tells you to.
 
-| Variable        | Default                             | What to put in it                                                                            |
-| --------------- | ----------------------------------- | -------------------------------------------------------------------------------------------- |
-| `PORT`          | `5000`                              | The port the app listens on. **macOS:** use `5001` (port 5000 is taken by AirPlay Receiver). |
-| `DATABASE_PATH` | `data/venues.db`                    | Where the SQLite file is created. Leave as is.                                               |
-| `SECRET_KEY`    | `change-me-to-a-long-random-string` | Any long random text. It signs the session cookie.                                           |
+| Variable                 | Default                             | What to put in it                                                                            |
+| ------------------------ | ----------------------------------- | -------------------------------------------------------------------------------------------- |
+| `PORT`                   | `5000`                              | The port the app listens on. **macOS:** use `5001` (port 5000 is taken by AirPlay Receiver). |
+| `DATABASE_PATH`          | `data/venues.db`                    | Where the SQLite file is created. Leave as is.                                               |
+| `SECRET_KEY`             | `change-me-to-a-long-random-string` | Any long random text. It signs the session cookie.                                           |
+| `SHOW_VERIFICATION_LINK` | `1`                                 | `1` prints the verification link in the console and displays it on `/login` (BR4 without SMTP). |
 
 `.env` is in `.gitignore` and is never committed.
 
@@ -78,12 +79,13 @@ One command:
 python src/init_db.py
 ```
 
-Expected output - **24 venues**, 51 rows in total:
+Expected output - **8 tables**, **24 venues**, 51 rows in total:
 
 ```
 Created data/venues.db
   user            7 rows
   venue          24 rows
+  venue_photo     0 rows
   pricing_rule    4 rows
   blocked_slot    2 rows
   booking         5 rows
@@ -133,9 +135,36 @@ python src/app.py
 Reload the page: **23 venue(s) found**. Put the line back (or run
 `git checkout data/venues.csv`) and run `python src/init_db.py` again to return to 24.
 
-Optional - run the automated tests: `pytest` → `15 passed`.
+Optional - run the automated tests: `pytest` → `62 passed`.
 
-## 7. Troubleshooting
+## 7. Test accounts & short P0 walk-through
+
+### Test accounts
+
+All seeded test accounts use the test password **`sanbong1`** (no real passwords).
+
+| Role | Email | Name | Notes |
+|---|---|---|---|
+| Customer (verified) | `minh@example.com` | Pham Duc Minh | Verified customer; holds bookings `BK-000101`, `BK-000103`. Ready to book. |
+| Customer (verified) | `trang@example.com` | Do Thu Trang | Verified customer; holds bookings `BK-000102`, `BK-000104`. |
+| Customer (unverified) | `khoa@example.com` | Vu Minh Khoa | Unverified customer (`email_verified_at` NULL); verifies BR4 booking refusal. |
+| Venue owner | `lan.owner@example.com` | Nguyen Thi Lan | Owns *Thong Nhat Football Pitch*, *Lan Anh Badminton Court*. Lands on `/owner/venues`. |
+| Venue owner | `hung.owner@example.com` | Tran Van Hung | Owns *My Dinh Football Pitch*. |
+| Venue owner | `son.owner@example.com` | Le Hoang Son | Owns *Chua Boc Badminton Court*. |
+| Administrator | `admin@example.com` | Admin | Administrative account (`admin`). |
+
+### Short P0 walk-through (5 minutes)
+
+Follow these steps in order to test the P0 stories through the interface:
+
+1. **US03 - Search for venues**: Open http://localhost:5000/search. Select Sport: **Football**, Area: **Cau Giay** and click **Search** to see 2 matching venues. Type in the text box to narrow down results.
+2. **US04 - View venue details & availability**: Click on **Thong Nhat Football Pitch** (or open http://localhost:5000/venues/1) to see venue information, photos, and the hourly availability grid for today.
+3. **US01 - Customer registration**: Go to http://localhost:5000/register. Create an account with a 10-digit phone number starting with 0 (e.g. `0988776655`) and password `sanbong1`. Since `SHOW_VERIFICATION_LINK=1`, the verification link is displayed on the login page banner and printed in the server terminal. Click it to verify your account (BR4).
+4. **US02 - User login**: Go to http://localhost:5000/login. Sign in with `minh@example.com` and password `sanbong1`. You are redirected to `/dashboard` (BR7) and your name is displayed in the navigation header.
+5. **US05 - Book a venue**: From `/venues/1` or `/search`, choose a date and click **Book now** on an available slot (or visit http://localhost:5000/booking/1). Review the segmented price breakdown and confirm. You are taken to `/bookings/BK-XXXXXX` displaying your booking confirmation.
+6. **US06 - Owner venue management**: Click **Sign out** (US02 logout), then sign in as owner `lan.owner@example.com` (`sanbong1`). You are redirected to `/owner/venues` (BR7). Click **Add venue** (http://localhost:5000/owner/venues/new) to create a new pitch.
+
+## 8. Troubleshooting
 
 | What you see                                                                                | Why                                                                         | Fix                                                                                                                                             |
 | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -144,9 +173,12 @@ Optional - run the automated tests: `pytest` → `15 passed`.
 | Windows: `Activate.ps1 cannot be loaded because running scripts is disabled on this system` | PowerShell's default execution policy blocks scripts                        | Run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`, answer `Y`, then activate again. Or use Command Prompt: `.venv\Scripts\activate.bat` |
 | `'python' is not recognized` (Windows) or `command not found: python` (macOS)               | Python not on PATH, or macOS only has `python3`                             | Windows: re-run the installer, choose _Modify_, tick _Add Python to environment variables_. macOS/Linux: use `python3` in every command         |
 | `sqlite3.OperationalError: no such table: venue`                                            | The app was started before the database was created, or from another folder | Run `python src/init_db.py` from the repository root (the folder that contains `README.md`)                                                     |
+| No verification email received / Cannot book: *"Please verify your email before booking"* (BR4) | Local development runs without an SMTP server. When `SHOW_VERIFICATION_LINK=1`, the link is printed in the terminal and displayed on `/login` | Click the verification link shown on `/login` or printed in the terminal console. Alternatively, sign in using an already-verified test account (`minh@example.com`). |
+| *"Account temporarily locked. Try again in 15 minutes"* (BR5)                               | An account had 5 consecutive incorrect login attempts (BR5 brute-force lock) | Wait 15 minutes, log in with another test account, or run `python src/init_db.py` to reset the database and lock counters.                     |
 
-## 8. Tested by
+## 9. Tested by
 
-| Who         | Machine (not the author's) | Date       | Time taken | Result |
-| ----------- | -------------------------- | ---------- | ---------- | ------ |
-| @PhunghoaAI | Windows 11, Python 3.13    | 02/10/2026 | 10 minutes | passed |
+| Who           | Machine (not the author's)     | Date       | Time taken | Result |
+| ------------- | ------------------------------ | ---------- | ---------- | ------ |
+| @PhunghoaAI   | Windows 11, Python 3.13        | 02/10/2026 | 10 minutes | passed |
+| @hoanglong-dev| macOS Sonoma 14.5, Python 3.11 | 16/10/2026 | 8 minutes  | passed |

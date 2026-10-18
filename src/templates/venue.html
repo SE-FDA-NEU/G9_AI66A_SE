@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}{{ venue.name }}{% endblock %}
+{% block style %}
+<style>
+  .facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; font-size: 14px; margin: 0; }
+  .facts dt { color: #5b6573; }
+  .facts dd { margin: 0; font-weight: 600; }
+  .gallery { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .gallery img { width: 220px; height: 150px; object-fit: cover; border-radius: 6px; border: 1px solid #dde1e7; }
+  .day-picker { display: flex; gap: 12px; align-items: end; margin-bottom: 12px; }
+  .day-picker label { display: flex; flex-direction: column; font-size: 13px; gap: 4px; }
+  .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+  .slot { padding: 10px; border-radius: 6px; text-align: center; font-size: 14px; border: 1px solid; }
+  .slot b { display: block; font-variant-numeric: tabular-nums; }
+  .slot.free { background: #eaf6ed; border-color: #a9d5b5; color: #1d5b2e; }
+  .slot.booked { background: #fbeceb; border-color: #e3b1ad; color: #8a1f17; }
+  .slot.blocked { background: #f1f1f1; border-color: #c9c9c9; color: #555; }
+  .slot.past { background: #f6f7f9; border-color: #e1e4e8; color: #9aa1ab; }
+  a.slot { text-decoration: none; }
+  a.slot:hover { outline: 2px solid #1a6d88; }
+  .state { padding: 20px; border-radius: 8px; background: #fff; border: 1px dashed #b9c0ca; text-align: center; margin-bottom: 12px; }
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 3px solid #c9d6e2; border-top-color: #1a6d88;
+             border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  [hidden] { display: none !important; }
+</style>
+{% endblock %}
+{% block content %}
+<p class="muted"><a href="/search">&larr; Back to search</a></p>
+<h1>{{ venue.name }}</h1>
+<div class="card">
+  <dl class="facts">
+    <dt>Sport</dt><dd>{{ venue.sport }}</dd>
+    <dt>Area</dt><dd>{{ venue.area }}</dd>
+    <dt>Address</dt><dd>{{ venue.address }}, {{ venue.area }}</dd>
+    <dt>Opening hours</dt><dd>{{ '%02d:00' % venue.open_hour }}&ndash;{{ '%02d:00' % venue.close_hour }}</dd>
+    <dt>Standard price</dt><dd>{{ "{:,}".format(venue.hourly_price) }} VND per hour
+      <span class="muted">(peak hours may cost more - the exact price is shown before you confirm)</span></dd>
+  </dl>
+  {% if photos %}
+  <div class="gallery">
+    {% for p in photos %}<img src="/venues/{{ venue.id }}/photos/{{ p.id }}" alt="Photo {{ loop.index }} of {{ venue.name }}">{% endfor %}
+  </div>
+  {% else %}
+  <p class="muted">No photos of this venue yet.</p>
+  {% endif %}
+</div>
+
+<h2>Free hours</h2>
+<form class="day-picker" onsubmit="return false">
+  <label>Date
+    <input type="date" id="day" value="{{ day }}" min="{{ today }}">
+  </label>
+</form>
+
+<!-- One of the four states below is visible at a time (docs/ui.md section 2). -->
+<div class="state" id="loading" role="status"><span class="spinner"></span>Loading free hours&hellip;</div>
+<div class="state" id="error" role="alert" hidden>
+  <p id="error-text"></p>
+  <button type="button" id="retry">Try again</button>
+</div>
+<div class="state" id="empty" role="status" hidden></div>
+<div id="data" hidden>
+  <p id="summary"></p>
+  <div class="slots" id="slots"></div>
+</div>
+<noscript><div class="state">This page needs JavaScript to show the free hours.</div></noscript>
+
+<script>
+const venueId = {{ venue.id }};
+const dayInput = document.getElementById("day");
+const STATES = ["loading", "error", "empty", "data"];
+
+function show(...visible) {
+  for (const id of STATES) document.getElementById(id).hidden = !visible.includes(id);
+}
+
+function asDisplayDate(iso) {             // 2026-10-20 -> 20/10/2026
+  const [y, m, d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+function slotCell(slot) {
+  const cell = document.createElement("div");
+  cell.className = `slot ${slot.status}`;
+  cell.innerHTML = `<b>${slot.start}-${slot.end}</b>${slot.status}`;
+  return cell;
+}
+
+async function loadSlots() {
+  const day = dayInput.value;
+  show("loading");
+  history.replaceState(null, "", `?date=${day}`);
+  let response, body;
+  try {
+    response = await fetch(`/api/venues/${venueId}?date=${encodeURIComponent(day)}`);
+    body = await response.json();
+  } catch (err) {
+    document.getElementById("error-text").textContent =
+      "We can't reach the server. Check that the app is still running, then try again.";
+    return show("error");
+  }
+  if (!response.ok) {                     // e.g. a date in the past (BR10): the server says why
+    document.getElementById("error-text").textContent = body.error;
+    return show("error");
+  }
+  const grid = document.getElementById("slots");
+  grid.replaceChildren(...body.slots.map((slot) => slotCell(slot)));
+  document.getElementById("summary").textContent =
+    `${asDisplayDate(body.date)}: ${body.free} free, ${body.booked} booked` +
+    (body.blocked ? `, ${body.blocked} closed for maintenance` : "");
+  if (body.free === 0) {
+    document.getElementById("empty").textContent =
+      `No free hours on ${asDisplayDate(body.date)} - every hour is booked, closed or over. Try another date.`;
+    return show("empty", "data");
+  }
+  show("data");
+}
+
+dayInput.addEventListener("change", loadSlots);
+document.getElementById("retry").addEventListener("click", loadSlots);
+loadSlots();
+</script>
+{% endblock %}

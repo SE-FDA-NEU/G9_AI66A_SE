@@ -56,19 +56,3 @@ def api_create_venue():
     if problems:
         raise problems[0]
     return jsonify(venue_id=venues.create_venue(get_db(), g.user, values)), 201
-
-@bp.get("/venues/<int:venue_id>")
-def venue_detail(venue_id):
-    conn = get_db()
-    venue = conn.execute("SELECT * FROM venue WHERE id = ?", (venue_id,)).fetchone()
-    if not venue:
-        return "Venue not found", 404
-    return f"""
-    <html>
-    <head><title>{venue['name']}</title></head>
-    <body>
-        <h1>{venue['name']}</h1>
-        <a href="/venues/{venue_id}/photos/">Photos</a>
-    </body>
-    </html>
-    """
