@@ -202,3 +202,84 @@ review did. The action carries over to Sprint 3.
 ### SM Sprint 3
 
 @PhunghoaAI  <!-- SM rotates each sprint; the PO (@thunopro) stays constant -->
+
+---
+
+## Sprint 3 - 05/10/2026 to 18/10/2026
+
+### Sprint goal
+
+A person who has never seen the app can complete every P0 story (US01-US06) through the
+interface, with real data from the database, and every broken business rule shows a
+clear message on screen.
+
+### Committed
+
+Agreed at Sprint 3 Planning (#63). Details and reasoning: `docs/backlog.md`.
+
+| Issue | Work | Points | Owner |
+|-------|------|--------|-------|
+| #64 | US02 User login: role routing, lockout and session timeout | 3 | @peng543 |
+| #65 | US01 Customer registration with email verification | 3 | @htngochan2802 |
+| #66 | US03 Search from fixed lists and narrowing while typing | 2 | @PhunghoaAI |
+| #67 | US04 Venue detail page with availability for a chosen date | 5 | @peng543 |
+| #68 | US05 Book a venue with per-segment pricing | 8 | @thunopro |
+| #69 | US06 Owner adds a venue and sees their venue list | 5 | @htngochan2802 |
+| #70 | docs/ui.md sections 1-3 | 3 | @lequangk2006-sys |
+| #71 | docs/ui.md section 4 and design.md update | 2 | @thunopro |
+| #72 | README first screen, SETUP.md test accounts and re-test | 1 | @PhunghoaAI |
+
+**Total committed: 32 points.** Chores #63 and #73 carry no points.
+
+### Result
+
+| Issue | Points | Status | PR | If not done, why |
+|-------|--------|--------|----|------------------|
+| #63 [Chore] Refine backlog | - | Done | #74 | |
+| #64 | 3 | Done | #76 | |
+| #65 | 3 | Done | #79 | |
+| #66 | 2 | Done | #77 | |
+| #67 | 5 | Done | #80 | |
+| #68 | 8 | Done | #75 | |
+| #69 | 5 | Done | #81 | |
+| #70 | 3 | Done | #83 | |
+| #71 | 2 | Done | #78 | |
+| #72 | 1 | Done | #82 | |
+| #73 [Chore] Sprint 3 wrap-up | - | Done | this PR | |
+
+**Completed: 32 points. Velocity: 32 points** (sum of the Points of every issue that is
+Done on the board; an issue that is not merged counts 0 and is labelled `carried-over`).
+Sprint 2 velocity was 22; Sprint 3 committed more because the P0 stories were already
+specified in Sprint 1 and the walking skeleton was in place.
+
+### Sprint Review
+
+- **What we demonstrated:** a clean clone following `docs/SETUP.md`; then, through the
+  interface only, searching for a venue, opening it, booking 19:00-21:00 across a peak
+  boundary (two price lines), registering and verifying a new account, and an owner adding
+  a venue. Rules broken on purpose: a 3-hour booking from 21:00, a price of `0`, an
+  unverified account trying to book.
+- **Feedback received:** No feedback from the instructor yet (Milestone 1 and Milestone 2 feedback have not been returned). Inside the team, PR reviews caught leftover merge-conflict markers in templates (#65), a duplicate route stub in `src/routes/owner.py` (#69), and checked how static requests interact with session timeout (#64) and how uploaded photo filenames are handled (#69); all issues were fixed before merge.
+- **Backlog changes as a result:** No new P0 issues added. Sprint 4 will pick up the P1 stories already in `docs/backlog.md`: US07 cancel a booking (#19), US08 booking history (#20), US09 owner blocks slots for maintenance (#22), and US10 owner views bookings (#23).
+
+### Retrospective
+
+Full notes in `docs/retro.md`.
+
+**Sprint 2 action checked:** Wednesday standup prompts were posted in the group chat each
+week of Sprint 3, and every Pull Request received a review with at least one specific
+question or change request pointed at a concrete line before approval.
+
+### Attendance
+
+| Member | Planning | Review | Retro |
+|--------|----------|--------|-------|
+| @thunopro | x | x | x |
+| @peng543 | x | x | x |
+| @PhunghoaAI | x | x | x |
+| @lequangk2006-sys | x | x | x |
+| @htngochan2802 | x | x | x |
+
+### SM Sprint 4
+
+@lequangk2006-sys
