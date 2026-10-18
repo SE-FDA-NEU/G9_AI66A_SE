@@ -44,3 +44,18 @@ review to carry at least one question or change request. Checked at the Sprint 2
 Wednesday standup prompt in the group chat every week of Sprint 3, and ensure every
 PR receives a review with at least one specific question or change request within 24 hours
 of opening. Checked at the Sprint 3 retrospective.
+
+---
+
+## Sprint 3 - 05/10/2026 to 18/10/2026
+
+**Velocity:** 32 points completed of 32 committed.
+
+| Keep | Stop | Try |
+|------|------|-----|
+| One issue per P0 story, each with its own tests - 88 tests by the end of the sprint | Waiting for the previous PR to merge before starting - #67, #68 and #69 queued behind each other | Start the next story on a branch from the open PR's branch, and rebase when it merges |
+| `BusinessRuleError` - one place that turns a broken rule into the message on screen | Writing error messages after the code - three messages were changed during review | Write the exact message in the issue before writing the code |
+
+**Action for Sprint 4 (owner: @lequangk2006-sys):** as the next Scrum Master, check on
+Wednesday of each week that every open PR has a reviewer who has replied, and reassign the
+review if not. Checked at the Sprint 4 retrospective.
