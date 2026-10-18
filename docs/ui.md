@@ -19,7 +19,39 @@ To run it on a new machine, follow [`SETUP.md`](SETUP.md).
 
 ## 1. P0 stories and status
 
-_Not written yet - owner @lequangk2006-sys, issue #70._
+Every P0 story from [`requirements.md`](requirements.md) section 4 is built and can be
+completed through the interface, starting from the home page - no URL has to be typed.
+Test accounts are in [`SETUP.md`](SETUP.md) section 6 (password `sanbong1` for all).
+
+| Story | Screen(s) | Route | Status | Issue |
+| ----- | --------- | ----- | ------ | ----- |
+| US01 Customer registration | Create an account, Verify your email | `/register`, `/verify` | partly works - no email server yet, so the verification link is printed in the terminal and shown on screen instead of being emailed (section 4) | #65 |
+| US02 User login | Sign in, then My page / My venues / Administration by role | `/login` → `/dashboard`, `/owner/venues`, `/admin` | works | #64 |
+| US03 Customer searches for venues | Find a venue | `/`, `/search` | works | #66 |
+| US04 Customer views venue details and availability | Venue detail | `/venues/{id}` | works - seeded venues have no photos yet; photos appear once an owner uploads one (US06) | #67 |
+| US05 Customer books a venue | Book, Booking confirmed, My page | `/booking/{venueId}`, `/bookings/{code}`, `/dashboard` | works | #68 |
+| US06 Venue owner adds a new venue | My venues, Add a venue | `/owner/venues`, `/owner/venues/new` | works | #69 |
+
+**Where each story starts** (also on the first screen of the README):
+
+| Story | Start here | Then |
+| ----- | ---------- | ---- |
+| US03 | Home page `/` | choose a sport and an area, press **Search**, or type 3 letters in *Name or sport contains* |
+| US04 | a venue name in the search results | pick a date above the free-hour grid |
+| US05 | a green **free - book** hour on a venue page | choose the length, check the price lines, press **Confirm booking** |
+| US01 | **Register** in the top bar | after creating the account, press **Verify my email** in the blue box |
+| US02 | **Sign in** in the top bar | a customer lands on My page, an owner on My venues |
+| US06 | sign in as an owner → **Add a venue** | fill the form, press **Add venue** |
+
+### Screen flow (updated from M1)
+
+![Screen flow of the P0 stories as built in Sprint 3](images/ui/flow-p0.png)
+
+*Figure 1 - The P0 part of the M1 flow diagram
+([`images/flow-diagram.png`](images/flow-diagram.png)) as it is built now. New since M1:
+`/verify` (US01, BR4), `/bookings/{code}` (the confirmation a booking leads to, US05), and
+the dashed arrow - a guest who clicks a free hour is sent to `/login` and comes back to the
+same booking page after signing in.*
 
 ---
 
