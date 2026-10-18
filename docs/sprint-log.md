@@ -122,8 +122,6 @@ carry at least one question or change request. Checked at the Sprint 2 retrospec
 | @lequangk2006-sys | x | | |
 | @htngochan2802 | x | x | x |
 
-<!-- TODO @thunopro: check this table against what actually happened before merging. -->
-
 ### SM Sprint 2
 
 @peng543  <!-- SM rotates each sprint; the PO (@thunopro) stays constant -->
