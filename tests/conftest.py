@@ -29,6 +29,6 @@ def client(db, tmp_path):
 def login(client):
     """login("minh@example.com") signs in through the real /login form.
     Every seeded account has the password sanbong1."""
-    def sign_in(email, password="sanbong1"):
-        return client.post("/login", data={"email": email, "password": password})
+    def sign_in(email, password=None):
+        return client.post("/login", data={"email": email, "password": password or "sanbong1"})
     return sign_in

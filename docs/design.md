@@ -30,11 +30,11 @@ clone and run it in fifteen minutes on a machine we have never seen.
 | Component       | Technology                                                                                | Where it runs           | Responsibility                                                                                                                                             |
 | --------------- | ----------------------------------------------------------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Browser         | Any modern browser                                                                        | User's phone or laptop  | Renders HTML pages and submits forms. No business logic.                                                                                                   |
-| Flask web app   | Python 3.11+, Flask 3, Jinja2 templates - `src/app.py`                                    | Host machine, port 5000 | Routes, form parsing, session cookie (BR8), role check before every owner/admin route (BR7, BR14), renders pages, serves the JSON API under `/api`.        |
+| Flask web app   | Python 3.11+, Flask 3, Jinja2 templates - `src/app.py`, `src/routes/*.py`                 | Host machine, port 5000 | Routes, form parsing, session cookie (BR8), role check before every owner/admin route (BR7, BR14), renders pages, serves the JSON API under `/api`.        |
 | Service layer   | Plain Python modules - `src/auth.py`, `src/venues.py`, `src/booking.py`, `src/pricing.py` | Same process            | Every business rule BR1-BR19 lives here, not in routes and not in templates. Routes call it; it calls the database.                                        |
 | SQLite database | SQLite 3 via the standard `sqlite3` module - `data/venues.db`                             | A file on the host      | Stores the 7 tables of section 2. `CHECK` and `UNIQUE` constraints are the last line of defence for BR1, BR3, BR11, BR13, BR18.                            |
-| Seed script     | `src/init_db.py` + `data/venues.csv`                                                      | Run once by hand        | Creates every table and inserts 24 venues, 6 users, 5 bookings.                                                                                            |
-| Email service   | SMTP (external)                                                                           | Outside our system      | Sends the verification link (BR4). **Sprint 2: a stub that prints the link to the console;** a real SMTP account is configured in Sprint 3 through `.env`. |
+| Seed script     | `src/init_db.py` + `data/venues.csv`                                                      | Run once by hand        | Creates every table and inserts 24 venues, 7 users, 5 bookings.                                                               |
+| Email service   | SMTP (external)                                                                           | Outside our system      | Sends the verification link (BR4). **Still a stub in Sprint 3:** the link is printed to the console and shown on screen while `SHOW_VERIFICATION_LINK=1` (see `ui.md` section 4). |
 
 **What travels along each arrow**
 
@@ -48,10 +48,12 @@ clone and run it in fifteen minutes on a machine we have never seen.
 | Seed script → SQLite          | `CREATE TABLE` from `src/schema.py`, then `INSERT` rows read from `data/venues.csv`                                |
 | Service layer → Email service | An SMTP message containing the verification link (BR4)                                                             |
 
-**Sprint 2 status.** Browser, Flask app, SQLite and seed script exist and are connected
-(section 4). The service-layer modules are created one per story from Sprint 3; the only
-query in the walking skeleton lives in `src/app.py` and moves to `src/venues.py` when
-US03 is implemented.
+**Sprint 3 status.** Every component except the real email service is built. Pages live
+in `src/routes/` - one module per group of screens, each a Flask Blueprint that
+`create_app()` registers automatically - and every business rule lives in the service
+modules `src/auth.py`, `src/venues.py`, `src/booking.py` and `src/pricing.py`. A broken
+rule is raised as `BusinessRuleError` (`src/errors.py`); a page shows its message next to
+the form, and the JSON API returns it with the code from section 3.
 
 ---
 
@@ -59,7 +61,7 @@ US03 is implemented.
 
 ![Entity-relationship diagram](images/erd.png)
 
-Seven tables. Types are SQLite storage classes; `DATETIME` columns are stored as `TEXT`
+Eight tables. Types are SQLite storage classes; `DATETIME` columns are stored as `TEXT`
 in the form `YYYY-MM-DD HH:MM`, and money is always an `INTEGER` number of VND - never a
 float, so 250,000 + 150,000 is exactly 400,000 (BR12). The DDL is
 [`src/schema.py`](../src/schema.py).
@@ -68,6 +70,7 @@ float, so 250,000 + 150,000 is exactly 400,000 (BR12). The DDL is
 | -------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `user`         | Every account: customer, venue owner or administrator | `id` INTEGER · `email` TEXT · `password_hash` TEXT · `full_name` TEXT · `phone` TEXT · `role` TEXT · `email_verified_at` DATETIME NULL · `failed_login_count` INTEGER · `locked_until` DATETIME NULL · `created_at` DATETIME                    | `id` | -                                                    | `email` UNIQUE, case-insensitive · **BR1**. `phone` CHECK 10 digits starting with 0 · **BR3**. `email_verified_at` NULL = cannot book · **BR4**. `failed_login_count`, `locked_until` · **BR5**. `role` CHECK IN (customer, owner, admin) · **BR7**                                                        |
 | `venue`        | A pitch or court that can be booked                   | `id` INTEGER · `owner_id` INTEGER · `name` TEXT · `sport` TEXT · `area` TEXT · `address` TEXT · `hourly_price` INTEGER · `open_hour` INTEGER · `close_hour` INTEGER · `active` BOOL · `created_at` DATETIME                                     | `id` | `owner_id` → `user.id`                               | `name` CHECK 3-100 characters, `hourly_price` CHECK 1,000-100,000,000 · **BR13**. `sport` CHECK IN a fixed list so search can match exactly · **BR9**. `owner_id` is what "owners act only on their own venues" is checked against · **BR14**                                                              |
+| `venue_photo`  | One photo in a venue's gallery (US04, US06)           | `id` INTEGER · `venue_id` INTEGER · `file_name` TEXT · `created_at` DATETIME                                                                                                                                                                    | `id` | `venue_id` → `venue.id`                              | `file_name` UNIQUE - the file lives in `data/uploads/` (git-ignored) under a random name, never the name the browser sent. A photo is served only under its own venue's URL, so a gallery never shows another venue's photo (US04 criterion 3). Added in Sprint 3 (`ui.md` section 4) |
 | `pricing_rule` | A peak-hour price for one venue on one weekday        | `id` INTEGER · `venue_id` INTEGER · `weekday` INTEGER · `start_hour` INTEGER · `end_hour` INTEGER · `price_per_hour` INTEGER                                                                                                                    | `id` | `venue_id` → `venue.id`                              | CHECK `start_hour < end_hour`, half-open `[start, end)` · **BR12**. "Rules must not overlap" is checked in `src/pricing.py` - SQLite has no range-exclusion constraint · **BR12**                                                                                                                          |
 | `blocked_slot` | One hour an owner has closed for maintenance          | `id` INTEGER · `venue_id` INTEGER · `slot_start` DATETIME · `reason` TEXT · `created_at` DATETIME                                                                                                                                               | `id` | `venue_id` → `venue.id`                              | UNIQUE (`venue_id`, `slot_start`); a blocked hour is excluded from search and booking · **BR16**. Blocking an hour that has a `booking_slot` row is refused in `src/booking.py` · **BR17**                                                                                                                 |
 | `booking`      | One reservation by one customer                       | `id` INTEGER · `code` TEXT · `customer_id` INTEGER · `venue_id` INTEGER · `start_at` DATETIME · `end_at` DATETIME · `total_price` INTEGER · `status` TEXT · `refund_amount` INTEGER NULL · `created_at` DATETIME · `cancelled_at` DATETIME NULL | `id` | `customer_id` → `user.id`, `venue_id` → `venue.id`   | `code` UNIQUE (e.g. `BK-000148`). `total_price` is written once at confirmation and never recalculated · **BR12**. `refund_amount` records the 100% / 50% tier · **BR15**. `customer_id` is checked on every read · **BR14**                                                                               |
@@ -84,6 +87,7 @@ float, so 250,000 + 150,000 is exactly 400,000 (BR12). The DDL is
 | `booking` holds `booking_slot`       | 1 - 1..\*    | A booking always covers at least one hour                       |
 | `venue` hour taken by `booking_slot` | 1 - 0..\*    |                                                                 |
 | `venue` has `pricing_rule`           | 1 - 0..\*    | No rule = standard `hourly_price` all day                       |
+| `venue` has `venue_photo`            | 1 - 0..\*    | A venue may have no photo yet                                   |
 | `venue` has `blocked_slot`           | 1 - 0..\*    |                                                                 |
 | `booking` is reviewed by `review`    | 1 - 0..1     | At most one review per booking (BR18)                           |
 
@@ -96,8 +100,10 @@ query), BR12 overlap of pricing rules, BR15 refund tier, BR17 (`src/booking.py`)
 
 ## 3. API design
 
-Pages are rendered by Flask; each page's data comes from, or is submitted to, the
-endpoints below. Errors return JSON `{"error": "<message>", "rule": "BR<n>"}` with the
+Pages are rendered by Flask. Since Sprint 3 a form is posted to its page's own route
+(for example `POST /register`), which calls the same service function as the endpoint
+below and shows the error next to the field; the free-hour grid on `/venues/{id}` calls
+endpoint 5 from JavaScript. Which page uses which endpoint: `ui.md` section 2. Errors return JSON `{"error": "<message>", "rule": "BR<n>"}` with the
 code listed; the message is exactly the sentence in the acceptance criterion.
 
 **Authentication:** a signed session cookie set by `POST /api/auth/login`. An endpoint
@@ -120,8 +126,11 @@ marked _customer_, _owner_ or _any user_ returns **401** without a valid session
 | 12  | GET    | `/api/owner/bookings`                  | owner    | `date` (query)                                                                | **200** bookings across the owner's venues for that day                                                     | **403** (BR14) · **400** date malformed                                                                                                                                                    | US10 #23 |
 | 13  | PUT    | `/api/owner/venues/{id}/pricing`       | owner    | list of `{weekday, start_hour, end_hour, price_per_hour}`                     | **200** rules saved                                                                                         | **403** (BR14) · **409** rules overlap (BR12) · **422** price out of range (BR13)                                                                                                          | US11 #24 |
 | 14  | POST   | `/api/bookings/{code}/review`          | customer | `rating`, `comment`                                                           | **201** `{review_id}`; venue average recalculated                                                           | **403** not your booking (BR14) · **409** already reviewed (BR18) · **422** booking not completed, rating not 1-5, comment > 1,000 characters (BR18)                                       | US12 #25 |
+| 15  | POST   | `/api/auth/logout`                     | any user | -                                                                             | **204** session ended                                                                                       | -                                                                                                                                                                                          | US02 #15 |
+| 16  | GET    | `/api/owner/venues`                    | owner    | -                                                                             | **200** the owner's own venues, newest first, with `photo_count`                                            | **401** not signed in · **403** "You do not have permission to access this page" (BR14)                                                                                                    | US06 #21 |
 
-Every P0 story (US01-US06) has at least one endpoint (rows 1-7). Rows 8-14 cover the P1
+Rows 15 and 16 were added in Sprint 3 (`ui.md` section 4). Every P0 story (US01-US06) has
+at least one endpoint (rows 1-7, 15, 16). Rows 8-14 cover the P1
 and P2 stories so Sprint 3 does not have to redesign the API.
 
 ---

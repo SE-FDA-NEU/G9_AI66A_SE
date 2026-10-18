@@ -1,0 +1,38 @@
+@startuml
+left to right direction
+
+' Khai báo các người que (Actors)
+actor "Customer" as cust
+actor "Venue Owner" as owner
+
+' Khai báo hệ thống bên ngoài (vẫn dùng kí hiệu actor hoặc đóng khung)
+actor "Payment Gateway" as pg <<System>>
+
+' Đóng khung hệ thống của chúng ta
+rectangle "Sports Venue Booking System" {
+  usecase "Register & Login" as UC1
+  usecase "Search Venues" as UC2
+  usecase "Book Venue" as UC3
+  usecase "Process Payment" as UC4
+  usecase "Cancel Booking" as UC5
+  usecase "Manage Venue Schedule" as UC6
+  usecase "View Bookings" as UC7
+}
+
+' Nối mũi tên từ người que vào các tính năng
+cust -- UC1
+owner -- UC1
+
+cust -- UC2
+cust -- UC3
+cust -- UC4
+cust -- UC5
+cust -- UC7
+
+owner -- UC6
+owner -- UC7
+
+' Nối tính năng thanh toán sang hệ thống bên ngoài
+UC4 -- pg
+
+@enduml

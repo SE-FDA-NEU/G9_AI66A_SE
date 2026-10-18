@@ -40,12 +40,12 @@ match section 2.
 
 | Story | Screen | Endpoint | Table |
 |---|---|---|---|
-| US01 Customer registration (#14) | `/register` | `POST /api/auth/register`<br>`GET /api/auth/verify` | `user` |
-| US02 User login (#15) | `/login` | `POST /api/auth/login` | `user` |
+| US01 Customer registration (#14) | `/register`, `/verify` | `POST /api/auth/register`<br>`GET /api/auth/verify` | `user` |
+| US02 User login (#15) | `/login` | `POST /api/auth/login`<br>`POST /api/auth/logout` | `user` |
 | US03 Customer searches for venues (#16) | `/search` | `GET /api/venues` | `venue` |
-| US04 Customer views venue details and availability (#17) | `/venues/{id}` | `GET /api/venues/{id}` | `venue`, `booking_slot`, `blocked_slot` |
-| US05 Customer books a venue (#18) | `/booking/{venueId}`<br>`/bookings/{code}` | `POST /api/bookings` | `booking`, `booking_slot`, `user`, `venue`, `pricing_rule`, `blocked_slot` |
-| US06 Venue owner adds a new venue (#21) | `/owner/venues/new` | `POST /api/owner/venues` | `venue`, `user` |
+| US04 Customer views venue details and availability (#17) | `/venues/{id}` | `GET /api/venues/{id}` | `venue`, `venue_photo`, `booking_slot`, `blocked_slot` |
+| US05 Customer books a venue (#18) | `/booking/{venueId}`, `/bookings/{code}` | `POST /api/bookings` | `booking`, `booking_slot`, `user`, `venue`, `pricing_rule`, `blocked_slot` |
+| US06 Venue owner adds a new venue (#21) | `/owner/venues`, `/owner/venues/new` | `GET /api/owner/venues`<br>`POST /api/owner/venues` | `venue`, `venue_photo`, `user` |
 
 ## Business rules
 
