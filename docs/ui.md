@@ -261,7 +261,53 @@ A customer who opens this address directly gets the 403 page instead:
 
 ## 3. Error messages
 
-_Not written yet - owner @lequangk2006-sys, issue #70._
+Every message below is the exact sentence on screen, taken from the code (`src/auth.py`,
+`src/venues.py`, `src/booking.py`, `src/guards.py`). The API code is the one in the
+[`design.md`](design.md) section 3 table; the JSON API returns the same sentence as
+`{"error": "<message>", "rule": "BR<n>"}`. No screen ever shows a bare code, "Something
+went wrong" or a stack trace. Each message says what happened, why, and what to do next -
+when the "why" is obvious from the field it sits next to, the message is short.
+
+| API error code | Business rule | The exact message the user sees | Where |
+| -------------- | ------------- | ------------------------------- | ----- |
+| 409 | BR1 | "This email is already in use" | `/register`, next to Email |
+| 400 | BR2 | "Password must be at least 8 characters" | `/register`, next to Password |
+| 400 | BR2 | "Password must contain at least one letter and one digit" | `/register` |
+| 400 | BR3 | "Phone number must be 10 digits" | `/register`, next to Phone |
+| 400 | BR3 | "Phone number must start with 0" | `/register` |
+| 410 | BR4 | "This verification link has expired - links last 24 hours. Sign in and press "Send a new link" to get a fresh one." | `/verify` |
+| 403 | BR4 | "Please verify your email before booking" | `/booking/{venueId}`, `/dashboard` (with a **Send a new link** button) |
+| 401 | BR6 | "Email or password is incorrect" - the same for an unknown email and a wrong password | `/login` |
+| 423 | BR5 | "Account temporarily locked. Try again in 15 minutes" | `/login`, from the 5th wrong password in a row |
+| 401 | BR8 | "Your session has expired" | `/login`, after 30 minutes without activity |
+| 400 | BR9 | "Please choose a sport from the list" / "Please choose an area from the list" | `/search`, `/owner/venues/new` |
+| 400 | BR10 | "Please choose today or a later date." | venue page grid (error state), `/booking/{venueId}` |
+| 409 | BR11 | "This time slot is no longer available" | `/booking/{venueId}`, when another customer confirmed the same hour first |
+| 422 | BR11 | "A booking lasts 1 to 4 hours. Choose a shorter booking." | `/booking/{venueId}` |
+| 422 | BR11 | "Lan Anh Badminton Court closes at 22:00, so a booking starting at 21:00 can last at most 1 hour(s)." | `/booking/{venueId}` |
+| 422 | BR16 | "Thong Nhat Football Pitch is closed for maintenance at 07:00 on 14/10/2026. Choose another time." | `/booking/{venueId}` |
+| 422 | BR13 | "Please enter the venue name" / "Venue name must be 3 to 100 characters" | `/owner/venues/new`, next to Venue name |
+| 422 | BR13 | "Hourly price must be at least 1,000 VND" | `/owner/venues/new`, next to Hourly price |
+| 403 | BR14 | "You do not have permission to access this page" | a customer opening `/owner/venues/new` |
+| 403 | BR14 | "You do not have permission to view this booking" | `/bookings/{code}` of another customer |
+
+Not tied to a business rule, but written the same way: an unknown address gives *"We could
+not find that page. Check the address, or start again from the search page."* (404), and a
+photo over 5 MB gives *"The photo is larger than 5 MB. Choose a smaller photo and add the
+venue again."* (413).
+
+**Rules to break on purpose** (what the instructor can try at the Sprint 3 Review):
+
+| Try this | You see |
+| -------- | ------- |
+| Book Lan Anh Badminton Court at 21:00 for 3 hours | "... closes at 22:00, so a booking starting at 21:00 can last at most 1 hour(s)." |
+| Sign in as `new.customer@example.com` and try to book | "Please verify your email before booking" |
+| Register with the email `minh@example.com` | "This email is already in use" |
+| As `lan.owner@example.com`, add a venue with the price `0` | "Hourly price must be at least 1,000 VND" |
+| Enter a wrong password 5 times for `trang@example.com` | "Account temporarily locked. Try again in 15 minutes" |
+
+![Booking that breaks BR11](images/ui/booking-error.png)
+![An unverified customer trying to book](images/ui/booking-unverified.png)
 
 ---
 
