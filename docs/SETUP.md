@@ -135,7 +135,22 @@ python src/app.py
 Reload the page: **23 venue(s) found**. Put the line back (or run
 `git checkout data/venues.csv`) and run `python src/init_db.py` again to return to 24.
 
-Optional - run the automated tests: `pytest` → `62 passed`.
+## 6. Run the automated test suite (Milestone 4)
+
+Milestone 4 introduces automated tests for every P0 story. You do **not** need to run the Flask web server or open a browser to run the tests; tests execute against an isolated temporary database fixture in seconds.
+
+```bash
+# Run all tests with standard summary
+python -m pytest
+
+# Or run with verbose test case names (as shown in docs/testing.md)
+python -m pytest -v
+```
+
+Expected output:
+```text
+============================= 89 passed in ~22s =============================
+```
 
 ## 7. Test accounts & short P0 walk-through
 

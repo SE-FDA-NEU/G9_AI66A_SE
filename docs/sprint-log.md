@@ -281,3 +281,65 @@ question or change request pointed at a concrete line before approval.
 ### SM Sprint 4
 
 @lequangk2006-sys
+
+---
+
+## Sprint 4 - 19/10/2026 to 02/11/2026
+
+### Sprint goal
+
+Milestone 4: Every P0 user story is checked by automated tests running under pytest in seconds. Boundary and error cases are verified across all layers, and testing documentation (`docs/testing.md`) provides complete traceability.
+
+### Committed
+
+Agreed at Sprint 4 Planning (#85).
+
+| Issue | Work | Points | Owner |
+|---|---|---|---|
+| #86 | [Test] Add comprehensive P0 test suites for US01 (Registration) & US02 (Login) | 5 | @htngochan2802 |
+| #87 | [Test] Add comprehensive P0 test suites for US03 (Search) & US04 (Venue Details & Availability) | 5 | @peng543 |
+| #88 | [Test] Fix date-dependent test regression and add boundary tests for US05 (Booking) | 5 | @thunopro |
+| #89 | [Test] Add comprehensive P0 test suites for US06 (Owner Venue Management) | 5 | @PhunghoaAI |
+| #90 | [Docs] Write docs/testing.md (Sections 1-4) and update docs/SETUP.md | 5 | @lequangk2006-sys |
+
+**Total committed: 25 points.** Chores #85 and #91 carry no points.
+
+### Result
+
+| Issue | Points | Status | PR | If not done, why |
+|---|---|---|---|---|
+| #85 [Chore] Refine backlog for Sprint 4 | - | Done | - | PO backlog refinement |
+| #86 | 5 | Done | #93 | |
+| #87 | 5 | Done | #94 | |
+| #88 | 5 | Done | #92 | |
+| #89 | 5 | Done | #95 | |
+| #90 | 5 | Done | #96 | |
+| #91 [Chore] Sprint 4 wrap-up | - | Done | - | SM wrap-up |
+
+**Completed: 25 points. Velocity: 25 points.**
+
+### Sprint Review
+
+- **What we demonstrated:** Running `python -m pytest -v` on a clean machine; all 89 test cases passing with zero failures. Demonstration of boundary condition assertions (duration 0h, 1h, 4h, 5h; price 999 vs 1000; lockout on exactly 5th failure).
+- **Feedback received:** Automated tests surfaced a date-dependent flaky test in `test_booking.py` caused by relative seed calculation, which was resolved and protected with an exact slot assertion.
+- **Backlog changes:** All P0 test suites completed. Sprint 5 will focus on remaining P1/P2 stories and final deployment preparations.
+
+### Retrospective
+
+- **What went well:** Automated tests enabled fast feedback loop during UI and schema adjustments. Test fixtures using temporary databases completely isolated test execution from developer state.
+- **Action for Sprint 5:** Maintain pre-commit test runs before pushing feature branches to prevent CI test breakages. Owner: @lequangk2006-sys.
+
+### Attendance
+
+| Member | Planning | Review | Retro |
+|---|---|---|---|
+| @thunopro | x | x | x |
+| @peng543 | x | x | x |
+| @PhunghoaAI | x | x | x |
+| @lequangk2006-sys | x | x | x |
+| @htngochan2802 | x | x | x |
+
+### SM Sprint 5
+
+@htngochan2802
+
