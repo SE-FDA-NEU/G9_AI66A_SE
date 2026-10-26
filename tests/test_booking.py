@@ -135,7 +135,7 @@ def test_unique_constraint_catches_what_the_recheck_misses(db, monkeypatch):
         book(db, "minh@example.com", 18, 1)
     assert e.value.status == 409
     with connect(db) as conn:
-        assert conn.execute("SELECT COUNT(*) FROM booking WHERE start_at LIKE '2026-10-13%'"
+        assert conn.execute("SELECT COUNT(*) FROM booking WHERE start_at = '2026-10-13 18:00'"
                             ).fetchone()[0] == 1
 
 
@@ -145,6 +145,25 @@ def test_only_start_times_inside_opening_hours_are_offered(db):
     with connect(db) as conn:
         hours = svc.free_hours(conn, svc.get_venue(conn, 1), date(2026, 10, 14), NOW)
     assert hours == list(range(6, 22))       # 06:00 ... 21:00
+
+
+def test_tc13_booking_duration_boundaries(db):
+    """TC-13, TC-14, TC-15: BR11 duration boundary check (0, 1, 4, 5 hours)."""
+    # Boundary: 0 hours (refused)
+    with pytest.raises(BusinessRuleError, match="1 to 4 consecutive hours"):
+        book(db, "minh@example.com", 8, 0)
+
+    # Boundary: 1 hour (minimum valid - accepted) - TC-13
+    b1 = book(db, "minh@example.com", 8, 1)
+    assert b1["code"].startswith("BK-")
+
+    # Boundary: 4 hours (maximum valid - accepted) - TC-14
+    b4 = book(db, "minh@example.com", 10, 4)
+    assert b4["code"].startswith("BK-")
+
+    # Boundary: 5 hours (just above limit - refused) - TC-15
+    with pytest.raises(BusinessRuleError, match="1 to 4 consecutive hours"):
+        book(db, "minh@example.com", 14, 5)
 
 
 def test_more_than_four_hours_is_refused(db):
