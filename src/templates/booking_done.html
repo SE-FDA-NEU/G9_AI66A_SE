@@ -4,50 +4,397 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Booking {{ booking.code if booking else "" }} - Sports Venue Booking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-  body { font-family: system-ui, sans-serif; margin: 0; background: #f6f7f9; color: #1d2330; }
-  header { background: #152d53; color: #fff; padding: 14px 32px; }
-  header h1 { margin: 0; font-size: 20px; }
-  main { max-width: 760px; margin: 24px auto; padding: 0 16px; }
-  .card { background: #fff; padding: 16px; border: 1px solid #dde1e7; border-radius: 8px; margin-top: 16px; }
-  .code { font-size: 28px; font-weight: 700; letter-spacing: 1px; }
-  .error { margin-top: 16px; padding: 12px 16px; background: #fdecea; border: 1px solid #f5b5ad;
-           color: #8a1c10; border-radius: 6px; font-weight: 600; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #e5e8ec; }
-  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
-  tr.total td { font-weight: 700; border-bottom: 0; }
-  .muted { color: #667; font-size: 13px; }
+  :root {
+    --brand-dark: #0f172a;
+    --brand-blue: #0284c7;
+    --brand-gradient: linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%);
+    --accent-emerald: #10b981;
+    --bg-page: #f8fafc;
+    --border-soft: #e2e8f0;
+    --text-primary: #0f172a;
+    --text-muted: #64748b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    margin: 0;
+    background: var(--bg-page);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(12px);
+    color: #fff;
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  header h1 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  header h1::before {
+    content: "⚡";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    background: var(--brand-gradient);
+    border-radius: 6px;
+    font-size: 14px;
+  }
+  main {
+    max-width: 780px;
+    width: 100%;
+    margin: 36px auto;
+    padding: 0 20px;
+    flex: 1;
+  }
+  .ticket-card {
+    background: #ffffff;
+    border: 1px solid var(--border-soft);
+    border-radius: 20px;
+    box-shadow: 0 16px 36px -8px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+    margin-top: 16px;
+    position: relative;
+  }
+  .card-top-banner {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #ffffff;
+    padding: 24px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    border-bottom: 2px dashed #334155;
+    position: relative;
+  }
+  .card-top-banner::before, .card-top-banner::after {
+    content: "";
+    position: absolute;
+    bottom: -12px;
+    width: 24px;
+    height: 24px;
+    background: var(--bg-page);
+    border-radius: 50%;
+  }
+  .card-top-banner::before { left: -12px; }
+  .card-top-banner::after { right: -12px; }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #34d399;
+    border-radius: 9999px;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .ticket-body {
+    padding: 32px 30px;
+  }
+  .code-section {
+    background: #f8fafc;
+    border: 1.5px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: var(--brand-blue);
+    margin: 4px 0 0;
+  }
+  .btn-copy {
+    background: #ffffff;
+    border: 1px solid var(--border-soft);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    color: var(--text-primary);
+    transition: all 0.15s ease;
+  }
+  .btn-copy:hover {
+    background: #f1f5f9;
+  }
+  .venue-info {
+    margin-bottom: 24px;
+  }
+  .venue-info h2 {
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0 0 6px;
+    color: var(--text-primary);
+  }
+  .venue-info p {
+    margin: 4px 0;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+  .info-highlight {
+    color: #0f172a;
+    font-weight: 600;
+  }
+  .error {
+    margin-top: 16px;
+    padding: 16px 20px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 14px;
+    margin-top: 16px;
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  th, td {
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  th {
+    background: #f8fafc;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+  }
+  td.num, th.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  tr.total td {
+    font-weight: 800;
+    font-size: 16px;
+    background: #f8fafc;
+    color: #0f172a;
+    border-bottom: 0;
+  }
+  .muted {
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  .ticket-footer-actions {
+    margin-top: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .btn-back-search {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    color: var(--brand-blue);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .btn-back-search:hover {
+    text-decoration: underline;
+  }
+  .barcode-sim {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #f1f5f9;
+    text-align: center;
+  }
+  .barcode-bars {
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 4px;
+    font-weight: 300;
+    font-size: 20px;
+    color: #94a3b8;
+    user-select: none;
+  }
 </style>
 </head>
 <body>
-<header><h1>Sports Venue Booking &middot; Booking</h1></header>
+<header>
+  <h1>Sports Venue Booking &middot; Booking</h1>
+  <div style="font-size:13px; color:#cbd5e1; font-weight:600;">E-Reservation Voucher</div>
+</header>
 <main>
 {% if not booking %}
   <div class="error" role="alert">{{ error }}</div>
 {% else %}
-  <div class="card">
-    <p class="muted">Booking code</p>
-    <p class="code">{{ booking.code }}</p>
-    <p><strong>{{ booking.venue_name }}</strong> &middot; {{ booking.address }}</p>
-    <p>{{ booking.start_at[8:10] }}/{{ booking.start_at[5:7] }}/{{ booking.start_at[:4] }},
-       {{ booking.start_at[11:] }}&ndash;{{ booking.end_at[11:] }} &middot; status: {{ booking.status }}</p>
-    <table>
-      <thead><tr><th>Time</th><th class="num">Hours</th><th class="num">Price / hour (VND)</th>
-        <th class="num">Amount (VND)</th></tr></thead>
-      <tbody>
-      {% for s in segments %}
-        <tr><td>{{ s['from'] }}&ndash;{{ s['to'] }}</td><td class="num">{{ s.hours }}</td>
-          <td class="num">{{ "{:,}".format(s.price_per_hour) }}</td>
-          <td class="num">{{ "{:,}".format(s.price) }}</td></tr>
-      {% endfor %}
-        <tr class="total"><td colspan="3">Total</td>
-          <td class="num">{{ "{:,}".format(booking.total_price) }}</td></tr>
-      </tbody>
-    </table>
+  <div class="ticket-card card">
+    <div class="card-top-banner">
+      <div>
+        <span class="muted" style="color:#94a3b8; text-transform:uppercase; font-size:12px; letter-spacing:0.05em;">Reservation Confirmed</span>
+        <div style="font-size:20px; font-weight:800; margin-top:2px;">Match Pass #{{ booking.code }}</div>
+      </div>
+      <div class="status-badge">
+        <span>●</span> Confirmed ({{ booking.status }})
+      </div>
+    </div>
+
+    <div class="ticket-body">
+      <div class="code-section">
+        <div>
+          <p class="muted" style="margin:0;">Official Booking Reference Code</p>
+          <p class="code" id="bookingCode">{{ booking.code }}</p>
+        </div>
+        <button class="btn-copy" onclick="copyCode()">Copy Code</button>
+      </div>
+
+      <div class="venue-info">
+        <p class="muted" style="margin:0 0 4px;">Venue &amp; Location</p>
+        <p><strong>{{ booking.venue_name }}</strong> &middot; {{ booking.address }}</p>
+        <p class="info-highlight">{{ booking.start_at[8:10] }}/{{ booking.start_at[5:7] }}/{{ booking.start_at[:4] }},
+           {{ booking.start_at[11:] }}&ndash;{{ booking.end_at[11:] }} &middot; status: {{ booking.status }}</p>
+      </div>
+
+      <p class="muted" style="margin: 20px 0 8px; font-weight:700;">Price Breakdown (Itemized Hours)</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th class="num">Hours</th>
+            <th class="num">Price / hour (VND)</th>
+            <th class="num">Amount (VND)</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for s in segments %}
+          <tr>
+            <td>{{ s['from'] }}&ndash;{{ s['to'] }}</td>
+            <td class="num">{{ s.hours }}</td>
+            <td class="num">{{ "{:,}".format(s.price_per_hour) }}</td>
+            <td class="num">{{ "{:,}".format(s.price) }}</td>
+          </tr>
+        {% endfor %}
+          <tr class="total">
+            <td colspan="3">Total</td>
+            <td class="num">{{ "{:,}".format(booking.total_price) }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="barcode-sim">
+        <div class="barcode-bars">||||| | |||| ||| | || ||||| || ||||</div>
+        <div class="muted" style="margin-top:6px; font-size:12px;">Present this digital confirmation voucher or your booking code upon court arrival</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ticket-footer-actions" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+    <p style="margin:0;"><a class="btn-back-search" href="/search">&larr; Back to search</a></p>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <button type="button" onclick="openQrModal()" class="button" style="background: linear-gradient(135deg, #0284c7, #0369a1); font-weight:700; display:inline-flex; align-items:center; gap:6px; padding:8px 14px; font-size:13px;">
+        💳 Thanh toán VietQR
+      </button>
+      <a href="javascript:window.print()" class="muted" style="text-decoration:none; font-weight:600;">🖨️ Print receipt</a>
+    </div>
+  </div>
+
+  <!-- VietQR Modal -->
+  <div id="qrModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.7); backdrop-filter:blur(6px); z-index:9999; justify-content:center; align-items:center; padding:16px;">
+    <div style="background:#fff; border-radius:16px; max-width:440px; width:100%; padding:24px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25); position:relative; text-align:center;">
+      <button type="button" onclick="closeQrModal()" style="position:absolute; top:16px; right:16px; background:#f1f5f9; border:0; width:32px; height:32px; border-radius:50%; font-weight:700; cursor:pointer;">✕</button>
+      
+      <div style="font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; color:#0284c7; margin-bottom:4px;">Cổng thanh toán tự động</div>
+      <h3 style="margin:0 0 16px; font-size:20px; font-weight:800;">Quét mã VietQR Napas247</h3>
+
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px; display:inline-block; margin-bottom:16px;">
+        <img src="https://img.vietqr.io/image/970422-0901234567-compact2.png?amount={{ booking.total_price }}&addInfo={{ booking.code }}&accountName=SAN%20BONG" 
+             alt="VietQR Code" style="width:260px; height:auto; display:block; border-radius:8px;">
+      </div>
+
+      <div style="text-align:left; background:#f8fafc; padding:12px 16px; border-radius:8px; font-size:13px; margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+          <span class="muted">Ngân hàng:</span>
+          <strong>MB Bank (Quân Đội)</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+          <span class="muted">Số tài khoản:</span>
+          <strong style="font-family:'JetBrains Mono', monospace;">0901234567</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+          <span class="muted">Số tiền:</span>
+          <strong style="color:#0284c7; font-size:15px;">{{ "{:,}".format(booking.total_price) }} VND</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <span class="muted">Nội dung CK:</span>
+          <strong style="font-family:'JetBrains Mono', monospace; color:#dc2626;">{{ booking.code }}</strong>
+        </div>
+      </div>
+
+      <button type="button" onclick="confirmPaymentSim()" id="btnConfirmPay" class="button" style="width:100%; font-weight:700; background:#10b981; padding:12px;">
+        ✓ Tôi đã chuyển khoản xong
+      </button>
+      <div id="paySuccessMsg" style="display:none; color:#15803d; font-weight:700; font-size:14px; margin-top:12px;">
+        🎉 Đã ghi nhận thanh toán thành công cho đơn #{{ booking.code }}!
+      </div>
+    </div>
   </div>
 {% endif %}
-  <p><a href="/search">Back to search</a></p>
+  {% if not booking %}
+  <p><a class="btn-back-search" href="/search">&larr; Back to search</a></p>
+  {% endif %}
 </main>
+</main>
+
+<script>
+function copyCode() {
+  const code = document.getElementById('bookingCode').innerText;
+  navigator.clipboard.writeText(code).then(() => {
+    alert('Booking code ' + code + ' copied to clipboard!');
+  });
+}
+function openQrModal() {
+  document.getElementById('qrModal').style.display = 'flex';
+}
+function closeQrModal() {
+  document.getElementById('qrModal').style.display = 'none';
+}
+function confirmPaymentSim() {
+  document.getElementById('btnConfirmPay').style.display = 'none';
+  document.getElementById('paySuccessMsg').style.display = 'block';
+  setTimeout(() => {
+    closeQrModal();
+    alert('Xác nhận thanh toán đơn {{ booking.code }} thành công! Bạn có thể lưu lại vé để xuất trình khi đến sân.');
+  }, 1200);
+}
+</script>
 </body>
 </html>

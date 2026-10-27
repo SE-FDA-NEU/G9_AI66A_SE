@@ -177,3 +177,75 @@ def upcoming(conn, user_id, now=None):
         "SELECT b.code, b.start_at, b.end_at, b.total_price, v.name AS venue_name FROM booking b"
         " JOIN venue v ON v.id = b.venue_id WHERE b.customer_id = ? AND b.status = 'confirmed'"
         " AND b.start_at > ? ORDER BY b.start_at", (user_id, now.strftime("%Y-%m-%d %H:%M"))).fetchall()
+
+
+def list_for_customer(conn, user_id, status_filter=None):
+    """Chronological list of all bookings for customer user_id (BR14), newest created first."""
+    base_sql = """
+    SELECT b.id, b.code, b.customer_id, b.venue_id, b.start_at, b.end_at, b.total_price,
+           b.status, b.refund_amount, b.created_at, b.cancelled_at,
+           v.name AS venue_name, v.address, v.sport
+    FROM booking b
+    JOIN venue v ON v.id = b.venue_id
+    WHERE b.customer_id = ?
+    """
+    params = [user_id]
+    if status_filter:
+        base_sql += " AND b.status = ?"
+        params.append(status_filter)
+    base_sql += " ORDER BY b.created_at DESC, b.id DESC"
+    return conn.execute(base_sql, tuple(params)).fetchall()
+
+
+def cancel_booking(conn, code, user, now=None):
+    """Customer cancels an upcoming booking with refund policy (US19, BR14, BR15).
+
+    - >= 24h before start: 100% refund (BR15)
+    - 2h to 24h before start: 50% refund (BR15)
+    - < 2h before start: refused (BR15)
+    - Releases booking_slot rows immediately so others can book (BR15).
+    """
+    now = now or datetime.now()
+    row = conn.execute(
+        "SELECT b.*, v.name AS venue_name FROM booking b"
+        " JOIN venue v ON v.id = b.venue_id WHERE b.code = ?", (code,)).fetchone()
+    if row is None:
+        raise BusinessRuleError("BR14", "Booking not found", 404)
+    if row["customer_id"] != user["id"]:
+        raise BusinessRuleError("BR14", "You do not have permission to cancel this booking", 403)
+    if row["status"] != "confirmed":
+        raise BusinessRuleError("BR15", "Only confirmed bookings can be cancelled", 400)
+
+    start_dt = datetime.strptime(row["start_at"], "%Y-%m-%d %H:%M")
+    diff_seconds = (start_dt - now).total_seconds()
+    diff_hours = diff_seconds / 3600.0
+
+    if diff_hours < 2:
+        raise BusinessRuleError("BR15", "Cannot cancel a booking less than 2 hours before start time", 400)
+
+    if diff_hours >= 24:
+        refund_amount = row["total_price"]
+        refund_pct = 100
+        message = (f"Booking cancelled successfully! You received a 100% refund "
+                   f"({refund_amount:,} VND)")
+    else:
+        refund_amount = row["total_price"] // 2
+        refund_pct = 50
+        message = (f"Booking cancelled. You received a 50% refund "
+                   f"({refund_amount:,} VND) in accordance with the cancellation policy.")
+
+    cancelled_at = now.strftime("%Y-%m-%d %H:%M:%S")
+    conn.execute(
+        "UPDATE booking SET status = 'cancelled', refund_amount = ?, cancelled_at = ? WHERE id = ?",
+        (refund_amount, cancelled_at, row["id"]))
+    conn.execute("DELETE FROM booking_slot WHERE booking_id = ?", (row["id"],))
+    conn.commit()
+
+    return {
+        "code": code,
+        "status": "cancelled",
+        "refund_amount": refund_amount,
+        "refund_percent": refund_pct,
+        "message": message,
+    }
+
