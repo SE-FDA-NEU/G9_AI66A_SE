@@ -1,14 +1,115 @@
-{% extends "base.html" %} {% block title %}My page{% endblock %} {% block
-content %}
-<h1>Hello, {{ g.user.full_name }}</h1>
-{% if not g.user.email_verified_at %}
-<div class="flash error" role="alert">
-  Please verify your email before booking. We sent a link to {{ g.user.email }}
-  when you registered.
-  <form method="post" action="/verify/resend" style="margin-top: 8px">
-    <button type="submit" class="secondary">Send a new link</button>
-  </form>
+{% extends "base.html" %}
+{% block title %}My page{% endblock %}
+{% block content %}
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <div class="user-welcome">
+      <div class="avatar-large">{{ g.user.full_name[0] | upper }}</div>
+      <div>
+        <h1>Hello, {{ g.user.full_name }}</h1>
+        <p class="user-subtitle">Manage your venue reservations, profile details, and account preferences.</p>
+      </div>
+    </div>
+    <div class="header-badges">
+      <span class="role-badge"><span class="badge-dot"></span> {{ g.user.role | capitalize }} Account</span>
+      {% if g.user.email_verified_at %}
+        <span class="verified-badge">✓ Verified</span>
+      {% else %}
+        <span class="unverified-badge">⚠️ Action Required</span>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if not g.user.email_verified_at %}
+  <div class="flash error unverified-callout" role="alert">
+    <div class="callout-icon">✉️</div>
+    <div class="callout-body">
+      <strong>Verification pending:</strong> Please verify your email before booking. We sent a link to <strong>{{ g.user.email }}</strong> when you registered.
+      <form method="post" action="/verify/resend" style="margin-top: 10px">
+        <button type="submit" class="secondary">Send a new link</button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Coverage Region</div>
+      <div class="stat-value">Hanoi City</div>
+      <div class="stat-meta">8 Active Districts &middot; 24 Pitches</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Upcoming Matches</div>
+      <div class="stat-value">{{ upcoming_bookings | length if upcoming_bookings else 0 }}</div>
+      <div class="stat-meta">Confirmed reservations</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Booking Confirmation</div>
+      <div class="stat-value">Instant Pass</div>
+      <div class="stat-meta">Zero wait time with automatic slot locking</div>
+    </div>
+  </div>
+
+  {% if upcoming_bookings %}
+  <div class="dashboard-section">
+    <div class="section-header-row">
+      <h2>Your Upcoming Reservations</h2>
+      <span class="badge-count">{{ upcoming_bookings | length }} active</span>
+    </div>
+    <div class="bookings-grid">
+      {% for b in upcoming_bookings %}
+      <div class="booking-card-item">
+        <div class="booking-card-header">
+          <span class="booking-code-pill">{{ b.code }}</span>
+          <span class="booking-status-tag">Confirmed</span>
+        </div>
+        <div class="booking-card-title">{{ b.venue_name }}</div>
+        <div class="booking-card-time">
+          <span>📅 {{ b.start_at[8:10] }}/{{ b.start_at[5:7] }}/{{ b.start_at[:4] }}</span>
+          <span>⏱️ {{ b.start_at[11:] }} - {{ b.end_at[11:] }}</span>
+        </div>
+        <div class="booking-card-footer">
+          <div class="booking-price-val">{{ "{:,}".format(b.total_price) }} VND</div>
+          <a href="/bookings/{{ b.code }}" class="btn-ticket-link">View Voucher &rarr;</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="dashboard-action-card">
+    <div class="action-card-text">
+      <h2>Ready for your next match?</h2>
+      <p>Explore top-rated venues in Cau Giay, Ba Dinh, Dong Da, and Hai Ba Trung with transparent hourly rates and instant booking.</p>
+    </div>
+    <div class="action-card-btn">
+      <p><a class="button" href="/search">Find a venue to book</a></p>
+    </div>
+  </div>
+
+  <div class="dashboard-features">
+    <div class="feature-item">
+      <div class="feature-icon">🛡️</div>
+      <div class="feature-content">
+        <h3>Fair Cancellation Policy</h3>
+        <p>Cancel up to 24 hours prior for a 100% refund; cancel within 2–24h for a 50% credit directly through your booking code.</p>
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon">⏱️</div>
+      <div class="feature-content">
+        <h3>Transparent Peak Pricing</h3>
+        <p>Real-time slot rate breakdown with transparent evening rates computed before final confirmation.</p>
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon">📍</div>
+      <div class="feature-content">
+        <h3>Accurate Court Details</h3>
+        <p>Direct contact numbers, surface types, high-res photos, and verified owner information for every listed arena.</p>
+      </div>
+    </div>
+  </div>
 </div>
-{% endif %}
-<p><a class="button" href="/search">Find a venue to book</a></p>
 {% endblock %}

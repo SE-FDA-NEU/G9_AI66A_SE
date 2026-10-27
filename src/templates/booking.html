@@ -4,85 +4,293 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Book {{ venue.name if venue else "a venue" }} - Sports Venue Booking</title>
+<link rel="stylesheet" href="/static/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-  body { font-family: system-ui, sans-serif; margin: 0; background: #f6f7f9; color: #1d2330; }
-  header { background: #152d53; color: #fff; padding: 14px 32px; }
-  header h1 { margin: 0; font-size: 20px; }
-  main { max-width: 760px; margin: 24px auto; padding: 0 16px; }
-  .card { background: #fff; padding: 16px; border: 1px solid #dde1e7; border-radius: 8px; margin-top: 16px; }
-  form.pick { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
-  label { display: flex; flex-direction: column; font-size: 13px; gap: 4px; }
-  input, select, button { font-size: 14px; padding: 6px 10px; }
-  button { background: #1a6d88; color: #fff; border: 0; border-radius: 4px; cursor: pointer; }
-  .error { margin-top: 16px; padding: 12px 16px; background: #fdecea; border: 1px solid #f5b5ad;
-           color: #8a1c10; border-radius: 6px; font-weight: 600; }
-  .full { margin-top: 16px; padding: 24px; background: #fff; border: 1px dashed #b9c0ca;
-          text-align: center; font-weight: 600; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #e5e8ec; }
-  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
-  tr.total td { font-weight: 700; border-bottom: 0; }
-  .muted { color: #667; font-size: 13px; }
+  body {
+    background-color: var(--bg-app);
+    color: var(--text-body);
+  }
+  .booking-header {
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(12px);
+    padding: 16px 32px;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .booking-header h1 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 800;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .booking-header h1::before {
+    content: "⚡";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    background: var(--brand-gradient);
+    border-radius: 6px;
+    font-size: 14px;
+  }
+  .booking-header a {
+    color: #cbd5e1;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .booking-header a:hover {
+    color: #38bdf8;
+  }
+  main.booking-layout {
+    max-width: 860px;
+    margin: 32px auto;
+    padding: 0 20px;
+  }
+  
+  /* Progress Breadcrumbs */
+  .booking-steps {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 14px 24px;
+    margin-bottom: 24px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .step-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+  }
+  .step-item.active {
+    color: var(--brand);
+  }
+  .step-num {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+  }
+  .step-item.active .step-num {
+    background: var(--brand);
+    color: #fff;
+  }
+
+  .venue-banner {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border-radius: var(--radius-lg);
+    padding: 26px 30px;
+    color: #fff;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .venue-banner h2 {
+    color: #fff;
+    margin: 0 0 6px;
+    font-size: 24px;
+  }
+  .venue-banner p {
+    color: #94a3b8;
+    margin: 0;
+    font-size: 14px;
+  }
+  .pricing-badge-callout {
+    background: rgba(2, 132, 199, 0.2);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    color: #38bdf8;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  form.pick {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+    background: #ffffff;
+    padding: 26px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+  }
+  form.pick label {
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+    font-weight: 600;
+    gap: 6px;
+    flex: 1 1 180px;
+  }
+  .error {
+    margin-top: 20px;
+    padding: 14px 18px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .full {
+    margin-top: 24px;
+    padding: 36px 20px;
+    background: #fff;
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    font-weight: 600;
+    color: #475569;
+  }
+  .quote-card {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    margin-top: 24px;
+    box-shadow: var(--shadow-md);
+  }
+  .quote-card h3 {
+    margin: 0 0 16px;
+    font-size: 19px;
+    font-weight: 800;
+    color: var(--text-main);
+  }
+  table.quote-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  table.quote-table th {
+    background: #f8fafc;
+    padding: 12px 16px;
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  table.quote-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+  }
+  table.quote-table td.num, table.quote-table th.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-family: var(--font-mono);
+  }
+  tr.total td {
+    font-weight: 800;
+    font-size: 16px;
+    color: #0284c7;
+    background: #f0f9ff;
+    border-bottom: 0;
+  }
 </style>
 </head>
 <body>
-<header><h1>Sports Venue Booking &middot; Book a venue</h1></header>
-<main>
+<header class="booking-header">
+  <h1>Sports Venue Booking &middot; Book a venue</h1>
+  <a href="/search">&larr; Back to search</a>
+</header>
+<main class="booking-layout">
+  <div class="booking-steps">
+    <div class="step-item active"><span class="step-num">1</span> Pick Date &amp; Hours</div>
+    <div class="step-item {% if quote %}active{% endif %}"><span class="step-num">2</span> Price Breakdown</div>
+    <div class="step-item"><span class="step-num">3</span> Confirmed Match Pass</div>
+  </div>
+
 {% if not venue %}
   <div class="error">{{ error }}</div>
-  <p><a href="/search">Back to search</a></p>
+  <p><a href="/search">&larr; Back to search</a></p>
 {% else %}
-  <h2>{{ venue.name }}</h2>
-  <p class="muted">{{ venue.sport }} &middot; {{ venue.address }}, {{ venue.area }} &middot;
-    open {{ '%02d:00' % venue.open_hour }}&ndash;{{ '%02d:00' % venue.close_hour }}</p>
+  <div class="venue-banner">
+    <div>
+      <h2>{{ venue.name }}</h2>
+      <p>{{ venue.sport }} &middot; {{ venue.address }}, {{ venue.area }} &middot;
+        Open {{ '%02d:00' % venue.open_hour }}&ndash;{{ '%02d:00' % venue.close_hour }} daily</p>
+    </div>
+    <div class="pricing-badge-callout">
+      ⚡ Peak Pricing (+30% from 17:00)
+    </div>
+  </div>
 
   {% if error %}<div class="error" role="alert">{{ error }}</div>{% endif %}
 
-  <form class="card pick" method="get">
-    <label>Date
+  <form class="pick" method="get">
+    <label>Choose Date
       <input type="date" name="date" value="{{ day.isoformat() }}">
     </label>
     {% if free %}
-    <label>Start time
+    <label>Start Time
       <select name="start_hour">
         {% for h in free %}
         <option value="{{ h }}" {% if start == h|string %}selected{% endif %}>{{ '%02d:00' % h }}</option>
         {% endfor %}
       </select>
     </label>
-    <label>Hours
+    <label>Duration (Hours)
       <select name="hours">
         {% for n in range(1, max_hours + 1) %}
-        <option value="{{ n }}" {% if hours == n|string %}selected{% endif %}>{{ n }}</option>
+        <option value="{{ n }}" {% if hours == n|string %}selected{% endif %}>{{ n }} {{ "Hour" if n == 1 else "Hours" }}</option>
         {% endfor %}
       </select>
     </label>
     {% endif %}
-    <button type="submit">{{ "See price" if free else "Change date" }}</button>
+    <button type="submit" style="min-height: 42px;">{{ "Calculate Price" if free else "Change Date" }}</button>
   </form>
 
   {% if not free %}
   <div class="full">
     This venue is fully booked on {{ day.strftime('%d/%m/%Y') }}
     {% if nearest %}
-    <p><a href="?date={{ nearest.isoformat() }}">Nearest date with free hours: {{ nearest.strftime('%d/%m/%Y') }}</a></p>
+    <p style="margin-top: 10px;"><a href="?date={{ nearest.isoformat() }}" style="font-weight: 700; color: #0284c7;">Nearest date with free hours: {{ nearest.strftime('%d/%m/%Y') }} &rarr;</a></p>
     {% endif %}
   </div>
   {% endif %}
 
   {% if quote %}
-  <div class="card">
-    <h3>{{ day.strftime('%d/%m/%Y') }}, {{ quote.segments[0]['from'] }}&ndash;{{ quote.segments[-1]['to'] }}</h3>
-    <table>
-      <thead><tr><th>Time</th><th class="num">Hours</th><th class="num">Price / hour (VND)</th>
-        <th class="num">Amount (VND)</th></tr></thead>
+  <div class="quote-card">
+    <h3>Booking Summary: {{ day.strftime('%d/%m/%Y') }}, {{ quote.segments[0]['from'] }}&ndash;{{ quote.segments[-1]['to'] }}</h3>
+    <table class="quote-table">
+      <thead><tr><th>Time Segment</th><th class="num">Hours</th><th class="num">Rate / hour (VND)</th>
+        <th class="num">Subtotal (VND)</th></tr></thead>
       <tbody>
       {% for s in quote.segments %}
         <tr><td>{{ s['from'] }}&ndash;{{ s['to'] }}</td><td class="num">{{ s.hours }}</td>
           <td class="num">{{ "{:,}".format(s.price_per_hour) }}</td>
           <td class="num">{{ "{:,}".format(s.price) }}</td></tr>
       {% endfor %}
-        <tr class="total"><td colspan="3">Total</td>
+        <tr class="total"><td colspan="3">Total Amount</td>
           <td class="num">{{ "{:,}".format(quote.total_price) }}</td></tr>
       </tbody>
     </table>
@@ -90,7 +298,7 @@
       <input type="hidden" name="date" value="{{ day.isoformat() }}">
       <input type="hidden" name="start_hour" value="{{ start }}">
       <input type="hidden" name="hours" value="{{ hours }}">
-      <p><button type="submit">Confirm booking</button></p>
+      <p style="margin: 0;"><button type="submit" style="padding: 12px 28px; font-size: 15px;">Confirm booking</button></p>
     </form>
   </div>
   {% endif %}

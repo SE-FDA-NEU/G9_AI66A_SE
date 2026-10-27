@@ -55,8 +55,8 @@ BLOCKS = [
 # (code, customer email, venue name, date, start_hour, hours, status)
 # On TUESDAY, Thong Nhat has 3 of its 16 hours booked: 13 free + 3 booked (US04 criterion 2).
 BOOKINGS = [
-    ("BK-000101", "minh@example.com",  "Thong Nhat Football Pitch", (TODAY - timedelta(days=14)).isoformat(), 18, 2, "completed"),
-    ("BK-000102", "trang@example.com", "Lan Anh Badminton Court",   (TODAY - timedelta(days=13)).isoformat(), 19, 1, "completed"),
+    ("BK-000101", "minh@example.com",  "Thong Nhat Football Pitch", (TODAY - timedelta(days=30)).isoformat(), 18, 2, "completed"),
+    ("BK-000102", "trang@example.com", "Lan Anh Badminton Court",   (TODAY - timedelta(days=29)).isoformat(), 19, 1, "completed"),
     ("BK-000103", "minh@example.com",  "Thong Nhat Football Pitch", TUESDAY, 19, 2, "confirmed"),
     ("BK-000104", "trang@example.com", "Chua Boc Badminton Court",  (TODAY + timedelta(days=2)).isoformat(), 20, 1, "confirmed"),
     ("BK-000105", "minh@example.com",  "My Dinh Football Pitch",    SATURDAY, 8, 2, "confirmed"),

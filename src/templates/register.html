@@ -1,5 +1,45 @@
 {% extends "base.html" %}
 {% block title %}Create an account{% endblock %}
+{% block style %}
+<style>
+  .auth-wrapper {
+    max-width: 480px;
+    margin: 32px auto;
+  }
+  .auth-card {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 36px 32px;
+    box-shadow: var(--shadow-lg);
+  }
+  .auth-header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .auth-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    border-radius: 16px;
+    font-size: 24px;
+    margin-bottom: 12px;
+  }
+  .auth-header h1 {
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0 0 6px;
+  }
+  .auth-header p {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin: 0;
+  }
+</style>
+{% endblock %}
 {% macro field(name, label, type="text", hint="", autocomplete="") -%}
   <label>{{ label }}
     <input type="{{ type }}" name="{{ name }}" autocomplete="{{ autocomplete }}"
@@ -10,16 +50,26 @@
   </label>
 {%- endmacro %}
 {% block content %}
-<div class="card narrow">
-  <h1>Create an account</h1>
-  {% if errors %}<div class="flash error" role="alert">Please fix the {{ errors|length }} field(s) marked below.</div>{% endif %}
-  <form class="stack" method="post" action="/register" novalidate>
-    {{ field("email", "Email", "email", autocomplete="email") }}
-    {{ field("password", "Password", "password", "At least 8 characters, with a letter and a digit", "new-password") }}
-    {{ field("full_name", "Full name", autocomplete="name") }}
-    {{ field("phone", "Phone number", "tel", "10 digits, starting with 0 - for example 0912345678", "tel") }}
-    <button type="submit">Create account</button>
-  </form>
-  <p class="muted">Already have an account? <a href="/login">Sign in</a></p>
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-icon">🏃‍♂️</div>
+      <h1>Create your account</h1>
+      <p>Join Hanoi's amateur sports network to book pitches in seconds</p>
+    </div>
+
+    {% if errors %}<div class="flash error" role="alert">Please fix the {{ errors|length }} field(s) marked below.</div>{% endif %}
+
+    <form class="stack" method="post" action="/register" novalidate>
+      {{ field("email", "Email Address", "email", autocomplete="email") }}
+      {{ field("password", "Password", "password", "At least 8 characters, with a letter and a digit", "new-password") }}
+      {{ field("full_name", "Full Name", autocomplete="name") }}
+      {{ field("phone", "Phone Number", "tel", "10 digits, starting with 0 - for example 0912345678", "tel") }}
+      <button type="submit" style="width: 100%; padding: 12px; margin-top: 8px; font-size: 15px;">Create account</button>
+    </form>
+    <p class="muted" style="text-align: center; margin-top: 24px; font-size: 14px;">
+      Already registered? <a href="/login" style="font-weight: 700;">Sign in &rarr;</a>
+    </p>
+  </div>
 </div>
 {% endblock %}

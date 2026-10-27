@@ -7,50 +7,95 @@
   {% if errors.get(name) %}aria-invalid="true" aria-describedby="{{ name }}-error"{% endif %}
 {%- endmacro %}
 {% block content %}
-<div class="card" style="max-width:600px">
-  <h1>Add a venue</h1>
-  {% if errors %}<div class="flash error" role="alert">Please fix the {{ errors|length }} field(s) marked below.</div>{% endif %}
+<div class="card form-hero-card" style="max-width:680px; margin: 0 auto;">
+  <div class="form-header-badge">
+    <span class="badge-icon">🏟️</span>
+    <div>
+      <h1>Add a venue</h1>
+      <p class="subtitle">List your sports arena on the Hanoi booking network and receive online player reservations.</p>
+    </div>
+  </div>
+
+  {% if errors %}
+    <div class="flash error" role="alert">
+      Please fix the {{ errors|length }} field(s) marked below.
+    </div>
+  {% endif %}
+
   <form class="stack" method="post" action="/owner/venues/new" enctype="multipart/form-data" novalidate>
-    <label>Venue name
-      <input name="name" value="{{ form.get('name', '') }}" maxlength="100" {{ invalid('name') }}>
-      {{ error_for('name') }}<span class="hint">3 to 100 characters, in English - for example Thong Nhat Football Pitch</span>
+    <label>
+      <span class="label-title">Venue name <span class="required">*</span></span>
+      <input name="name" value="{{ form.get('name', '') }}" maxlength="100" placeholder="e.g., Thong Nhat Football Pitch" {{ invalid('name') }}>
+      {{ error_for('name') }}
+      <span class="hint">3 to 100 characters, in English - for example Thong Nhat Football Pitch</span>
     </label>
-    <label>Sport
-      <select name="sport" {{ invalid('sport') }}>
-        <option value="">Choose a sport</option>
-        {% for s in sports %}<option {% if s == form.get('sport') %}selected{% endif %}>{{ s }}</option>{% endfor %}
-      </select>
-      {{ error_for('sport') }}
-    </label>
-    <label>Area (district of Hanoi)
-      <select name="area" {{ invalid('area') }}>
-        <option value="">Choose an area</option>
-        {% for a in areas %}<option {% if a == form.get('area') %}selected{% endif %}>{{ a }}</option>{% endfor %}
-      </select>
-      {{ error_for('area') }}
-    </label>
-    <label>Street address
+
+    <div class="form-row-2col">
+      <label>
+        <span class="label-title">Sport discipline <span class="required">*</span></span>
+        <select name="sport" {{ invalid('sport') }}>
+          <option value="">Choose a sport</option>
+          {% for s in sports %}<option {% if s == form.get('sport') %}selected{% endif %}>{{ s }}</option>{% endfor %}
+        </select>
+        {{ error_for('sport') }}
+      </label>
+
+      <label>
+        <span class="label-title">Area (district of Hanoi) <span class="required">*</span></span>
+        <select name="area" {{ invalid('area') }}>
+          <option value="">Choose an area</option>
+          {% for a in areas %}<option {% if a == form.get('area') %}selected{% endif %}>{{ a }}</option>{% endfor %}
+        </select>
+        {{ error_for('area') }}
+      </label>
+    </div>
+
+    <label>
+      <span class="label-title">Street address <span class="required">*</span></span>
       <input name="address" value="{{ form.get('address', '') }}" placeholder="12 Tran Thai Tong" {{ invalid('address') }}>
       {{ error_for('address') }}
+      <span class="hint">Exact address assists players in finding your pitch easily.</span>
     </label>
-    <label>Hourly price (VND)
+
+    <label>
+      <span class="label-title">Hourly base price (VND) <span class="required">*</span></span>
       <input name="hourly_price" value="{{ form.get('hourly_price', '') }}" inputmode="numeric" placeholder="250,000" {{ invalid('hourly_price') }}>
-      {{ error_for('hourly_price') }}<span class="hint">From 1,000 to 100,000,000 VND per hour</span>
+      {{ error_for('hourly_price') }}
+      <span class="hint">From 1,000 to 100,000,000 VND per hour</span>
     </label>
-    <div style="display:flex; gap:12px">
-      <label>Opens at
-        <select name="open_hour">{% for h in hours[:-1] %}<option value="{{ h }}" {% if h == form.open_hour|int %}selected{% endif %}>{{ '%02d:00' % h }}</option>{% endfor %}</select>
+
+    <div class="form-row-2col">
+      <label>
+        <span class="label-title">Opens at <span class="required">*</span></span>
+        <select name="open_hour">
+          {% for h in hours[:-1] %}
+            <option value="{{ h }}" {% if h == form.open_hour|int %}selected{% endif %}>{{ '%02d:00' % h }}</option>
+          {% endfor %}
+        </select>
       </label>
-      <label>Closes at
-        <select name="close_hour" {{ invalid('close_hour') }}>{% for h in hours[1:] %}<option value="{{ h }}" {% if h == form.close_hour|int %}selected{% endif %}>{{ '%02d:00' % h }}</option>{% endfor %}</select>
+
+      <label>
+        <span class="label-title">Closes at <span class="required">*</span></span>
+        <select name="close_hour" {{ invalid('close_hour') }}>
+          {% for h in hours[1:] %}
+            <option value="{{ h }}" {% if h == form.close_hour|int %}selected{% endif %}>{{ '%02d:00' % h }}</option>
+          {% endfor %}
+        </select>
         {{ error_for('close_hour') }}
       </label>
     </div>
-    <label>Photo (optional)
+
+    <label>
+      <span class="label-title">Venue Photo (optional)</span>
       <input type="file" name="photo" accept=".jpg,.jpeg,.png" {{ invalid('photo') }}>
-      {{ error_for('photo') }}<span class="hint">JPG or PNG, at most 5 MB</span>
+      {{ error_for('photo') }}
+      <span class="hint">JPG or PNG, at most 5 MB. Showcases pitch surface &amp; lighting to players.</span>
     </label>
-    <button type="submit">Add venue</button>
+
+    <div class="form-actions-bar">
+      <button type="submit" class="button btn-submit-venue">Add venue</button>
+      <a href="/owner/venues" class="button secondary">Cancel</a>
+    </div>
   </form>
 </div>
 {% endblock %}
