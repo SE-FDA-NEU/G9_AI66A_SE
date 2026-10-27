@@ -1,41 +1,81 @@
-{% extends "base.html" %} {% block title %}My venues{% endblock %} {% block
-content %}
-<h1>My venues</h1>
-<p><a class="button" href="/owner/venues/new">Add a venue</a></p>
-{% if venues %}
-<table>
-  <thead>
-    <tr>
-      <th>Venue</th>
-      <th>Sport</th>
-      <th>Area</th>
-      <th>Address</th>
-      <th>Opening hours</th>
-      <th class="num">Price / hour (VND)</th>
-      <th class="num">Photos</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for v in venues %}
-    <tr>
-      <td><a href="/venues/{{ v.id }}">{{ v.name }}</a></td>
-      <td>{{ v.sport }}</td>
-      <td>{{ v.area }}</td>
-      <td>{{ v.address }}</td>
-      <td>
-        {{ '%02d:00' % v.open_hour }}&ndash;{{ '%02d:00' % v.close_hour }}
-      </td>
-      <td class="num">{{ "{:,}".format(v.hourly_price) }}</td>
-      <td class="num">
-        <a href="/venues/{{ v.id }}/photos/">{{ v.photo_count }}</a>
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
-{% else %}
-<div class="empty">
-  You have no venues yet. Add your first venue so customers can find and book
-  it.
+{% extends "base.html" %}
+{% block title %}My venues{% endblock %}
+{% block content %}
+<div class="owner-container">
+  <div class="owner-header-bar">
+    <div>
+      <h1>My venues</h1>
+      <p class="subtitle">Manage listed pitches, operating hours, hourly pricing, and gallery photos.</p>
+    </div>
+    <div>
+      <p><a class="button btn-add-venue" href="/owner/venues/new">+ Add a venue</a></p>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total Listed Venues</div>
+      <div class="stat-value">{{ venues | length }}</div>
+      <div class="stat-meta">Ready for customer bookings</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Platform Commission</div>
+      <div class="stat-value">0%</div>
+      <div class="stat-meta">Direct owner management &amp; payout</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Slot Control</div>
+      <div class="stat-value">Automated</div>
+      <div class="stat-meta">Guaranteed reservation shield</div>
+    </div>
+  </div>
+
+  {% if venues %}
+  <div class="table-responsive-wrapper">
+    <table class="owner-table">
+      <thead>
+        <tr>
+          <th>Venue</th>
+          <th>Sport</th>
+          <th>Area</th>
+          <th>Address</th>
+          <th>Opening hours</th>
+          <th class="num">Price / hour (VND)</th>
+          <th class="num">Photos</th>
+          <th style="text-align: right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for v in venues %}
+        <tr>
+          <td class="venue-cell">
+            <a href="/venues/{{ v.id }}" class="venue-title-link">{{ v.name }}</a>
+          </td>
+          <td><span class="sport-badge-pill">{{ v.sport }}</span></td>
+          <td><span class="area-badge-pill">{{ v.area }}</span></td>
+          <td class="address-cell">{{ v.address }}</td>
+          <td class="hours-cell">
+            <span class="hour-tag">{{ '%02d:00' % v.open_hour }}&ndash;{{ '%02d:00' % v.close_hour }}</span>
+          </td>
+          <td class="num price-cell">{{ "{:,}".format(v.hourly_price) }}</td>
+          <td class="num photos-cell">
+            <a href="/venues/{{ v.id }}/photos/" class="photo-badge">📷 {{ v.photo_count }}</a>
+          </td>
+          <td style="text-align: right; white-space: nowrap;">
+            <a href="/owner/venues/{{ v.id }}/schedule" class="button secondary" style="padding: 5px 10px; font-size: 12px; font-weight: 700;">📅 Lịch</a>
+            <a href="/owner/venues/{{ v.id }}/pricing" class="button secondary" style="padding: 5px 10px; font-size: 12px; font-weight: 700;">💰 Giá</a>
+            <a href="/owner/bookings?venue_id={{ v.id }}" class="button secondary" style="padding: 5px 10px; font-size: 12px; font-weight: 700;">📋 Đơn</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty">
+    You have no venues yet. Add your first venue so customers can find and book
+    it.
+  </div>
+  {% endif %}
 </div>
-{% endif %} {% endblock %}
+{% endblock %}
