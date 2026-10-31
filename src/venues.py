@@ -5,7 +5,7 @@ Sport and area come from the fixed lists below, never from typed text (BR9), so
 "Cau Giay", "cau giay" and "Q. Cau Giay" can never become three different areas.
 """
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from errors import BusinessRuleError
 
@@ -168,3 +168,173 @@ def owner_venues(conn, owner):
     return conn.execute(
         "SELECT v.*, (SELECT COUNT(*) FROM venue_photo p WHERE p.venue_id = v.id) AS photo_count"
         " FROM venue v WHERE v.owner_id = ? ORDER BY v.id DESC", (owner["id"],)).fetchall()
+
+
+def check_venue_owner(conn, venue_id, owner_id):
+    """Ensure venue exists and belongs to owner (BR14, BR18). Returns venue or raises."""
+    venue = conn.execute("SELECT * FROM venue WHERE id = ?", (venue_id,)).fetchone()
+    if venue is None:
+        raise BusinessRuleError(404, "Venue not found")
+    if venue["owner_id"] != owner_id:
+        raise BusinessRuleError(403, "You do not have permission to access this venue")
+    return venue
+
+
+def owner_bookings(conn, owner, date_str, venue_id=None):
+    """Bookings for an owner on a specific date (US23, BR16, BR17, BR18)."""
+    sql = """
+    SELECT b.id, b.code, b.start_at, b.end_at, b.total_price, b.status,
+           v.id AS venue_id, v.name AS venue_name,
+           u.full_name AS customer_name, u.phone AS customer_phone
+    FROM booking b
+    JOIN venue v ON v.id = b.venue_id
+    JOIN user u ON u.id = b.customer_id
+    WHERE v.owner_id = ?
+      AND date(b.start_at) = ?
+    """
+    params = [owner["id"], date_str]
+    if venue_id:
+        sql += " AND v.id = ?"
+        params.append(venue_id)
+    sql += " ORDER BY b.start_at ASC"
+    return conn.execute(sql, tuple(params)).fetchall()
+
+
+def owner_booking_detail(conn, owner, code):
+    """View one booking for owner; 403 if it belongs to another owner (US23 AC 6, BR18)."""
+    row = conn.execute(
+        """
+        SELECT b.id, b.code, b.start_at, b.end_at, b.total_price, b.status,
+               b.refund_amount, b.created_at, b.cancelled_at,
+               v.id AS venue_id, v.name AS venue_name, v.address, v.sport, v.owner_id,
+               u.full_name AS customer_name, u.phone AS customer_phone, u.email AS customer_email
+        FROM booking b
+        JOIN venue v ON v.id = b.venue_id
+        JOIN user u ON u.id = b.customer_id
+        WHERE b.code = ?
+        """, (code,)).fetchone()
+    if row is None:
+        raise BusinessRuleError(404, "Booking not found")
+    if row["owner_id"] != owner["id"]:
+        raise BusinessRuleError(403, "You do not have permission to view this booking")
+    return row
+
+
+def venue_schedule_slots(conn, venue, day, now):
+    """All 1-hour slots for an owner schedule view (US22).
+    Includes active booking codes and maintenance reasons."""
+    slots_map = {}
+    for hour in range(venue["open_hour"], venue["close_hour"]):
+        key = f"{day.isoformat()} {hour:02d}:00"
+        slots_map[key] = {
+            "hour": hour,
+            "start": f"{hour:02d}:00",
+            "end": f"{hour + 1:02d}:00",
+            "slot_start": key,
+            "status": "free",
+            "booking_code": None,
+            "reason": None,
+        }
+        if datetime(day.year, day.month, day.day, hour) <= now:
+            slots_map[key]["status"] = "past"
+
+    # Overlay bookings
+    booking_rows = conn.execute(
+        """
+        SELECT bs.slot_start, b.code, b.status
+        FROM booking_slot bs
+        JOIN booking b ON b.id = bs.booking_id
+        WHERE bs.venue_id = ? AND date(bs.slot_start) = ?
+        """, (venue["id"], day.isoformat())).fetchall()
+    for r in booking_rows:
+        key = r["slot_start"]
+        if key in slots_map:
+            slots_map[key]["status"] = "booked"
+            slots_map[key]["booking_code"] = r["code"]
+
+    # Overlay blocked slots
+    blocked_rows = conn.execute(
+        "SELECT slot_start, reason FROM blocked_slot WHERE venue_id = ? AND date(slot_start) = ?",
+        (venue["id"], day.isoformat())).fetchall()
+    for r in blocked_rows:
+        key = r["slot_start"]
+        if key in slots_map:
+            slots_map[key]["status"] = "blocked"
+            slots_map[key]["reason"] = r["reason"]
+
+    return list(slots_map.values())
+
+
+def block_single_slot(conn, owner, venue_id, slot_day, hour, reason="Under maintenance", now=None):
+    """Block one slot for maintenance (US22, BR13, BR14, BR15)."""
+    now = now or datetime.now()
+    venue = check_venue_owner(conn, venue_id, owner["id"])
+    slot_start = f"{slot_day.isoformat()} {hour:02d}:00"
+
+    # BR15: Only allow blocking slots starting after current time
+    slot_dt = datetime(slot_day.year, slot_day.month, slot_day.day, hour)
+    if slot_dt <= now:
+        raise BusinessRuleError(400, "Can only block slots starting after current time", "BR15")
+
+    # BR14: Cannot block slot with active uncancelled booking
+    booked = conn.execute(
+        """
+        SELECT b.code FROM booking_slot bs
+        JOIN booking b ON b.id = bs.booking_id
+        WHERE bs.venue_id = ? AND bs.slot_start = ?
+        """, (venue_id, slot_start)).fetchone()
+    if booked:
+        raise BusinessRuleError(
+            409,
+            f"Cannot block: this slot is already booked ({booked['code']}). Cancel booking first.",
+            "BR14")
+
+    conn.execute(
+        "INSERT OR REPLACE INTO blocked_slot (venue_id, slot_start, reason) VALUES (?, ?, ?)",
+        (venue_id, slot_start, reason or "Under maintenance"))
+    conn.commit()
+
+
+def unblock_single_slot(conn, owner, venue_id, slot_day, hour):
+    """Unblock a previously blocked slot (US22, BR13). Takes effect immediately."""
+    check_venue_owner(conn, venue_id, owner["id"])
+    slot_start = f"{slot_day.isoformat()} {hour:02d}:00"
+    conn.execute(
+        "DELETE FROM blocked_slot WHERE venue_id = ? AND slot_start = ?",
+        (venue_id, slot_start))
+    conn.commit()
+
+
+def batch_block_slots(conn, owner, venue_id, start_day, end_day, start_hour, end_hour, reason="Under maintenance", now=None):
+    """Batch block date range & hours (US22 AC 5). Returns (blocked_count, skipped_messages)."""
+    now = now or datetime.now()
+    check_venue_owner(conn, venue_id, owner["id"])
+    blocked_count = 0
+    skipped = []
+
+    cur_day = start_day
+    while cur_day <= end_day:
+        for hour in range(start_hour, end_hour):
+            slot_start = f"{cur_day.isoformat()} {hour:02d}:00"
+            slot_dt = datetime(cur_day.year, cur_day.month, cur_day.day, hour)
+            if slot_dt <= now:
+                continue
+
+            booked = conn.execute(
+                """
+                SELECT b.code FROM booking_slot bs
+                JOIN booking b ON b.id = bs.booking_id
+                WHERE bs.venue_id = ? AND bs.slot_start = ?
+                """, (venue_id, slot_start)).fetchone()
+            if booked:
+                skipped.append(f"{cur_day.strftime('%d/%m/%Y')} {start_hour:02d}:00-{end_hour:02d}:00")
+                break
+            else:
+                conn.execute(
+                    "INSERT OR REPLACE INTO blocked_slot (venue_id, slot_start, reason) VALUES (?, ?, ?)",
+                    (venue_id, slot_start, reason or "Under maintenance"))
+                blocked_count += 1
+        cur_day += timedelta(days=1)
+    conn.commit()
+    return blocked_count, skipped
+

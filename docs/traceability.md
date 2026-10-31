@@ -16,12 +16,12 @@ approved.
 | `/booking/{venueId}` | Confirm a booking: pick a slot, see the segmented price, confirm | U | P0 | F3 Booking | #18, #24 | #29, #28 | Done |
 | `/bookings/{code}` | The booking just confirmed: code, hours, price lines (BR14: own bookings only) | U | P0 | F3 Booking | #18 | - | Done |
 | `/dashboard` | The customer's page after signing in | U | P1 | F4 Booking management | #15 | #39 | Done |
-| `/my-bookings` | My bookings: upcoming, history, cancel, review after playing | U | P1 | F4 Booking management | #19, #20, #25 | #36, #35, #33 | Spec done |
+| `/my-bookings` | My bookings: upcoming, history, cancel, review after playing | U | P1 | F4 Booking management | #19, #20, #25 | #36, #35, #33 | Done |
 | `/owner/venues` | The owner's list of venues | U | P0 | F5 Venue management | #21 | #32 | Done |
 | `/owner/venues/new` | Add a new venue | U | P0 | F5 Venue management | #21 | #32 | Done |
-| `/owner/venues/{id}/schedule` | Venue schedule: block and unblock hours for maintenance | U | P1 | F5 Venue management | #22 | #37 | Spec done |
-| `/owner/venues/{id}/pricing` | Configure peak and off-peak pricing | U | P2 | F6 Pricing | #24 | #28 | Spec done |
-| `/owner/bookings` | Day-by-day list of bookings across the owner's venues | U | P1 | F5 Venue management | #23 | #38 | Spec done |
+| `/owner/venues/{id}/schedule` | Venue schedule: block and unblock hours for maintenance | U | P1 | F5 Venue management | #22 | #37 | Done |
+| `/owner/venues/{id}/pricing` | Configure peak and off-peak pricing | U | P2 | F6 Pricing | #24 | #28 | Done |
+| `/owner/bookings` | Day-by-day list of bookings across the owner's venues | U | P1 | F5 Venue management | #23 | #38 | Done |
 | `/admin` | Moderate reported reviews, suspend offending accounts | A | P2 | F7 Administration | - | - | Not started |
 
 **Access codes:** G = guest (not signed in) · U = authenticated user · A = administrator

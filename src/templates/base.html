@@ -8,38 +8,387 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='style.css') }}"
     />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     {% block style %}{% endblock %}
   </head>
   <body>
     <header class="top">
-      <a class="brand" href="/search">Sports Venue Booking</a>
+      <a class="brand" href="/search">
+        <span class="brand-icon">⚡</span>
+        <span class="brand-text">Hanoi Sports Arena</span>
+      </a>
       <nav>
-        <a href="/search">Find a venue</a>
-        {% if g.user %} {% if g.user.role == 'customer' %}<a href="/dashboard"
-          >My page</a
-        >
-        {% elif g.user.role == 'owner' %}<a href="/owner/venues">My venues</a>
-        {% else %}<a href="/admin">Administration</a>{% endif %}
-        <span class="who">{{ g.user.full_name }}</span>
-        <form method="post" action="/logout">
-          <button class="link" type="submit">Sign out</button>
-        </form>
+        <a href="/search" class="nav-link">🏟️ Find a venue</a>
+        {% if g.user %}
+          {% if g.user.role == 'customer' %}
+            <a href="/dashboard" class="nav-link">👤 My page</a>
+            <a href="/my-bookings" class="nav-link">📅 My bookings</a>
+          {% elif g.user.role == 'owner' %}
+            <a href="/owner/venues" class="nav-link">💼 My venues</a>
+            <a href="/owner/bookings" class="nav-link">📋 Bookings</a>
+          {% else %}
+            <a href="/admin" class="nav-link">⚙️ Administration</a>
+          {% endif %}
+          <div class="user-profile-badge">
+            <span class="user-avatar">{{ g.user.full_name[0] | upper }}</span>
+            <span class="who">{{ g.user.full_name }}</span>
+          </div>
+          <form method="post" action="/logout">
+            <button class="link btn-logout" type="submit">Sign out</button>
+          </form>
         {% else %}
-        <a href="/login">Sign in</a>
-        <a href="/register">Register</a>
+          <a href="/login" class="nav-link btn-login">Sign in</a>
+          <a href="/register" class="nav-link btn-register-nav">Register</a>
         {% endif %}
+
+        <div class="lang-switcher" id="langSwitcher" title="Language Switcher">
+          <button type="button" class="lang-btn active" data-lang="en" onclick="setLanguage('en')">🇬🇧 EN</button>
+          <button type="button" class="lang-btn" data-lang="vi" onclick="setLanguage('vi')">🇻🇳 VI</button>
+        </div>
       </nav>
     </header>
+
     <main>
-      {% with messages = get_flashed_messages(with_categories=true) %} {% for
-      category, message in messages %} {% if category == "verify-link" %}
-      <div class="flash" role="status">
-        No email server is set up on this machine, so here is the link we just
-        sent: <a href="{{ message }}">Verify my email</a>
-      </div>
-      {% else %}
-      <div class="flash {{ category }}" role="status">{{ message }}</div>
-      {% endif %} {% endfor %} {% endwith %} {% block content %}{% endblock %}
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          {% if category == "verify-link" %}
+            <div class="flash flash-verify" role="status">
+              <span class="flash-icon">✉️</span>
+              <div>
+                <strong>Verification Link:</strong> No email server is configured on this test instance. Use this link directly: 
+                <a href="{{ message }}" class="verify-action-link">Verify my email &rarr;</a>
+              </div>
+            </div>
+          {% else %}
+            <div class="flash {{ category }}" role="status">
+              {% if category == 'success' %}
+                <span class="flash-icon">✓</span>
+              {% elif category == 'error' %}
+                <span class="flash-icon">⚠️</span>
+              {% endif %}
+              <div>{{ message }}</div>
+            </div>
+          {% endif %}
+        {% endfor %}
+      {% endwith %}
+      {% block content %}{% endblock %}
     </main>
+
+    <!-- World-Class 4-Column Footer -->
+    <footer class="app-footer">
+      <div class="footer-container">
+        <div class="footer-columns-grid">
+          <div class="footer-col brand-col">
+            <div class="footer-brand-title">⚡ Hanoi Sports Arena</div>
+            <p class="footer-desc">Hanoi's premier sports facility network. Instant court reservation, real-time availability, and fair cancellation policies.</p>
+            <div class="sys-status" style="margin-top: 14px;">
+              <span class="status-pulse"></span>
+              <span>All 24 Pitches Operational &middot; Online Booking Available</span>
+            </div>
+          </div>
+
+          <div class="footer-col">
+            <div class="footer-col-title">Popular Districts</div>
+            <ul class="footer-links-list">
+              <li><a href="/search?area=Cau+Giay">Cau Giay District</a></li>
+              <li><a href="/search?area=Ba+Dinh">Ba Dinh District</a></li>
+              <li><a href="/search?area=Dong+Da">Dong Da District</a></li>
+              <li><a href="/search?area=Hai+Ba+Trung">Hai Ba Trung District</a></li>
+              <li><a href="/search?area=Nam+Tu+Liem">Nam Tu Liem District</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <div class="footer-col-title">Sports Disciplines</div>
+            <ul class="footer-links-list">
+              <li><a href="/search?sport=Football">Football (7-a-side)</a></li>
+              <li><a href="/search?sport=Badminton">Badminton (Indoor courts)</a></li>
+              <li><a href="/search?sport=Tennis">Tennis (Standard hard courts)</a></li>
+              <li><a href="/search?sport=Pickleball">Pickleball (Outdoor courts)</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <div class="footer-col-title">Customer Guarantees</div>
+            <ul class="footer-links-list">
+              <li><span class="rule-tag">🛡️</span> Verified Player Accounts</li>
+              <li><span class="rule-tag">⚡</span> Instant Slot Confirmation</li>
+              <li><span class="rule-tag">💎</span> Transparent Peak Pricing</li>
+              <li><span class="rule-tag">🔄</span> 100% / 50% Fair Refund Policy</li>
+              <li><span class="rule-tag">💳</span> VietQR Napas247 Instant Pay</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="footer-bottom-bar">
+          <div class="footer-credits">
+            Hanoi Sports Arena &middot; Modern Amateur Court &amp; Pitch Booking Platform
+          </div>
+          <div class="footer-tags">
+            <span class="tag-badge">Instant Confirmation</span>
+            <span class="tag-badge">VietQR Napas247</span>
+            <span class="tag-badge">Guaranteed Slots</span>
+            <span class="tag-badge">Verified Venues</span>
+            <span class="tag-badge">Hanoi Sports Network</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+    (function() {
+      const DICT_EN_VI = {
+        // Navigation & Auth
+        "Find a venue": "Tìm sân thể thao",
+        "My page": "Trang cá nhân",
+        "My bookings": "Lịch sử đặt sân",
+        "My venues": "Cụm sân của tôi",
+        "Bookings": "Lịch đặt sân",
+        "Administration": "Quản trị hệ thống",
+        "Sign out": "Đăng xuất",
+        "Sign in": "Đăng nhập",
+        "Register": "Đăng ký",
+        "Customer Account": "Tài khoản Khách hàng",
+        "Owner Account": "Tài khoản Chủ sân",
+        "Super Admin": "Quản trị viên",
+
+        // Hero & Stats
+        "Hanoi Amateur Sports Network · Verified Pitches": "Mạng Lưới Sân Thể Thao Hà Nội · Đã Xác Thực",
+        "Book Your Court in Seconds.": "Đặt Sân Thể Thao Trong Vài Giây.",
+        "Play Like Champions.": "Thỏa Sức Đam Mê Cùng Đồng Đội.",
+        "The premier athletic booking platform for Hanoi players. Instant confirmation, transparent pricing, and seamless electronic booking vouchers.": "Nền tảng đặt sân thể thao hàng đầu dành cho người chơi tại Hà Nội. Xác nhận tức thì, giá cả minh bạch và nhận vé điện tử nhanh chóng.",
+        "Active Venues": "Sân Hoạt Động",
+        "Hanoi Districts": "Quận Huyện",
+        "Reservation Guarantee": "Giữ Chỗ 100%",
+        "Instant Confirmation": "Xác Nhận Tức Thì",
+
+        // Categories & Filters
+        "Explore by Sport Discipline": "Khám Phá Theo Môn Thể Thao",
+        "⚽ Football (Bóng đá)": "⚽ Bóng đá (Football)",
+        "🏸 Badminton (Cầu lông)": "🏸 Cầu lông (Badminton)",
+        "🎾 Tennis (Quần vợt)": "🎾 Quần vợt (Tennis)",
+        "🏓 Pickleball": "🏓 Pickleball",
+        "Filter Pitches & Courts": "Bộ Lọc Tìm Kiếm Sân",
+        "Sport Discipline": "Môn Thể Thao",
+        "All Sports": "Tất cả các môn",
+        "Hanoi District": "Quận Huyện",
+        "All Districts": "Tất cả các quận",
+        "Booking Date": "Ngày Đặt Sân",
+        "Search Pitches & Courts": "Tìm Kiếm Sân",
+        "Clear Filters": "Xóa Bộ Lọc",
+        "Verified Sports Venues": "Cụm Sân Thể Thao Đã Xác Minh",
+        "sports venues ready for instant booking": "cụm sân sẵn sàng nhận đặt chỗ",
+
+        // Venue Cards & Details
+        "Opening hours": "Giờ mở cửa",
+        "Opening Hours": "Giờ mở cửa",
+        "per hour": "/ giờ",
+        "Book Now": "Đặt Sân Ngay",
+        "View Details": "Xem Chi Tiết",
+        "Facility Highlights & Amenities": "Tiện Ích & Dịch Vụ Sân Bãi",
+        "FIFA Quality Turf": "Cỏ Nhân Tạo Chuẩn FIFA",
+        "Night LED Match Lights": "Đèn LED Chiếu Sáng Ban Đêm",
+        "Changing Rooms & Shower": "Phòng Thay Đồ & Tắm Nóng Lạnh",
+        "Free Secure Parking": "Bãi Giữ Xe An Toàn Miễn Phí",
+        "Refreshment Canteen": "Căng Tin Giải Khát",
+        "Instant Confirmation Guarantee": "Cam Kết Giữ Chỗ Tức Thì",
+        "Standard price": "Giá tiêu chuẩn",
+        "Sport": "Môn chơi",
+        "Area": "Khu vực",
+        "Address": "Địa chỉ",
+        "Live Availability & Free Hours": "Lịch Hoạt Động & Khung Giờ Trống",
+        "Click any green slot to proceed directly to instant checkout.": "Nhấp vào bất kỳ khung giờ màu xanh để tiến hành đặt sân ngay.",
+        "Free (Bookable)": "Trống (Có thể đặt)",
+        "Booked": "Đã đặt",
+        "Closed": "Đã đóng",
+        "Blocked": "Bảo trì",
+        "Past": "Đã qua",
+        "Peak Pricing Notice:": "Lưu Ý Giá Giờ Cao Điểm:",
+        "Slots between 17:00 and 21:00 apply evening rates. Transparently itemized in your price quote.": "Các khung giờ từ 17:00 đến 21:00 áp dụng mức giá buổi tối. Chi tiết sẽ hiển thị minh bạch trong bảng báo giá.",
+        "Select Date": "Chọn Ngày",
+        "Player Reviews & Ratings": "Đánh Giá & Nhận Xét Của Người Chơi",
+        "Verified feedback from players who completed matches at this venue.": "Nhận xét đã xác thực từ những người chơi đã thi đấu tại sân.",
+        "No reviews for this venue yet. Book a session and be the first to share your experience!": "Chưa có đánh giá nào cho sân này. Hãy đặt sân và chia sẻ cảm nhận đầu tiên của bạn!",
+        "Report": "Báo cáo",
+        "Flag": "Báo vi phạm",
+
+        // How it works
+        "How Booking Works": "Quy Trình Đặt Sân",
+        "Three simple steps to lock your match": "3 bước đơn giản để chốt sân bóng",
+        "Explore Courts & Areas": "1. Khám Phá & Chọn Sân",
+        "Search over 24 verified courts across 8 Hanoi districts. Filter by Football, Badminton, Tennis, and Pickleball.": "Tìm kiếm hơn 24 sân bóng tiêu chuẩn khắp 8 quận Hà Nội. Lọc theo Bóng đá, Cầu lông, Tennis và Pickleball.",
+        "Real-Time Slot Availability": "2. Kiểm Tra Lịch Trống",
+        "Check live available hours. Lock your preferred match time instantly with 100% reservation guarantee.": "Xem khung giờ trống thực tế. Chốt giờ thi đấu tức thì với cam kết giữ chỗ 100%.",
+        "Instant Match Pass": "3. Nhận Vé Trận Đấu",
+        "Receive your digital voucher code immediately. Show up at the pitch and enjoy your match!": "Nhận mã vé điện tử ngay tức khắc. Đến sân và thỏa sức tận hưởng trận đấu!",
+        "Trusted by Hanoi's Amateur Athletes": "Được Tin Chọn Bởi Người Chơi Hà Nội",
+        "Thousands of players and team captains reserve weekly matches through our network": "Hàng ngàn cầu thủ và đội trưởng tin tưởng đặt lịch thi đấu hàng tuần qua hệ thống",
+        "Over 24 verified sports venues available across Hanoi.": "Hơn 24 cụm sân thể thao đã xác thực hoạt động tại Hà Nội.",
+
+        // Booking Process
+        "Pick Date & Hours": "1. Chọn Ngày & Giờ",
+        "Price Breakdown": "2. Bảng Tính Giá",
+        "Confirmed Match Pass": "3. Vé Đặt Chỗ",
+        "Peak Pricing (+30% from 17:00)": "Giá Giờ Vàng (+30% từ 17:00)",
+        "Choose Date": "Chọn Ngày",
+        "Start Time": "Giờ Bắt Đầu",
+        "Duration": "Thời Lượng",
+        "Check Price": "Tính Giá Dự Kiến",
+        "Price Quote": "Báo Giá Chi Tiết",
+        "Total Price": "Tổng Tiền",
+        "Base Price": "Giá Tiêu Chuẩn",
+        "Peak Surcharge": "Phụ Thu Giờ Cao Điểm",
+        "Confirm & Book Now": "Xác Nhận & Đặt Sân Ngay",
+        "Price Breakdown (Itemized Hours)": "Chi Tiết Giá Từng Giờ",
+        "Pay with VietQR": "Thanh Toán VietQR Napas247",
+        "Print receipt": "In Biên Lai / Vé",
+        "View Voucher": "Xem Vé Điện Tử",
+
+        // My Bookings
+        "My Bookings · Match History": "Lịch Sử Đặt Sân · Trận Đấu Của Tôi",
+        "Manage your upcoming pitch reservations and view your match history.": "Quản lý các trận đấu sắp diễn ra và tra cứu lịch sử đặt sân của bạn.",
+        "Book another venue": "Đặt Thêm Sân Khác",
+        "All": "Tất Cả",
+        "Upcoming (Confirmed)": "🟢 Sắp Diễn Ra",
+        "Completed": "🔵 Đã Hoàn Thành",
+        "Cancelled": "🔴 Đã Hủy",
+        "You have no bookings yet": "Bạn chưa có đơn đặt sân nào",
+        "Find football pitches, badminton, tennis, and pickleball courts near you and reserve in seconds.": "Tìm sân bóng đá, cầu lông, tennis, pickleball gần bạn và giữ chỗ chỉ trong vài giây.",
+        "Find a venue now": "Tìm Sân Ngay",
+        "Cancel Booking": "Hủy Đặt Sân",
+        "Leave a Review": "Viết Đánh Giá",
+        "Submit Review": "Gửi Đánh Giá",
+
+        // Owner Section
+        "Owner Bookings · Daily Reservations": "Lịch Đặt Sân · Quản Lý Theo Ngày",
+        "Review all customer bookings across your venues and manage player check-ins.": "Theo dõi tất cả lịch đặt sân của khách hàng và quản lý điểm danh tại sân.",
+        "My Venues": "Cụm Sân Của Tôi",
+        "Filter by Date": "Lọc Theo Ngày",
+        "Filter by Venue": "Lọc Theo Sân",
+        "All My Venues": "Tất cả sân của tôi",
+        "View Schedule": "Xem Lịch",
+        "Time Slot": "Khung Giờ",
+        "Customer": "Khách Hàng",
+        "Phone": "Số Điện Thoại",
+        "Status": "Trạng Thái",
+        "Availability Schedule": "Lịch Hoạt Động & Bảo Trì",
+        "Add Peak Pricing Rule": "Thêm Quy Tắc Giá Giờ Cao Điểm",
+        "Batch Schedule Maintenance (Multi-day)": "Bảo Trì Lịch Hàng Loạt (Nhiều Ngày)",
+        "For recurring maintenance across consecutive days. Automatically skips slots that already hold customer bookings.": "Phục vụ bảo trì định kỳ nhiều ngày liên tiếp. Tự động bỏ qua các khung giờ khách đã đặt trước.",
+        "Block": "Khóa",
+        "Unblock": "Mở khóa",
+
+        // Footer
+        "Popular Districts": "Quận Huyện Nổi Bật",
+        "Cau Giay District": "Quận Cầu Giấy",
+        "Ba Dinh District": "Quận Ba Đình",
+        "Dong Da District": "Quận Đống Đa",
+        "Hai Ba Trung District": "Quận Hai Bà Trưng",
+        "Nam Tu Liem District": "Quận Nam Từ Liêm",
+        "Sports Disciplines": "Môn Thể Thao",
+        "Football (7-a-side)": "Bóng đá (Sân 7 người)",
+        "Badminton (Indoor courts)": "Cầu lông (Sân trong nhà)",
+        "Tennis (Standard hard courts)": "Tennis (Sân tiêu chuẩn)",
+        "Pickleball (Outdoor courts)": "Pickleball (Sân ngoài trời)",
+        "Customer Guarantees": "Cam Kết Dịch Vụ",
+        "Verified Player Accounts": "Tài Khoản Người Chơi Xác Thực",
+        "Instant Slot Confirmation": "Xác Nhận Giữ Chỗ Tức Thì",
+        "Transparent Peak Pricing": "Giá Giờ Vàng Minh Bạch",
+        "100% / 50% Fair Refund Policy": "Chính Sách Hoàn Tiền 100% / 50%",
+        "VietQR Napas247 Instant Pay": "Thanh Toán Nhanh VietQR",
+        "Hanoi Sports Arena · Modern Amateur Court & Pitch Booking Platform": "Hanoi Sports Arena · Nền Tảng Đặt Sân Thể Thao Phong Trào Hiện Đại",
+        "All 24 Pitches Operational · Online Booking Available": "Tất cả 24 cụm sân hoạt động · Nhận đặt chỗ trực tuyến",
+        "Guaranteed Slots": "Bảo Đảm Giữ Chỗ",
+        "Verified Venues": "Sân Đã Xác Minh",
+        "Hanoi Sports Network": "Mạng Lưới Thể Thao Hà Nội"
+      };
+
+      const PLACEHOLDERS_VI = {
+        "Search by name, sport, or district...": "Tìm theo tên sân, môn thể thao, quận...",
+        "Search by name or street...": "Tìm theo tên sân hoặc tên đường...",
+        "Password": "Mật khẩu",
+        "Email address": "Địa chỉ Email",
+        "Full name": "Họ và tên",
+        "Phone number": "Số điện thoại"
+      };
+
+      function translateTree(node, lang) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const raw = node.nodeValue;
+          const trimmed = raw.trim();
+          if (!trimmed) return;
+
+          if (lang === 'vi') {
+            if (node._origEn === undefined) {
+              node._origEn = raw;
+            }
+            if (DICT_EN_VI[trimmed]) {
+              node.nodeValue = raw.replace(trimmed, DICT_EN_VI[trimmed]);
+            }
+          } else if (lang === 'en') {
+            if (node._origEn !== undefined) {
+              node.nodeValue = node._origEn;
+            }
+          }
+          return;
+        }
+
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          // Translate placeholder attributes
+          if (node.hasAttribute('placeholder')) {
+            const ph = node.getAttribute('placeholder');
+            if (lang === 'vi') {
+              if (!node._origPh) node._origPh = ph;
+              if (PLACEHOLDERS_VI[ph]) {
+                node.setAttribute('placeholder', PLACEHOLDERS_VI[ph]);
+              }
+            } else if (lang === 'en' && node._origPh) {
+              node.setAttribute('placeholder', node._origPh);
+            }
+          }
+
+          // Translate submit buttons or button values
+          if (node.tagName === 'INPUT' && (node.type === 'submit' || node.type === 'button')) {
+            const val = node.value.trim();
+            if (lang === 'vi') {
+              if (!node._origVal) node._origVal = node.value;
+              if (DICT_EN_VI[val]) {
+                node.value = DICT_EN_VI[val];
+              }
+            } else if (lang === 'en' && node._origVal) {
+              node.value = node._origVal;
+            }
+          }
+
+          // Recursively traverse children
+          for (let child = node.firstChild; child; child = child.nextSibling) {
+            translateTree(child, lang);
+          }
+        }
+      }
+
+      window.setLanguage = function(lang) {
+        localStorage.setItem('arena_lang', lang);
+        document.documentElement.lang = lang;
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
+        });
+        translateTree(document.body, lang);
+      };
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const savedLang = localStorage.getItem('arena_lang') || 'en';
+        document.documentElement.lang = savedLang;
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.getAttribute('data-lang') === savedLang);
+        });
+        if (savedLang === 'vi') {
+          translateTree(document.body, 'vi');
+        }
+      });
+    })();
+    </script>
   </body>
 </html>

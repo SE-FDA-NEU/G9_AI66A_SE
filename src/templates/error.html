@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Sorry{% endblock %}
 {% block content %}
-<div class="card narrow">
-  <div class="flash error" role="alert">{{ message }}</div>
-  <p><a href="/search">Back to the search page</a></p>
+<div class="card narrow error-page-card" style="margin-top: 40px; text-align: center;">
+  <div class="error-illustration">🚫</div>
+  <h1>Something went wrong</h1>
+  <div class="flash error" role="alert" style="margin-top: 16px;">{{ message or error }}</div>
+  <p style="margin-top: 24px;"><a class="button" href="/search">Back to the search page</a></p>
 </div>
 {% endblock %}

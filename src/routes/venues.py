@@ -2,9 +2,10 @@
 from collections import Counter
 from datetime import datetime
 
-from flask import Blueprint, current_app, jsonify, render_template, request, send_from_directory
+from flask import Blueprint, current_app, flash, jsonify, redirect, render_template, request, send_from_directory
 
 import venues
+import reviews
 from db import get_db
 from errors import BusinessRuleError
 
@@ -29,10 +30,26 @@ def search_page():
 @bp.get("/venues/<int:venue_id>")
 def venue_page(venue_id):
     conn = get_db()
+    now = current_app.config.get("NOW", datetime.now)()
     venue = venues.get_venue(conn, venue_id)
-    day = request.args.get("date") or datetime.now().date().isoformat()
+    day = request.args.get("date") or now.date().isoformat()
+    reviews_list = reviews.venue_reviews(conn, venue_id)
+    rating_summary = reviews.venue_rating_summary(conn, venue_id)
     return render_template("venue.html", venue=venue, photos=venues.photos(conn, venue_id), day=day,
-                           today=datetime.now().date().isoformat())
+                           today=now.date().isoformat(), reviews=reviews_list,
+                           rating_summary=rating_summary)
+
+
+@bp.post("/venues/<int:venue_id>/reviews/<int:review_id>/report")
+def report_review_route(venue_id, review_id):
+    conn = get_db()
+    try:
+        reviews.report_review(conn, review_id)
+        flash("Review report submitted successfully.", "success")
+    except BusinessRuleError as e:
+        flash(e.message, "error")
+    return redirect(f"/venues/{venue_id}")
+
 
 
 @bp.get("/venues/<int:venue_id>/photos/<int:photo_id>")
@@ -47,7 +64,7 @@ def venue_photo(venue_id, photo_id):
 @bp.get("/api/venues/<int:venue_id>")
 def api_venue(venue_id):
     conn = get_db()
-    now = datetime.now()
+    now = current_app.config.get("NOW", datetime.now)()
     venue = venues.get_venue(conn, venue_id)
     day = venues.parse_day(request.args.get("date") or now.date().isoformat(), now)
     slots = venues.day_slots(conn, venue, day, now)
