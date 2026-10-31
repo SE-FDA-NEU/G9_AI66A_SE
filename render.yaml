@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: g9-venue-booking
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && python src/init_db.py
+    startCommand: gunicorn --chdir src "app:create_app()" --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: SHOW_VERIFICATION_LINK
+        value: "1"
+      - key: DATABASE_PATH
+        value: data/venues.db
+    disk:
+      name: venue-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
