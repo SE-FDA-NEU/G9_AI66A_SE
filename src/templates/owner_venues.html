@@ -59,7 +59,7 @@
           </td>
           <td class="num price-cell">{{ "{:,}".format(v.hourly_price) }}</td>
           <td class="num photos-cell">
-            <a href="/venues/{{ v.id }}/photos/" class="photo-badge">📷 {{ v.photo_count }}</a>
+            <a href="/venues/{{ v.id }}" class="photo-badge" title="View venue photos">📷 {{ v.photo_count }}</a>
           </td>
           <td style="text-align: right; white-space: nowrap;">
             <a href="/owner/venues/{{ v.id }}/schedule" class="button secondary" style="padding: 5px 10px; font-size: 12px; font-weight: 700;">📅 Lịch</a>
