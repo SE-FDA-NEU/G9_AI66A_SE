@@ -1,5 +1,8 @@
 # Vercel Deployment Guide
 
+**Live Production Deployment:** 🌐 **[https://g9-venue-booking-demo.vercel.app](https://g9-venue-booking-demo.vercel.app)**  
+**Health Check Endpoint:** `https://g9-venue-booking-demo.vercel.app/health` → `{"status":"ok","venues":24}`
+
 This guide explains how to deploy the Sports Venue Booking System to [Vercel](https://vercel.com) using **Vercel Postgres** for the database and **Cloudinary** for persistent photo storage.
 
 > **Note:** This document covers the application changes and project configuration required for Vercel. It does **not** perform the actual deployment, because that requires creating a Vercel project and adding secrets that only the account owner can provide.

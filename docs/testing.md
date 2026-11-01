@@ -1,6 +1,8 @@
-﻿# Testing - Milestone 4: Automated Testing Strategy & P0 Verification
+# Testing - Milestone 4: Automated Testing Strategy & P0 Verification
 
 This document specifies the testing strategy, test case catalog, automated test suite, and defect analysis for Milestone 4. It proves that the Sports Venue Booking System functions deterministically under continuous change, that business rules (`BR1`–`BR19`) are enforced, and that every P0 user story is continuously safeguarded by fast, reproducible automated tests.
+
+Live production deployment: [https://g9-venue-booking-demo.vercel.app](https://g9-venue-booking-demo.vercel.app).
 
 ---
 
