@@ -33,11 +33,21 @@ jobs:
           GH_TOKEN: ${{ secrets.PROJECT_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          PROJECT_ID=$(gh api graphql -f query='
+          if ! PROJECT_ID=$(gh api graphql -f query='
             query($org:String!, $num:Int!) {
               organization(login:$org) { projectV2(number:$num) { id } }
             }' -f org="$ORG" -F num="$PROJECT_NUMBER" \
-            --jq '.data.organization.projectV2.id')
+            --jq '.data.organization.projectV2.id // empty'); then
+            echo "::warning::Unable to access organization project #$PROJECT_NUMBER. Skipping the board status update; verify the project number and that PROJECT_TOKEN can access this organization project."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ -z "$PROJECT_ID" ]; then
+            echo "::warning::Organization project #$PROJECT_NUMBER was not found. Skipping the board status update; verify PROJECT_NUMBER and PROJECT_TOKEN access."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
           read -r FIELD_ID OPTION_ID < <(gh api graphql -f query='
             query($pid:ID!) {
@@ -59,6 +69,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Set Status = In Review on every issue this PR closes
+        if: steps.meta.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ secrets.PROJECT_TOKEN || secrets.GITHUB_TOKEN }}
           BODY: ${{ github.event.pull_request.body }}
