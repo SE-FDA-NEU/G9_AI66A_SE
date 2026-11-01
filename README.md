@@ -25,6 +25,7 @@ one screen instead of keeping it in a paper notebook.
 https://github.com/orgs/SE-FDA-NEU/projects/25
 
 **New machine? Start with [`docs/SETUP.md`](docs/SETUP.md).**
+**Deploying? See [`docs/DEPLOY.md`](docs/DEPLOY.md) (Render, free tier, persistent disk).**
 
 ## Core Features & P0 Stories
 
