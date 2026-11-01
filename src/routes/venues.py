@@ -6,6 +6,7 @@ from flask import Blueprint, current_app, flash, jsonify, redirect, render_templ
 
 import venues
 import reviews
+import storage
 from db import get_db
 from errors import BusinessRuleError
 
@@ -43,6 +44,8 @@ def venue_photo(venue_id, photo_id):
                              (photo_id, venue_id)).fetchone()
     if photo is None:
         raise BusinessRuleError(404, "Photo not found.")
+    if storage.using_cloudinary():
+        return redirect(storage.photo_url(photo["file_name"]))
     return send_from_directory(current_app.config["UPLOAD_DIR"], photo["file_name"])
 
 

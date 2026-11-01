@@ -32,7 +32,8 @@ LANDING_PAGE = {"customer": "/dashboard", "owner": "/owner/venues", "admin": "/a
 
 def sign_in(conn, email, password, now):
     """Return the user row, or raise BusinessRuleError (BR5, BR6)."""
-    user = conn.execute("SELECT * FROM user WHERE email = ?", (email.strip(),)).fetchone()
+    normalized_email = email.strip().casefold()
+    user = conn.execute("SELECT * FROM user WHERE lower(email) = ?", (normalized_email,)).fetchone()
     if user is None:
         # BR6: the same sentence as a wrong password, so nobody learns which emails exist
         raise BusinessRuleError(401, WRONG_SIGN_IN, "BR6")
@@ -63,10 +64,11 @@ def sign_in(conn, email, password, now):
 def check_registration(conn, email, password, full_name, phone):
     """Return one BusinessRuleError per broken rule - an empty list when all is well.
     Every field is checked at once, so the user can fix everything in one go."""
+    email = email.strip().casefold()
     problems = []
     if not EMAIL_PATTERN.match(email):
         problems.append(BusinessRuleError(400, "Please enter a valid email address", None, "email"))
-    elif conn.execute("SELECT 1 FROM user WHERE email = ?", (email,)).fetchone():
+    elif conn.execute("SELECT 1 FROM user WHERE lower(email) = ?", (email,)).fetchone():
         problems.append(BusinessRuleError(409, "This email is already in use", "BR1", "email"))
     if len(password) < 8:
         problems.append(BusinessRuleError(400, "Password must be at least 8 characters", "BR2", "password"))
@@ -85,7 +87,7 @@ def check_registration(conn, email, password, full_name, phone):
 def register(conn, email, password, full_name, phone):
     """Create a customer account. It cannot book until its email is verified (BR4).
     Return the new user id, or raise the first broken rule."""
-    email, full_name, phone = email.strip(), full_name.strip(), phone.strip()
+    email, full_name, phone = email.strip().casefold(), full_name.strip(), phone.strip()
     problems = check_registration(conn, email, password, full_name, phone)
     if problems:
         raise problems[0]

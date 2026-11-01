@@ -24,7 +24,7 @@
   <div class="flash error unverified-callout" role="alert">
     <div class="callout-icon">✉️</div>
     <div class="callout-body">
-      <strong>Verification pending:</strong> Please verify your email before booking. We sent a link to <strong>{{ g.user.email }}</strong> when you registered.
+      <strong>Verification pending:</strong> Verify your email before booking. This demo does not send email; use the verification link shown on the sign-in page.
       <form method="post" action="/verify/resend" style="margin-top: 10px">
         <button type="submit" class="secondary">Send a new link</button>
       </form>
@@ -34,9 +34,9 @@
 
   <div class="stats-grid">
     <div class="stat-card">
-      <div class="stat-label">Coverage Region</div>
-      <div class="stat-value">Hanoi City</div>
-      <div class="stat-meta">8 Active Districts &middot; 24 Pitches</div>
+      <div class="stat-label">Service area</div>
+      <div class="stat-value">Hanoi</div>
+      <div class="stat-meta">Browse local venue listings</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Upcoming Matches</div>
@@ -44,9 +44,9 @@
       <div class="stat-meta">Confirmed reservations</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">Booking Confirmation</div>
-      <div class="stat-value">Instant Pass</div>
-      <div class="stat-meta">Zero wait time with automatic slot locking</div>
+      <div class="stat-label">Your reservations</div>
+      <div class="stat-value">Booking codes</div>
+      <div class="stat-meta">Find the details for each reservation in your booking list.</div>
     </div>
   </div>
 
@@ -57,7 +57,7 @@
         <h2>Your Upcoming Reservations</h2>
         <span class="badge-count">{{ upcoming_bookings | length }} active</span>
       </div>
-      <a href="/my-bookings" style="font-size: 13px; font-weight: 700; color: #0284c7; text-decoration: none;">View all match history &rarr;</a>
+      <a href="/my-bookings" style="font-size: 13px; font-weight: 700; color: #286b45; text-decoration: none;">View all match history &rarr;</a>
     </div>
     <div class="bookings-grid">
       {% for b in upcoming_bookings %}
@@ -84,7 +84,7 @@
   <div class="dashboard-action-card">
     <div class="action-card-text">
       <h2>Ready for your next match?</h2>
-      <p>Explore top-rated venues in Cau Giay, Ba Dinh, Dong Da, and Hai Ba Trung with transparent hourly rates and instant booking.</p>
+      <p>Browse venues around Hanoi, compare listed hourly prices, and check available times before booking.</p>
     </div>
     <div class="action-card-btn" style="display: flex; gap: 10px; flex-wrap: wrap;">
       <a class="button" href="/search">Find a venue to book</a>
@@ -97,7 +97,7 @@
       <div class="feature-icon">🛡️</div>
       <div class="feature-content">
         <h3>Fair Cancellation Policy</h3>
-        <p>Cancel up to 24 hours prior for a 100% refund; cancel within 2–24h for a 50% credit directly through your booking code.</p>
+        <p>Cancel at least 24 hours before your booking for a full refund. Cancellations 2–24 hours before the start receive a 50% refund.</p>
       </div>
     </div>
     <div class="feature-item">
@@ -111,7 +111,7 @@
       <div class="feature-icon">📍</div>
       <div class="feature-content">
         <h3>Accurate Court Details</h3>
-        <p>Direct contact numbers, surface types, high-res photos, and verified owner information for every listed arena.</p>
+        <p>Each listing shows its location, opening hours, and prices provided by the venue owner.</p>
       </div>
     </div>
   </div>

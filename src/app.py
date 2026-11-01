@@ -7,16 +7,36 @@ service modules (src/auth.py, ...). This file only wires them together.
 import importlib
 import os
 import pkgutil
+from pathlib import Path
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
 
 import routes
-from db import ROOT, close_db, get_db
+from db import ROOT, close_db, connect, get_db
 from errors import BusinessRuleError
 from guards import SESSION_TIMEOUT, load_user
+from pg_schema import PG_SCHEMA
+from schema import SCHEMA
 
 load_dotenv()
+
+
+def _ensure_schema(database=None):
+    """Create tables if they do not exist. Never drops or reseeds data."""
+    if os.environ.get("DATABASE_URL"):
+        with connect() as conn:
+            conn.executescript(PG_SCHEMA)
+            from pg_seed import seed_postgres
+            seed_postgres(conn)
+        return
+    # SQLite: only create the file/schema when it does not exist yet.
+    from db import database_path
+    path = database_path() if database is None else Path(database)
+    if not path.exists():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with connect(path) as conn:
+            conn.executescript(SCHEMA)
 
 
 def wants_json():
@@ -28,8 +48,10 @@ def create_app(database=None):
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-only")
     app.config["DATABASE"] = database
     app.config["PERMANENT_SESSION_LIFETIME"] = SESSION_TIMEOUT        # BR8
-    app.config["UPLOAD_DIR"] = ROOT / "data" / "uploads"                # venue photos, git-ignored
+    app.config["UPLOAD_DIR"] = Path(os.environ.get("UPLOAD_DIR", ROOT / "data" / "uploads"))  # venue photos, git-ignored
     app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024                   # largest photo upload: 5 MB
+
+    _ensure_schema(database)
 
     app.before_request(load_user)
     app.teardown_appcontext(close_db)

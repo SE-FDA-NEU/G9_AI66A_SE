@@ -401,68 +401,57 @@
 {% endblock %}
 
 {% block content %}
-<div class="hero-container">
-  <div class="hero-pill-badge">
-    <span class="dot"></span> Hanoi Amateur Sports Network &middot; Verified Pitches
-  </div>
-  <h1 class="hero-title">Book Your Court in Seconds.<br><span class="gradient-text">Play Like Champions.</span></h1>
-  <p class="hero-lead">The premier athletic booking platform for Hanoi players. Instant confirmation, transparent pricing, and seamless electronic booking vouchers.</p>
-  
-  <div class="hero-stats-row">
-    <div class="hero-stat-box">
-      <div class="hero-stat-val">{{ total }}</div>
-      <div class="hero-stat-lbl">Active Venues</div>
+<section class="hero-container" aria-labelledby="hero-title">
+  <div class="hero-layout">
+    <div class="hero-copy">
+      <div class="hero-pill-badge"><span class="dot"></span> SÂN THỂ THAO · HÀ NỘI</div>
+      <h1 class="hero-title" id="hero-title">Kèo hay bắt đầu<br>từ một chiếc sân <span class="gradient-text">đúng ý.</span></h1>
+      <p class="hero-lead">Tìm sân bóng đá, cầu lông, tennis và pickleball gần bạn. Xem giờ trống, so sánh giá và đặt lịch thuận tiện.</p>
+      <div class="hero-stats-row">
+        <div class="hero-stat-box">
+          <div class="hero-stat-val">{{ total }}</div>
+          <div class="hero-stat-lbl">sân đang nhận đặt</div>
+        </div>
+        <div class="hero-stat-note">Chọn môn chơi · chọn khu vực · chọn giờ phù hợp</div>
+      </div>
     </div>
-    <div class="hero-stat-box">
-      <div class="hero-stat-val">8</div>
-      <div class="hero-stat-lbl">Hanoi Districts</div>
-    </div>
-    <div class="hero-stat-box">
-      <div class="hero-stat-val">100%</div>
-      <div class="hero-stat-lbl">Reservation Guarantee</div>
-    </div>
-    <div class="hero-stat-box">
-      <div class="hero-stat-val">&lt; 200ms</div>
-      <div class="hero-stat-lbl">Instant Confirmation</div>
-    </div>
-  </div>
-</div>
 
-<div class="category-bar">
-  <div class="category-title">Explore by Sport Discipline</div>
-  <div class="category-pills">
-    <a href="/search?sport=Football" class="cat-pill {% if request.args.get('sport') == 'Football' %}active{% endif %}">⚽ Football (Bóng đá)</a>
-    <a href="/search?sport=Badminton" class="cat-pill {% if request.args.get('sport') == 'Badminton' %}active{% endif %}">🏸 Badminton (Cầu lông)</a>
-    <a href="/search?sport=Tennis" class="cat-pill {% if request.args.get('sport') == 'Tennis' %}active{% endif %}">🎾 Tennis (Quần vợt)</a>
-    <a href="/search?sport=Table+Tennis" class="cat-pill {% if request.args.get('sport') == 'Table Tennis' %}active{% endif %}">🏓 Table Tennis (Bóng bàn)</a>
-    <a href="/search?sport=Pickleball" class="cat-pill {% if request.args.get('sport') == 'Pickleball' %}active{% endif %}">🥍 Pickleball (Trend)</a>
-  </div>
-</div>
-
-<form class="filters" method="get" action="/search">
+    <form class="filters hero-filters" method="get" action="/search">
   <label>
-    <span>Sport Discipline</span>
+    <span>Môn thể thao</span>
     <select name="sport">
       <option value="">All sports</option>
-      {% for s in sports %}<option {% if s == selected_sport %}selected{% endif %}>{{ s }}</option>{% endfor %}
+      {% for s in sports %}<option {% if s == sport %}selected{% endif %}>{{ s }}</option>{% endfor %}
     </select>
   </label>
   <label>
-    <span>Area (District of Hanoi)</span>
+    <span>Khu vực</span>
     <select name="area">
       <option value="">All areas</option>
-      {% for a in areas %}<option {% if a == selected_area %}selected{% endif %}>{{ a }}</option>{% endfor %}
+      {% for a in areas %}<option {% if a == area %}selected{% endif %}>{{ a }}</option>{% endfor %}
     </select>
   </label>
   <label>
-    <span>Quick Keyword Search</span>
-    <input type="search" name="q" id="q" value="{{ q }}" placeholder="Pitch name, court, or keyword..." autocomplete="off">
+    <span>Tên sân hoặc địa chỉ</span>
+    <input type="search" name="q" id="q" value="{{ q }}" placeholder="Ví dụ: sân Thống Nhất, Cầu Giấy..." autocomplete="off">
   </label>
   <div class="filter-actions">
-    <button type="submit">Filter Venues</button>
-    <a class="button secondary" href="/search">Reset</a>
+    <button type="submit">Tìm sân</button>
+    <a class="button secondary" href="/search">Xóa lọc</a>
+      </div>
+    </form>
   </div>
-</form>
+</section>
+
+<div class="category-bar">
+  <div class="category-title">Bạn muốn chơi môn gì?</div>
+  <div class="category-pills">
+    <a href="/search?sport=Football" class="cat-pill {% if request.args.get('sport') == 'Football' %}active{% endif %}">⚽ Bóng đá</a>
+    <a href="/search?sport=Badminton" class="cat-pill {% if request.args.get('sport') == 'Badminton' %}active{% endif %}">🏸 Cầu lông</a>
+    <a href="/search?sport=Tennis" class="cat-pill {% if request.args.get('sport') == 'Tennis' %}active{% endif %}">🎾 Tennis</a>
+    <a href="/search?sport=Pickleball" class="cat-pill {% if request.args.get('sport') == 'Pickleball' %}active{% endif %}">🏓 Pickleball</a>
+  </div>
+</div>
 
 {% if error %}<div class="flash error" role="alert" style="margin-top:16px">{{ error }}</div>{% endif %}
 
@@ -471,17 +460,20 @@
     <p class="count" style="margin: 0; font-size: 16px; font-weight: 700;">
       <strong id="count">{{ venues|length }}</strong> venue(s) found
     </p>
-    <span class="tag-badge" style="background:#e0f2fe; color:#0369a1; border-color:#bae6fd; font-weight:700; font-size:12px; padding:6px 12px;">
-      ⚡ Real-time Availability Sync
+    <span class="tag-badge" style="background:#e9efdf; color:#355e3e; border-color:#d6e2ca; font-weight:700; font-size:12px; padding:6px 12px;">
+      Lịch trống xem theo ngày
     </span>
   </div>
 
   <!-- Modern Grid Showcase Cards -->
   <div class="venue-cards-grid">
     {% for v in venues %}
-    <div class="venue-card-item venue-card-filter-target" data-text="{{ (v.name ~ ' ' ~ v.sport ~ ' ' ~ v.area)|lower }}">
-      <div class="venue-card-img">
-        <span>{% if v.sport == 'Football' %}⚽{% elif v.sport == 'Badminton' %}🏸{% elif v.sport == 'Tennis' %}🎾{% elif v.sport == 'Pickleball' %}🏓{% else %}🏟️{% endif %}</span>
+    <div class="venue-card-item venue-card-filter-target" data-text="{{ (v.name ~ ' ' ~ v.sport ~ ' ' ~ v.area ~ ' ' ~ v.address)|lower }}">
+      <div class="venue-card-img sport-{{ v.sport|lower }} image-{{ v.id % (4 if v.sport == 'Football' else 5) }}" {% if not v.cover_photo_id %}role="img" aria-label="Ảnh minh họa {{ v.sport }}"{% endif %}>
+        {% if v.cover_photo_id %}<img class="venue-cover" src="/venues/{{ v.id }}/photos/{{ v.cover_photo_id }}" alt="Ảnh sân {{ v.name }}">{% else %}
+        <span class="venue-card-placeholder-icon" aria-hidden="true">{% if v.sport == 'Football' %}⚽{% elif v.sport == 'Badminton' %}🏸{% elif v.sport == 'Tennis' %}🎾{% elif v.sport == 'Pickleball' %}🏓{% else %}🏟️{% endif %}</span>
+        <span class="photo-note">Ảnh minh họa</span>
+        {% endif %}
         <span class="venue-card-sport-pill">{{ v.sport }}</span>
         <span class="venue-card-district-pill">📍 {{ v.area }}</span>
       </div>
@@ -491,49 +483,44 @@
           <span>{{ v.address }}</span>
         </div>
         <div class="venue-card-features">
-          <span class="feat-tag">★ 4.9 Rating</span>
-          <span class="feat-tag">Open {{ '%02d:00' % v.open_hour }}&ndash;{{ '%02d:00' % v.close_hour }}</span>
-          <span class="feat-tag">Night LED</span>
+          <span class="feat-tag">Mở {{ '%02d:00' % v.open_hour }}&ndash;{{ '%02d:00' % v.close_hour }}</span>
+          <span class="feat-tag">{{ v.sport }}</span>
         </div>
       </div>
       <div class="venue-card-footer">
-        <div class="venue-card-price">{{ "{:,}".format(v.hourly_price) }} <small>VND/h</small></div>
-        <a href="/venues/{{ v.id }}" class="button" style="padding: 8px 16px; font-size: 13px;">View Slots &rarr;</a>
+        <div class="venue-card-price">{{ "{:,}".format(v.hourly_price) }} <small>VND/hour</small></div>
+        <a href="/venues/{{ v.id }}" class="button" style="padding: 8px 16px; font-size: 13px;">Xem sân</a>
       </div>
     </div>
     {% endfor %}
   </div>
 
-  <!-- Data Table (Preserved for automated tests and desktop view) -->
-  <h3 style="margin: 32px 0 16px; font-size: 18px;">Detailed Venue Directory</h3>
+  <details class="directory-details">
+  <summary>Hiện danh sách dạng bảng</summary>
   <table>
-    <thead><tr><th>#</th><th>Venue Name & Ratings</th><th>Sport</th><th>Area</th><th>Address</th>
-      <th>Hours</th><th class="num">Rate / hour (VND)</th><th>Action</th></tr></thead>
+    <thead><tr><th>#</th><th>Venue</th><th>Sport</th><th>Area</th><th>Address</th>
+      <th>Opening hours</th><th class="num">Price / hour (VND)</th><th>Action</th></tr></thead>
     <tbody>
     {% for v in venues %}
-      <tr data-text="{{ (v.name ~ ' ' ~ v.sport)|lower }}">
+      <tr data-text="{{ (v.name ~ ' ' ~ v.sport ~ ' ' ~ v.area ~ ' ' ~ v.address)|lower }}">
         <td>{{ v.id }}</td>
         <td>
           <a href="/venues/{{ v.id }}" style="font-weight: 700; font-size: 15px;">{{ v.name }}</a>
-          <div style="display: flex; gap: 6px; align-items: center; margin-top: 4px;">
-            <span class="rating-badge" style="background:#fef3c7; color:#b45309; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:700;">★ 4.9</span>
-            <span class="amenity-tag" style="background:#f1f5f9; color:#475569; padding:2px 6px; border-radius:4px; font-size:11px;">✓ LED Lights</span>
-            <span class="amenity-tag" style="background:#f1f5f9; color:#475569; padding:2px 6px; border-radius:4px; font-size:11px;">✓ Parking</span>
-          </div>
         </td>
-        <td><span class="badge-sport" style="display:inline-block; padding:4px 8px; background:#e0f2fe; color:#0369a1; border-radius:6px; font-weight:700; font-size:12px;">
+        <td><span class="badge-sport" style="display:inline-block; padding:4px 8px; background:#e9efdf; color:#355e3e; border-radius:6px; font-weight:700; font-size:12px;">
           {% if v.sport == 'Football' %}⚽{% elif v.sport == 'Badminton' %}🏸{% elif v.sport == 'Tennis' %}🎾{% elif v.sport == 'Pickleball' %}🏓{% endif %}
           {{ v.sport }}
         </span></td>
         <td><span class="badge-area" style="font-weight:600;">📍 {{ v.area }}</span></td>
         <td>{{ v.address }}</td>
         <td style="font-size: 13px; color: var(--text-muted); font-weight: 600;">{{ '%02d:00' % v.open_hour }}&ndash;{{ '%02d:00' % v.close_hour }}</td>
-        <td class="num price-highlight" style="font-weight:800; color:#0284c7;">{{ "{:,}".format(v.hourly_price) }}</td>
+        <td class="num price-highlight" style="font-weight:800; color:#286b45;">{{ "{:,}".format(v.hourly_price) }}</td>
         <td><a class="button" href="/venues/{{ v.id }}" style="padding: 6px 14px; font-size: 13px;">View Slots</a></td>
       </tr>
     {% endfor %}
     </tbody>
   </table>
+  </details>
 </div>
 
 <div class="empty" id="no-match" {% if venues or error %}hidden{% endif %}>
@@ -543,85 +530,44 @@
   <a href="/search" class="button secondary">View All Venues</a>
 </div>
 
-<!-- How It Works Section -->
 <div class="section-divider">
-  <h2>How Hanoi Sports Booking Works</h2>
-  <p>Reserve premier amateur sports courts in three seamless steps</p>
+  <h2>Đặt sân gọn trong vài bước</h2>
+  <p>Thông tin giờ mở cửa và giá được hiển thị trước khi bạn xác nhận.</p>
 </div>
 <div class="steps-grid">
   <div class="step-card">
     <div class="step-card-num">1</div>
-    <h3>Explore Courts &amp; Areas</h3>
-    <p>Search over 24 verified courts across 8 Hanoi districts. Filter by Football, Badminton, Tennis, and Pickleball.</p>
+    <h3>Tìm sân quanh bạn</h3>
+    <p>Lọc theo môn thể thao, khu vực hoặc tên sân.</p>
   </div>
   <div class="step-card">
     <div class="step-card-num">2</div>
-    <h3>Real-Time Slot Availability</h3>
-    <p>Check live available hours. Lock your preferred match time instantly with 100% reservation guarantee.</p>
+    <h3>Chọn khung giờ</h3>
+    <p>Xem giờ còn trống theo ngày và kiểm tra mức giá trước khi đặt.</p>
   </div>
   <div class="step-card">
     <div class="step-card-num">3</div>
-    <h3>Instant Match Pass</h3>
-    <p>Receive your digital voucher code immediately. Show up at the pitch and enjoy your match!</p>
+    <h3>Xác nhận lịch</h3>
+    <p>Mã đặt sân giúp bạn tra cứu lịch trong mục Đơn của tôi.</p>
   </div>
 </div>
 
-<!-- Community Testimonials -->
-<div class="section-divider">
-  <h2>Trusted by Hanoi's Amateur Athletes</h2>
-  <p>Thousands of players and team captains reserve weekly matches through our network</p>
-</div>
-<div class="testimonials-grid">
-  <div class="testimonial-card">
-    <div class="testimonial-stars">★★★★★</div>
-    <div class="testimonial-quote">"Booking pitches in Cau Giay used to take dozens of phone calls. With this platform, our squad locks Saturday matches in 30 seconds flat."</div>
-    <div class="testimonial-author">
-      <div class="author-avatar">TM</div>
-      <div>
-        <div class="author-name">Tran Manh</div>
-        <div class="author-role">Captain, FC NEU Alumni</div>
-      </div>
-    </div>
-  </div>
-  <div class="testimonial-card">
-    <div class="testimonial-stars">★★★★★</div>
-    <div class="testimonial-quote">"Transparent peak hour rates and automated email confirmation make court scheduling for our badminton league completely effortless."</div>
-    <div class="testimonial-author">
-      <div class="author-avatar">HL</div>
-      <div>
-        <div class="author-name">Hoang Linh</div>
-        <div class="author-role">Organizer, Hanoi Badminton Club</div>
-      </div>
-    </div>
-  </div>
-  <div class="testimonial-card">
-    <div class="testimonial-stars">★★★★★</div>
-    <div class="testimonial-quote">"The fair play cancellation policy gives our weekend tennis group total peace of mind in case of sudden weather shifts."</div>
-    <div class="testimonial-author">
-      <div class="author-avatar">VT</div>
-      <div>
-        <div class="author-name">Vu Tuan</div>
-        <div class="author-role">Dong Da Tennis League</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<p class="muted" style="margin-top: 36px; text-align: center;">Over {{ total }} verified sports venues available across Hanoi.</p>
+<p class="muted" style="margin-top: 24px; text-align: center;">Đang hiển thị {{ total }} sân đang nhận đặt lịch.</p>
 
 <script>
 // US03 criterion 3: from the 3rd character typed, narrow the list to venues whose name or
-// sport contains the text - without reloading the page. Fewer than 3 characters shows all.
+// venue name, sport, area, or address contains the text - without reloading the page. Fewer than 3 characters shows all.
 const q = document.getElementById("q");
+const normalizeSearch = value => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 const rows = [...document.querySelectorAll("#results tbody tr")];
 const cards = [...document.querySelectorAll(".venue-card-filter-target")];
 
 q.addEventListener("input", () => {
-  const text = q.value.trim().toLowerCase();
+  const text = normalizeSearch(q.value.trim());
   let shown = 0;
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
-    const match = text.length < 3 || row.dataset.text.includes(text);
+    const match = text.length < 3 || normalizeSearch(row.dataset.text).includes(text);
     row.hidden = !match;
     if (cards[i]) cards[i].hidden = !match;
     if (match) shown++;

@@ -5,30 +5,14 @@
   <div class="admin-header-bar">
     <div>
       <h1>Administration</h1>
-      <p class="subtitle">Platform moderation and community safety dashboard.</p>
+      <p class="subtitle">Community review moderation.</p>
     </div>
-    <span class="admin-role-pill">Super Admin</span>
+    <span class="admin-role-pill">Administrator</span>
   </div>
 
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-label">Pending Reviews</div>
-      <div class="stat-value">0</div>
-      <div class="stat-meta">All user flags resolved</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Security Audits</div>
-      <div class="stat-value">Passed</div>
-      <div class="stat-meta">SQL Injection &amp; Concurrency safe</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">System Health</div>
-      <div class="stat-value">100%</div>
-      <div class="stat-meta">Vercel Serverless Edge active</div>
-    </div>
-  </div>
-
-  <div class="empty">No reported reviews to moderate.</div>
-  <p class="muted" style="margin-top: 16px;">Community reviews with 3 or more reports are automatically hidden from public venue pages.</p>
+  <section class="card admin-note-card">
+    <h2>Review moderation</h2>
+    <p>Reviews are hidden from public venue pages after receiving three reports. This demo does not provide a manual moderation queue.</p>
+  </section>
 </div>
 {% endblock %}
