@@ -140,7 +140,7 @@
       <div class="venue-pills">
         <span class="pill sport">{{ venue.sport }}</span>
         <span class="pill area">📍 {{ venue.area }}</span>
-        {% if rating_summary and rating_summary.avg_rating %}<span class="pill rating">★ {{ rating_summary.avg_rating }} · {{ rating_summary.review_count }} đánh giá</span>{% endif %}
+        {% if rating_summary and rating_summary.avg_rating %}<span class="pill rating">★ {{ rating_summary.avg_rating }} · {{ rating_summary.review_count }} review{% if rating_summary.review_count > 1 %}s{% endif %}</span>{% endif %}
       </div>
     </div>
     <a class="button" href="/booking/{{ venue.id }}" style="padding: 12px 26px; font-size: 15px;">Book This Venue</a>
@@ -175,8 +175,8 @@
     {% for p in photos %}<img src="/venues/{{ venue.id }}/photos/{{ p.id }}" alt="Photo {{ loop.index }} of {{ venue.name }}">{% endfor %}
   </div>
   {% else %}
-  <div class="venue-photo-placeholder sport-{{ venue.sport|lower }} image-{{ venue.id % (4 if venue.sport == 'Football' else 5) }}" role="img" aria-label="Ảnh minh họa {{ venue.sport }}">
-    <span>Ảnh minh họa · {{ venue.sport }}</span>
+  <div class="venue-photo-placeholder sport-{{ venue.sport|lower }} image-{{ venue.id % (4 if venue.sport == 'Football' else 5) }}" role="img" aria-label="Illustrative photo {{ venue.sport }}">
+    <span>Illustrative photo · {{ venue.sport }}</span>
   </div>
   {% endif %}
 </div>

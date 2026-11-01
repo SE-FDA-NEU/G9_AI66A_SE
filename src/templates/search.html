@@ -404,50 +404,50 @@
 <section class="hero-container" aria-labelledby="hero-title">
   <div class="hero-layout">
     <div class="hero-copy">
-      <div class="hero-pill-badge"><span class="dot"></span> SÂN THỂ THAO · HÀ NỘI</div>
-      <h1 class="hero-title" id="hero-title">Kèo hay bắt đầu<br>từ một chiếc sân <span class="gradient-text">đúng ý.</span></h1>
-      <p class="hero-lead">Tìm sân bóng đá, cầu lông, tennis và pickleball gần bạn. Xem giờ trống, so sánh giá và đặt lịch thuận tiện.</p>
+      <div class="hero-pill-badge"><span class="dot"></span> HANOI SPORTS VENUES · VERIFIED</div>
+      <h1 class="hero-title" id="hero-title">Great matches start<br>with the right <span class="gradient-text">court.</span></h1>
+      <p class="hero-lead">Find football pitches, badminton, tennis and pickleball courts near you. Check live availability, compare prices, and book in seconds.</p>
       <div class="hero-stats-row">
         <div class="hero-stat-box">
           <div class="hero-stat-val">{{ total }}</div>
-          <div class="hero-stat-lbl">sân đang nhận đặt</div>
+          <div class="hero-stat-lbl">venues taking bookings</div>
         </div>
-        <div class="hero-stat-note">Chọn môn chơi · chọn khu vực · chọn giờ phù hợp</div>
+        <div class="hero-stat-note">Choose a sport · pick an area · find your slot</div>
       </div>
     </div>
 
     <form class="filters hero-filters" method="get" action="/search">
   <label>
-    <span>Môn thể thao</span>
+    <span>Sport discipline</span>
     <select name="sport">
       <option value="">All sports</option>
       {% for s in sports %}<option {% if s == sport %}selected{% endif %}>{{ s }}</option>{% endfor %}
     </select>
   </label>
   <label>
-    <span>Khu vực</span>
+    <span>Area (district)</span>
     <select name="area">
       <option value="">All areas</option>
       {% for a in areas %}<option {% if a == area %}selected{% endif %}>{{ a }}</option>{% endfor %}
     </select>
   </label>
   <label>
-    <span>Tên sân hoặc địa chỉ</span>
-    <input type="search" name="q" id="q" value="{{ q }}" placeholder="Ví dụ: sân Thống Nhất, Cầu Giấy..." autocomplete="off">
+    <span>Venue name or address</span>
+    <input type="search" name="q" id="q" value="{{ q }}" placeholder="e.g. Thong Nhat pitch, Cau Giay..." autocomplete="off">
   </label>
   <div class="filter-actions">
-    <button type="submit">Tìm sân</button>
-    <a class="button secondary" href="/search">Xóa lọc</a>
+    <button type="submit">Search venues</button>
+    <a class="button secondary" href="/search">Clear filters</a>
       </div>
     </form>
   </div>
 </section>
 
 <div class="category-bar">
-  <div class="category-title">Bạn muốn chơi môn gì?</div>
+  <div class="category-title">What do you want to play?</div>
   <div class="category-pills">
-    <a href="/search?sport=Football" class="cat-pill {% if request.args.get('sport') == 'Football' %}active{% endif %}">⚽ Bóng đá</a>
-    <a href="/search?sport=Badminton" class="cat-pill {% if request.args.get('sport') == 'Badminton' %}active{% endif %}">🏸 Cầu lông</a>
+    <a href="/search?sport=Football" class="cat-pill {% if request.args.get('sport') == 'Football' %}active{% endif %}">⚽ Football</a>
+    <a href="/search?sport=Badminton" class="cat-pill {% if request.args.get('sport') == 'Badminton' %}active{% endif %}">🏸 Badminton</a>
     <a href="/search?sport=Tennis" class="cat-pill {% if request.args.get('sport') == 'Tennis' %}active{% endif %}">🎾 Tennis</a>
     <a href="/search?sport=Pickleball" class="cat-pill {% if request.args.get('sport') == 'Pickleball' %}active{% endif %}">🏓 Pickleball</a>
   </div>
@@ -461,7 +461,7 @@
       <strong id="count">{{ venues|length }}</strong> venue(s) found
     </p>
     <span class="tag-badge" style="background:#e9efdf; color:#355e3e; border-color:#d6e2ca; font-weight:700; font-size:12px; padding:6px 12px;">
-      Lịch trống xem theo ngày
+      Live slot availability by date
     </span>
   </div>
 
@@ -469,10 +469,10 @@
   <div class="venue-cards-grid">
     {% for v in venues %}
     <div class="venue-card-item venue-card-filter-target" data-text="{{ (v.name ~ ' ' ~ v.sport ~ ' ' ~ v.area ~ ' ' ~ v.address)|lower }}">
-      <div class="venue-card-img sport-{{ v.sport|lower }} image-{{ v.id % (4 if v.sport == 'Football' else 5) }}" {% if not v.cover_photo_id %}role="img" aria-label="Ảnh minh họa {{ v.sport }}"{% endif %}>
-        {% if v.cover_photo_id %}<img class="venue-cover" src="/venues/{{ v.id }}/photos/{{ v.cover_photo_id }}" alt="Ảnh sân {{ v.name }}">{% else %}
+      <div class="venue-card-img sport-{{ v.sport|lower }} image-{{ v.id % (4 if v.sport == 'Football' else 5) }}" {% if not v.cover_photo_id %}role="img" aria-label="Illustrative photo {{ v.sport }}"{% endif %}>
+        {% if v.cover_photo_id %}<img class="venue-cover" src="/venues/{{ v.id }}/photos/{{ v.cover_photo_id }}" alt="Photo of {{ v.name }}">{% else %}
         <span class="venue-card-placeholder-icon" aria-hidden="true">{% if v.sport == 'Football' %}⚽{% elif v.sport == 'Badminton' %}🏸{% elif v.sport == 'Tennis' %}🎾{% elif v.sport == 'Pickleball' %}🏓{% else %}🏟️{% endif %}</span>
-        <span class="photo-note">Ảnh minh họa</span>
+        <span class="photo-note">Illustrative photo</span>
         {% endif %}
         <span class="venue-card-sport-pill">{{ v.sport }}</span>
         <span class="venue-card-district-pill">📍 {{ v.area }}</span>
@@ -483,20 +483,20 @@
           <span>{{ v.address }}</span>
         </div>
         <div class="venue-card-features">
-          <span class="feat-tag">Mở {{ '%02d:00' % v.open_hour }}&ndash;{{ '%02d:00' % v.close_hour }}</span>
+          <span class="feat-tag">Open {{ '%02d:00' % v.open_hour }}&ndash;{{ '%02d:00' % v.close_hour }}</span>
           <span class="feat-tag">{{ v.sport }}</span>
         </div>
       </div>
       <div class="venue-card-footer">
         <div class="venue-card-price">{{ "{:,}".format(v.hourly_price) }} <small>VND/hour</small></div>
-        <a href="/venues/{{ v.id }}" class="button" style="padding: 8px 16px; font-size: 13px;">Xem sân</a>
+        <a href="/venues/{{ v.id }}" class="button" style="padding: 8px 16px; font-size: 13px;">View venue</a>
       </div>
     </div>
     {% endfor %}
   </div>
 
   <details class="directory-details">
-  <summary>Hiện danh sách dạng bảng</summary>
+  <summary>Show table view</summary>
   <table>
     <thead><tr><th>#</th><th>Venue</th><th>Sport</th><th>Area</th><th>Address</th>
       <th>Opening hours</th><th class="num">Price / hour (VND)</th><th>Action</th></tr></thead>
@@ -531,28 +531,28 @@
 </div>
 
 <div class="section-divider">
-  <h2>Đặt sân gọn trong vài bước</h2>
-  <p>Thông tin giờ mở cửa và giá được hiển thị trước khi bạn xác nhận.</p>
+  <h2>Book a venue in a few steps</h2>
+  <p>Opening hours and prices are shown before you confirm.</p>
 </div>
 <div class="steps-grid">
   <div class="step-card">
     <div class="step-card-num">1</div>
-    <h3>Tìm sân quanh bạn</h3>
-    <p>Lọc theo môn thể thao, khu vực hoặc tên sân.</p>
+    <h3>Find courts near you</h3>
+    <p>Filter by sport, area or venue name across Hanoi.</p>
   </div>
   <div class="step-card">
     <div class="step-card-num">2</div>
-    <h3>Chọn khung giờ</h3>
-    <p>Xem giờ còn trống theo ngày và kiểm tra mức giá trước khi đặt.</p>
+    <h3>Choose a time slot</h3>
+    <p>Check availability by date and review the price before booking.</p>
   </div>
   <div class="step-card">
     <div class="step-card-num">3</div>
-    <h3>Xác nhận lịch</h3>
-    <p>Mã đặt sân giúp bạn tra cứu lịch trong mục Đơn của tôi.</p>
+    <h3>Confirm your booking</h3>
+    <p>Use your booking code to find your reservation in My bookings.</p>
   </div>
 </div>
 
-<p class="muted" style="margin-top: 24px; text-align: center;">Đang hiển thị {{ total }} sân đang nhận đặt lịch.</p>
+<p class="muted" style="margin-top: 24px; text-align: center;">Showing {{ total }} venues currently taking bookings.</p>
 
 <script>
 // US03 criterion 3: from the 3rd character typed, narrow the list to venues whose name or
