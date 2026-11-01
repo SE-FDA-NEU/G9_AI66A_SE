@@ -19,14 +19,14 @@
       <div class="stat-meta">Ready for customer bookings</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">Platform Commission</div>
-      <div class="stat-value">0%</div>
-      <div class="stat-meta">Direct owner management &amp; payout</div>
+      <div class="stat-label">Schedule management</div>
+      <div class="stat-value">Availability</div>
+      <div class="stat-meta">Update opening hours and mark unavailable times.</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">Slot Control</div>
-      <div class="stat-value">Automated</div>
-      <div class="stat-meta">Guaranteed reservation shield</div>
+      <div class="stat-label">Pricing rules</div>
+      <div class="stat-value">By day and time</div>
+      <div class="stat-meta">Set different hourly prices for selected periods.</div>
     </div>
   </div>
 
@@ -59,12 +59,12 @@
           </td>
           <td class="num price-cell">{{ "{:,}".format(v.hourly_price) }}</td>
           <td class="num photos-cell">
-            <a href="/venues/{{ v.id }}/photos/" class="photo-badge">📷 {{ v.photo_count }}</a>
+            <a href="/venues/{{ v.id }}" class="photo-badge" title="View venue photos">📷 {{ v.photo_count }}</a>
           </td>
           <td style="text-align: right; white-space: nowrap;">
-            <a href="/owner/venues/{{ v.id }}/schedule" class="button secondary" style="padding: 5px 10px; font-size: 12px; font-weight: 700;">📅 Lịch</a>
-            <a href="/owner/venues/{{ v.id }}/pricing" class="button secondary" style="padding: 5px 10px; font-size: 12px; font-weight: 700;">💰 Giá</a>
-            <a href="/owner/bookings?venue_id={{ v.id }}" class="button secondary" style="padding: 5px 10px; font-size: 12px; font-weight: 700;">📋 Đơn</a>
+            <a href="/owner/venues/{{ v.id }}/schedule" class="button secondary" style="padding: 5px 10px; font-size: 12px; font-weight: 700;">📅 Schedule</a>
+            <a href="/owner/venues/{{ v.id }}/pricing" class="button secondary" style="padding: 5px 10px; font-size: 12px; font-weight: 700;">💰 Pricing</a>
+            <a href="/owner/bookings?venue_id={{ v.id }}" class="button secondary" style="padding: 5px 10px; font-size: 12px; font-weight: 700;">📋 Bookings</a>
           </td>
         </tr>
         {% endfor %}

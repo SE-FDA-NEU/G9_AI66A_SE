@@ -2,3 +2,5 @@ Flask>=3.0,<4
 python-dotenv>=1.0,<2
 pytest>=8,<10
 gunicorn>=22,<24
+psycopg2-binary>=2.9,<3
+cloudinary>=1.40,<2

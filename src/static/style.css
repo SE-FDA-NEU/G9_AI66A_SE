@@ -4,8 +4,6 @@
    Compliant with WCAG accessibility, full responsive mobile/desktop
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
-
 :root {
   /* Color Palette */
   --primary: #0f172a;
@@ -43,7 +41,7 @@
   --radius-lg: 18px;
   --radius-full: 9999px;
 
-  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 }
 
@@ -1108,4 +1106,333 @@ a.slot.free span {
 .lang-btn:not(.active):hover {
   color: #ffffff;
   background: rgba(255, 255, 255, 0.15);
+}
+
+/* Sân Nhà product refresh: grounded in Hanoi's local court culture. */
+:root {
+  --primary: #173b2c;
+  --primary-light: #24533b;
+  --brand: #286b45;
+  --brand-glow: rgba(40, 107, 69, .18);
+  --brand-gradient: linear-gradient(135deg, #d4ee79, #b9df56);
+  --accent-sport: #4b8b58;
+  --bg-app: #f4f5ef;
+  --bg-card: #fff;
+  --border-color: #e1e5dc;
+  --border-focus: #7da853;
+  --text-main: #1f3026;
+  --text-body: #455349;
+  --text-muted: #778178;
+  --text-light: #9ca59c;
+  --shadow-sm: 0 2px 8px rgba(32, 54, 38, .05);
+  --shadow-md: 0 8px 24px rgba(32, 54, 38, .08);
+  --shadow-lg: 0 18px 44px rgba(32, 54, 38, .13);
+  --radius-sm: 7px;
+  --radius-md: 10px;
+  --radius-lg: 13px;
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-display: 'Barlow Condensed', 'DM Sans', sans-serif;
+}
+
+body { background: var(--bg-app); color: var(--text-body); }
+main { max-width: 1240px; margin-top: 30px; }
+h1, h2, h3 { color: var(--text-main); }
+h1 { font-family: var(--font-display); font-size: clamp(2rem, 4vw, 3rem); letter-spacing: -.025em; }
+button, .button { border-radius: 9px; font-weight: 700; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible,
+summary:focus-visible { outline: 3px solid #a6ce62; outline-offset: 3px; }
+
+header.top {
+  min-height: 76px; padding: 12px max(24px, calc((100vw - 1240px) / 2));
+  background: #173b2c; border-bottom: 1px solid rgba(255,255,255,.1);
+  box-shadow: none; backdrop-filter: none;
+}
+header.top .brand { gap: 10px; font-size: 16px; letter-spacing: -.02em; }
+header.top .brand-icon {
+  width: 38px; height: 38px; border-radius: 12px; background: #d3eb7b;
+  color: #1d402b; box-shadow: none; font-size: 12px; font-weight: 800; letter-spacing: -.06em;
+}
+.brand-text { display: flex; flex-direction: column; line-height: 1; }
+.brand-name { white-space: nowrap; }
+.brand-period { color: #d3eb7b; display: inline; }
+.brand-text small { margin-top: 5px; color: #b5c7b8; font-size: 8px; font-weight: 700; letter-spacing: .13em; }
+header.top nav { gap: 5px; }
+header.top nav a.nav-link { padding: 9px 12px; border-radius: 8px; color: #d8e2d9; }
+header.top nav a.nav-link:hover { background: rgba(255,255,255,.1); color: #fff; }
+header.top .btn-register-nav { background: #d3eb7b; color: #1d402b !important; box-shadow: none; }
+.user-profile-badge { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.12); }
+.user-avatar { background: #d3eb7b; color: #1d402b; }
+.lang-switcher { margin-left: 6px; }
+
+/* Search landing: one clear promise, local photography, useful filters. */
+main:has(.hero-container) { max-width: 1240px; margin-top: 26px; }
+main:has(.hero-container) > .hero-container {
+  min-height: 350px; padding: clamp(30px, 5vw, 58px); margin-bottom: 34px;
+  display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
+  border: 0; border-radius: 22px; box-shadow: 0 20px 50px rgba(24, 50, 33, .19);
+  background: linear-gradient(90deg, rgba(15,39,27,.96) 0%, rgba(20,51,34,.88) 47%, rgba(20,51,34,.18) 100%),
+    url('/static/images/hero-candidates/unsplash-green-field-night.jpg') center 43% / cover;
+}
+main:has(.hero-container) .hero-container::before { display: none; }
+main:has(.hero-container) .hero-pill-badge { padding: 0; margin-bottom: 18px; border: 0; background: transparent; color: #d8e89b; font-size: 11px; letter-spacing: .12em; }
+main:has(.hero-container) .hero-pill-badge .dot { width: 7px; height: 7px; background: #d3eb7b; box-shadow: none; }
+main:has(.hero-container) .hero-title { max-width: 670px; margin-bottom: 14px; font-family: var(--font-display); font-size: clamp(42px, 6vw, 70px); line-height: .98; letter-spacing: -.02em; }
+main:has(.hero-container) .hero-title .gradient-text { color: #d3eb7b; background: none; }
+main:has(.hero-container) .hero-lead { max-width: 510px; color: #e0e9df; font-size: 16px; line-height: 1.7; }
+main:has(.hero-container) .hero-stats-row { margin-top: 19px; display: flex; align-items: center; gap: 14px; }
+main:has(.hero-container) .hero-stat-box { padding: 0; border: 0; background: transparent; box-shadow: none; text-align: left; }
+main:has(.hero-container) .hero-stat-val { font-family: var(--font-display); font-size: 28px; color: #d3eb7b; }
+main:has(.hero-container) .hero-stat-lbl { color: #d2ddd2; font-size: 12px; }
+main:has(.hero-container) .hero-stat-note { max-width: 270px; padding-left: 15px; border-left: 1px solid rgba(255,255,255,.35); color: #d2ddd2; font-size: 12px; }
+.category-bar { margin-bottom: 16px; }
+.category-title { color: var(--text-main); font-size: 15px; letter-spacing: 0; text-transform: none; }
+.category-pills { gap: 8px; }
+.cat-pill { padding: 9px 14px; border-radius: 9px; box-shadow: none; }
+.cat-pill:hover, .cat-pill.active { background: #e6efdc; border-color: #cadbbc; color: #285739; transform: none; box-shadow: none; }
+form.filters { padding: 18px; gap: 12px; border-radius: 14px; box-shadow: var(--shadow-sm); }
+form.filters label { gap: 7px; color: #455349; }
+form.filters select, form.filters input { min-height: 44px; border-radius: 8px; }
+form.filters button { min-height: 44px; background: #286b45; }
+.results-meta-bar { margin: 24px 0 14px; }
+.results-meta-bar .count { color: #526054; font-size: 14px !important; }
+.results-meta-bar .count strong { color: #244b32; font-size: 23px; }
+.results-meta-bar .tag-badge { background: #e9eee5 !important; border: 0 !important; color: #586b59 !important; }
+.venue-cards-grid { grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 22px; }
+.venue-cards-grid .venue-card-item { border: 1px solid #e5e8e0; border-radius: 11px; box-shadow: 0 1px 3px rgba(26,48,31,.04); }
+.venue-cards-grid .venue-card-item:hover { transform: translateY(-2px); border-color: #bdcbb8; box-shadow: 0 8px 20px rgba(26,48,31,.09); }
+.venue-cards-grid .venue-card-img {
+  height: 190px; justify-content: flex-start; align-items: flex-end; padding: 14px;
+  background-color: #365f42; background-size: cover; background-position: center; font-size: 0;
+}
+.venue-card-img::after { content: ''; position: absolute; inset: 35% 0 0; background: linear-gradient(0deg, rgba(15,33,23,.52), transparent); }
+.venue-card-img.sport-football { background-image: url('/static/images/football.jpg'); }
+.venue-card-img.sport-football.image-1 { background-image: url('/static/images/football-1.jpg'); }
+.venue-card-img.sport-football.image-2 { background-image: url('/static/images/football-2.jpg'); }
+.venue-card-img.sport-football.image-3 { background-image: url('/static/images/football-3.jpg'); }
+.venue-card-img.sport-badminton { background-image: url('/static/images/badminton.jpg'); }
+.venue-card-img.sport-badminton.image-1 { background-image: url('/static/images/badminton-1.jpg'); background-position: center 34%; }
+.venue-card-img.sport-badminton.image-2 { background-image: url('/static/images/badminton-2.jpg'); }
+.venue-card-img.sport-tennis { background-image: url('/static/images/tennis.jpg'); }
+.venue-card-img.sport-tennis.image-1 { background-image: url('/static/images/tennis-1.jpg'); }
+.venue-card-img.sport-tennis.image-2 { background-image: url('/static/images/tennis-2.jpg'); }
+.venue-card-img.sport-pickleball { background-image: url('/static/images/pickleball-1.jpg'); }
+.venue-card-img.sport-pickleball.image-1 { background-image: url('/static/images/pickleball-2.jpg'); }
+.venue-card-img.sport-pickleball.image-2 { background-image: url('/static/images/pickleball-3.jpg'); }
+.venue-card-img.sport-badminton.image-3 { background-image: url('/static/images/sport-candidates/badminton-pexels-aerial.jpg'); }
+.venue-card-img.sport-badminton.image-4 { background-image: url('/static/images/sport-candidates/badminton-pexels-women.jpg'); }
+.venue-card-img.sport-tennis.image-3 { background-image: url('/static/images/sport-candidates/tennis-unsplash-ball.jpg'); }
+.venue-card-img.sport-tennis.image-4 { background-image: url('/static/images/sport-candidates/tennis-pexels-courts.jpg'); }
+.venue-card-img.sport-pickleball.image-3 { background-image: url('/static/images/sport-candidates/pickleball-pexels-outdoors.jpg'); }
+.venue-card-img.sport-pickleball.image-4 { background-image: url('/static/images/sport-candidates/pickleball-pexels-court.jpg'); }
+.venue-card-placeholder-icon { display: none; }
+.venue-cover { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.photo-note { position: absolute; z-index: 2; top: 12px; left: 13px; padding: 4px 7px; border-radius: 5px; background: rgba(20,39,27,.68); color: rgba(255,255,255,.92); font-size: 10px; font-weight: 600; }
+.venue-card-img .venue-card-sport-pill, .venue-card-img .venue-card-district-pill { z-index: 2; top: auto; bottom: 13px; font-size: 11px; border: 0; }
+.venue-card-img .venue-card-sport-pill { left: 14px; background: #d3eb7b; color: #24452e; }
+.venue-card-img .venue-card-district-pill { right: 14px; background: rgba(24,49,34,.84); color: #fff; }
+.venue-cards-grid .venue-card-body { gap: 10px; padding: 17px 18px; }
+.venue-cards-grid .venue-card-title { font-size: 19px; }
+.venue-cards-grid .venue-card-address { min-height: 38px; align-items: flex-start; line-height: 1.5; }
+.venue-cards-grid .venue-card-features { gap: 6px; }
+.feat-tag { padding: 4px 8px; border-radius: 6px; background: #f0f2ec; color: #626e62; }
+.venue-cards-grid .venue-card-footer { padding: 13px 18px; background: #fff; }
+.venue-cards-grid .venue-card-price { color: #244b32; font-size: 17px; }
+.venue-cards-grid .venue-card-price small { color: #778178; }
+.venue-card-footer .button { background: #286b45; }
+.directory-details { margin: 22px 0 0; color: #687269; font-size: 13px; }
+.directory-details summary { width: fit-content; cursor: pointer; padding: 8px 0; font-weight: 700; }
+.directory-details table { margin-top: 10px; }
+.section-divider { margin-top: 52px; text-align: left; }
+.section-divider h2 { font-family: var(--font-display); font-size: 32px; }
+.steps-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.step-card { border-radius: 14px; box-shadow: none; }
+.step-card-num { background: #e9efdf; color: #355e3e; }
+
+/* Shared content surfaces keep the booking and owner flows in the same product. */
+.card, .auth-card, .venue-header-box, .quote-card, .owner-container .stat-card,
+.owner-container .table-responsive-wrapper { border-radius: 15px; box-shadow: var(--shadow-sm); }
+input, select, textarea { border-color: #d8ded4; border-radius: 8px; }
+input:focus, select:focus, textarea:focus { border-color: #739a58; box-shadow: 0 0 0 3px rgba(115,154,88,.13); }
+.button, button[type="submit"] { background: #286b45; }
+.button:hover, button[type="submit"]:hover { background: #1d5637; }
+.button.secondary { background: #fff; color: #355e3e; border-color: #d9e1d4; }
+.venue-photo-placeholder { min-height: 210px; display: grid; place-items: center; margin-top: 18px; overflow: hidden; border-radius: 14px; color: #fff; font-weight: 700; background-size: cover; background-position: center; }
+.venue-photo-placeholder span { padding: 7px 11px; border-radius: 7px; background: rgba(24,49,34,.78); }
+.venue-photo-placeholder.sport-football { background-image: linear-gradient(rgba(10,30,18,.15),rgba(10,30,18,.15)),url('/static/images/football.jpg'); }
+.venue-photo-placeholder.sport-badminton { background-image: linear-gradient(rgba(10,30,18,.15),rgba(10,30,18,.15)),url('/static/images/badminton.jpg'); }
+.venue-photo-placeholder.sport-tennis { background-image: linear-gradient(rgba(10,30,18,.15),rgba(10,30,18,.15)),url('/static/images/tennis.jpg'); }
+.venue-photo-placeholder.sport-pickleball { background-image: linear-gradient(rgba(10,30,18,.15),rgba(10,30,18,.15)),url('/static/images/pickleball-1.jpg'); }
+.venue-photo-placeholder.sport-football.image-1 { background-image: linear-gradient(rgba(10,30,18,.15),rgba(10,30,18,.15)),url('/static/images/football-1.jpg'); }
+.venue-photo-placeholder.sport-football.image-2 { background-image: linear-gradient(rgba(10,30,18,.15),rgba(10,30,18,.15)),url('/static/images/football-2.jpg'); }
+.venue-photo-placeholder.sport-football.image-3 { background-image: linear-gradient(rgba(10,30,18,.15),rgba(10,30,18,.15)),url('/static/images/football-3.jpg'); }
+.venue-photo-placeholder.sport-badminton.image-1 { background-image: linear-gradient(rgba(10,30,18,.15),rgba(10,30,18,.15)),url('/static/images/badminton-1.jpg'); }
+.venue-photo-placeholder.sport-badminton.image-2 { background-image: linear-gradient(rgba(10,30,18,.15),rgba(10,30,18,.15)),url('/static/images/badminton-2.jpg'); }
+.venue-photo-placeholder.sport-tennis.image-1 { background-image: linear-gradient(rgba(10,30,18,.15),rgba(10,30,18,.15)),url('/static/images/tennis-1.jpg'); }
+.venue-photo-placeholder.sport-tennis.image-2 { background-image: linear-gradient(rgba(10,30,18,.15),rgba(10,30,18,.15)),url('/static/images/tennis-2.jpg'); }
+.venue-photo-placeholder.sport-pickleball.image-1 { background-image: linear-gradient(rgba(10,30,18,.15),rgba(10,30,18,.15)),url('/static/images/pickleball-2.jpg'); }
+.venue-photo-placeholder.sport-pickleball.image-2 { background-image: linear-gradient(rgba(10,30,18,.15),rgba(10,30,18,.15)),url('/static/images/pickleball-3.jpg'); }
+.venue-photo-placeholder.sport-badminton.image-3 { background-image: linear-gradient(rgba(10,30,18,.15),rgba(10,30,18,.15)),url('/static/images/sport-candidates/badminton-pexels-aerial.jpg'); }
+.venue-photo-placeholder.sport-badminton.image-4 { background-image: linear-gradient(rgba(10,30,18,.15),rgba(10,30,18,.15)),url('/static/images/sport-candidates/badminton-pexels-women.jpg'); }
+.venue-photo-placeholder.sport-tennis.image-3 { background-image: linear-gradient(rgba(10,30,18,.15),rgba(10,30,18,.15)),url('/static/images/sport-candidates/tennis-unsplash-ball.jpg'); }
+.venue-photo-placeholder.sport-tennis.image-4 { background-image: linear-gradient(rgba(10,30,18,.15),rgba(10,30,18,.15)),url('/static/images/sport-candidates/tennis-pexels-courts.jpg'); }
+.venue-photo-placeholder.sport-pickleball.image-3 { background-image: linear-gradient(rgba(10,30,18,.15),rgba(10,30,18,.15)),url('/static/images/sport-candidates/pickleball-pexels-outdoors.jpg'); }
+.venue-photo-placeholder.sport-pickleball.image-4 { background-image: linear-gradient(rgba(10,30,18,.15),rgba(10,30,18,.15)),url('/static/images/sport-candidates/pickleball-pexels-court.jpg'); }
+.app-footer { margin-top: 54px; background: #173b2c; }
+.footer-container { max-width: 1240px; padding: 0 24px; }
+.footer-bottom-bar { min-height: 78px; padding: 18px 0; border: 0; }
+.footer-credits { color: #c4d1c4; font-size: 13px; }
+.footer-credits strong { color: #fff; }
+.footer-bottom-bar > a { color: #d3eb7b; font-size: 13px; }
+
+@media (max-width: 760px) {
+  header.top { position: relative; padding: 12px 18px; align-items: center; flex-wrap: wrap; }
+  header.top nav { width: 100%; justify-content: flex-start; gap: 2px; }
+  header.top nav a.nav-link { padding: 8px; font-size: 12px; }
+  .user-profile-badge { display: none; }
+  main { padding: 0 16px; margin-top: 20px; }
+  main:has(.hero-container) > .hero-container { min-height: 330px; padding: 28px 24px; background-position: 58% center; }
+  main:has(.hero-container) .hero-title { font-size: clamp(40px, 11vw, 58px); }
+  main:has(.hero-container) .hero-stats-row { align-items: flex-start; flex-direction: column; gap: 6px; }
+  main:has(.hero-container) .hero-stat-note { padding: 0; border: 0; }
+  form.filters { align-items: stretch; }
+  .filter-actions { width: 100%; }
+  .filter-actions > * { flex: 1; }
+  .venue-cards-grid { grid-template-columns: 1fr; }
+  .steps-grid { grid-template-columns: 1fr; }
+  .footer-container { padding: 0 18px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+/* Sân Nhà visual refresh: editorial full-bleed hero and calmer booking surfaces. */
+:root {
+  --primary: #173b2c;
+  --primary-light: #244b38;
+  --brand: #286b45;
+  --brand-glow: rgba(40, 107, 69, .2);
+  --brand-gradient: linear-gradient(135deg, #3c8050, #245b3a);
+  --bg-app: #f6f6f1;
+  --bg-card: #fff;
+  --border-color: #e1e5dc;
+  --border-focus: #6a945f;
+  --text-main: #1d3024;
+  --text-body: #405046;
+  --text-muted: #738075;
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-display: 'Barlow Condensed', 'DM Sans', sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+body { background: var(--bg-app); color: var(--text-body); }
+main:has(.hero-container) {
+  width: 100%; max-width: none; margin: 0; padding: 0 0 8px;
+}
+main:has(.hero-container) > .hero-container {
+  position: relative; isolation: isolate; width: 100%; min-height: 510px;
+  margin: 0 0 26px; padding: 54px 30px;
+  border: 0; border-radius: 0; box-shadow: none;
+  background-image: linear-gradient(90deg, rgba(12, 34, 22, .94) 0%, rgba(16, 43, 28, .83) 38%, rgba(16, 43, 28, .33) 100%), url('/static/images/hero-candidates/unsplash-green-field-night.jpg');
+  background-position: center 46%; background-size: cover;
+}
+.hero-layout {
+  width: min(1240px, 100%); min-height: 402px; margin: 0 auto;
+  display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(310px, .68fr);
+  align-items: center; gap: clamp(32px, 6vw, 92px);
+}
+.hero-copy { max-width: 650px; }
+main:has(.hero-container) .hero-title { font-size: clamp(50px, 6.2vw, 82px); max-width: 680px; line-height: .92; letter-spacing: -.015em; }
+main:has(.hero-container) .hero-lead { max-width: 530px; font-size: 16px; }
+.hero-stats-row { display: flex !important; align-items: center; gap: 18px !important; }
+main:has(.hero-container) .hero-stat-val { font-size: 35px; }
+main:has(.hero-container) .hero-stat-note { max-width: 250px; }
+.hero-filters {
+  display: grid !important; grid-template-columns: 1fr 1fr; gap: 15px !important;
+  padding: 24px !important; border: 1px solid rgba(255,255,255,.62) !important;
+  border-radius: 16px !important; background: rgba(255,255,255,.97) !important;
+  color: #29392f; box-shadow: 0 22px 60px rgba(6, 22, 13, .24) !important;
+  backdrop-filter: blur(10px);
+}
+.hero-filters label { min-width: 0; color: #435147 !important; font-size: 12px !important; letter-spacing: .025em; }
+.hero-filters label:nth-child(3), .hero-filters .filter-actions { grid-column: 1 / -1; }
+.hero-filters select, .hero-filters input { width: 100%; background: #fff; color: #27382d; }
+.hero-filters .filter-actions { display: flex; gap: 9px; }
+.hero-filters .filter-actions > * { flex: 1; justify-content: center; }
+.hero-filters button { min-height: 46px; border: 0; border-radius: 8px; background: #286b45; color: white; font-weight: 700; }
+.hero-filters .button.secondary { min-height: 46px; }
+main:has(.hero-container) > .category-bar,
+main:has(.hero-container) > #results,
+main:has(.hero-container) > .empty,
+main:has(.hero-container) > .section-divider,
+main:has(.hero-container) > .steps-grid,
+main:has(.hero-container) > .directory-details { width: min(1240px, calc(100% - 48px)); margin-left: auto; margin-right: auto; }
+.category-bar { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; margin-bottom: 23px !important; }
+.category-title { margin: 0; font-size: 14px; font-weight: 700; color: #58645a; }
+.category-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.cat-pill { border: 1px solid #dfe5db; border-radius: 999px; background: #fff; color: #324638; font-size: 13px; }
+.cat-pill:hover, .cat-pill.active { background: #e8efd9; border-color: #cfdbbc; color: #21482e; }
+form.filters:not(.hero-filters) { background: #fff; border: 1px solid #e1e5dc; }
+.venue-cards-grid { gap: 18px; }
+.venue-cards-grid .venue-card-item { overflow: hidden; border-color: #e3e7df; border-radius: 12px; box-shadow: 0 2px 8px rgba(29,48,36,.045); }
+.venue-cards-grid .venue-card-item:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(29,48,36,.11); }
+.venue-cards-grid .venue-card-img { height: 205px; }
+.venue-cards-grid .venue-card-body { min-height: 154px; }
+.venue-cards-grid .venue-card-title { font-family: var(--font-display); font-size: 23px; font-weight: 700; letter-spacing: .005em; }
+.venue-cards-grid .venue-card-address { color: #758077; font-size: 13px; }
+.feat-tag { background: #f2f4ef; }
+.venue-cards-grid .venue-card-footer { border-top: 1px solid #eef0eb; }
+.results-meta-bar .count strong { font-family: var(--font-display); font-size: 30px; }
+.section-divider h2 { font-size: 37px; }
+.step-card { border: 1px solid #e7e9e3; background: #fff; }
+
+@media (max-width: 860px) {
+  main:has(.hero-container) > .hero-container { min-height: 0; padding: 42px 24px; background-position: 62% center; }
+  .hero-layout { grid-template-columns: 1fr; gap: 28px; min-height: 0; }
+  .hero-copy { max-width: 700px; }
+  main:has(.hero-container) .hero-title { font-size: clamp(48px, 9vw, 72px); }
+  .hero-filters { max-width: 680px; }
+}
+@media (max-width: 560px) {
+  main:has(.hero-container) > .hero-container { padding: 35px 20px 27px; background-image: linear-gradient(90deg, rgba(12,34,22,.9), rgba(16,43,28,.59)), url('/static/images/hero-candidates/unsplash-green-field-night.jpg'); }
+  main:has(.hero-container) .hero-title { font-size: clamp(44px, 13vw, 62px); }
+  main:has(.hero-container) .hero-lead { font-size: 14px; }
+  .hero-stats-row { align-items: flex-start !important; }
+  .hero-stat-note { max-width: 100% !important; }
+  .hero-filters { grid-template-columns: 1fr; padding: 18px !important; }
+  .hero-filters label:nth-child(3), .hero-filters .filter-actions { grid-column: auto; }
+  main:has(.hero-container) > .category-bar,
+  main:has(.hero-container) > #results,
+  main:has(.hero-container) > .empty,
+  main:has(.hero-container) > .section-divider,
+  main:has(.hero-container) > .steps-grid,
+  main:has(.hero-container) > .directory-details { width: calc(100% - 36px); }
+  .category-bar { align-items: flex-start; gap: 10px; }
+  .cat-pill { padding: 8px 11px; font-size: 12px; }
+  .venue-cards-grid .venue-card-img { height: 195px; }
+}
+
+/* Shared type and form rhythm across customer, owner, and booking screens. */
+main:not(:has(.hero-container)) { width: min(1200px, calc(100% - 48px)); max-width: 1200px; margin: 32px auto 0; padding: 0; }
+main:not(:has(.hero-container)) h1 { color: #1d3024; font-size: clamp(34px, 4vw, 48px); line-height: 1.02; letter-spacing: -.02em; }
+main:not(:has(.hero-container)) h2 { color: #243b2c; letter-spacing: -.015em; }
+main:not(:has(.hero-container)) h3 { color: #2c4032; }
+input, select, textarea { min-height: 44px; padding: 10px 12px; border: 1px solid #d9dfd5; border-radius: 8px; background: #fff; color: #24352a; font: inherit; }
+textarea { min-height: 112px; }
+label { color: #46564a; font-weight: 650; }
+input::placeholder, textarea::placeholder { color: #929b92; }
+button, .button { min-height: 42px; border-radius: 8px; font-weight: 700; }
+.card, .auth-card, .venue-header-box, .quote-card, .owner-container .stat-card,
+.owner-container .table-responsive-wrapper, .booking-card, .receipt-card {
+  border: 1px solid #e3e7df; border-radius: 14px; box-shadow: 0 3px 14px rgba(29,48,36,.055);
+}
+table { border-color: #e4e8e1; }
+thead th { background: #f4f6f1; color: #56645a; font-size: 11px; letter-spacing: .055em; text-transform: uppercase; }
+tbody tr:hover { background: #fafbf8; }
+.flash { border-radius: 9px; }
+@media (max-width: 760px) {
+  main:not(:has(.hero-container)) { width: calc(100% - 32px); margin-top: 22px; }
+  main:not(:has(.hero-container)) h1 { font-size: clamp(32px, 9vw, 42px); }
+  .auth-card { padding: 25px 21px; }
+  .owner-container .table-responsive-wrapper { overflow-x: auto; }
 }

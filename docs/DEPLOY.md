@@ -27,9 +27,14 @@ python src/init_db.py
 gunicorn --chdir src "app:create_app()" --bind 0.0.0.0:5000 --workers 2
 ```
 
-## Why not Vercel?
+## Vercel Serverless Production Deployment
 
-Vercel's filesystem is read-only and ephemeral, so SQLite + photo uploads would be wiped
-on every cold start. The previous Vercel link in README was a Sprint 2 static mock-up only.
-For a real, modern, persistent deploy, use Render (above) or Railway/Fly.io with the same
-Procfile/gunicorn setup.
+**Live Vercel Production URL:** 🌐 **[https://g9-venue-booking-demo.vercel.app](https://g9-venue-booking-demo.vercel.app)**  
+**Health Check:** `https://g9-venue-booking-demo.vercel.app/health`
+
+The application supports serverless hosting on Vercel by decoupling storage:
+- **Database:** Uses PostgreSQL via `DATABASE_URL` and `src/db_compat.py` (`CompatConnection`), supporting Vercel Postgres, Supabase, or Neon.
+- **Photos:** Persistent storage backed by Cloudinary via `CLOUDINARY_URL` and `src/storage.py`.
+- **Serverless Entrypoint:** `api/index.py` with `vercel.json` configuration.
+
+See [`docs/VERCEL_DEPLOYMENT.md`](VERCEL_DEPLOYMENT.md) for step-by-step Vercel configuration.

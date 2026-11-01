@@ -38,7 +38,7 @@
   {% else %}
   <div class="bookings-list" style="display: flex; flex-direction: column; gap: 16px;">
     {% for b in bookings %}
-    <div class="card booking-item-card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; padding: 22px; border-radius: 12px; border-left: 6px solid {% if b.status == 'confirmed' %}#10b981{% elif b.status == 'completed' %}#0284c7{% else %}#ef4444{% endif %};">
+    <div class="card booking-item-card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; padding: 22px; border-radius: 12px; border-left: 6px solid {% if b.status == 'confirmed' %}#10b981{% elif b.status == 'completed' %}#286b45{% else %}#ef4444{% endif %};">
       <div style="flex: 1; min-width: 280px;">
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
           <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: var(--brand); background: #f0f9ff; padding: 3px 8px; border-radius: 6px; border: 1px solid #bae6fd;">{{ b.code }}</span>
@@ -71,7 +71,7 @@
         </a>
 
         {% if b.status == 'confirmed' %}
-        <form method="post" action="/my-bookings/{{ b.code }}/cancel" onsubmit="return confirm('Are you sure you want to cancel booking {{ b.code }}?\n\nCancellation Policy:\n- At least 24h before match: 100% refund\n- 2h to 24h before match: 50% refund\n- Under 2h: Cannot cancel.');">
+        <form method="post" action="/my-bookings/{{ b.code }}/cancel" onsubmit="return confirmCancelBooking('{{ b.code }}');">
           <button type="submit" class="button" style="font-size: 13px; font-weight: 700; background: #ef4444; color: #fff; width: 140px; text-align: center;">
             ✕ Cancel Booking
           </button>
@@ -104,4 +104,20 @@
   </div>
   {% endif %}
 </div>
+
+<script>
+function confirmCancelBooking(code) {
+  const lines = [
+    `Are you sure you want to cancel booking ${code}?`,
+    '',
+    'Cancellation policy:',
+    'Cancel at least 24 hours before the start: 100% refund.',
+    'Cancel 2–24 hours before the start: 50% refund.',
+    'Less than 2 hours before the start: cancellation is unavailable.'
+  ];
+  const localized = lines.map(line => line && window.arenaText ? window.arenaText(line) : line);
+  return window.confirm(localized.join('\n'));
+}
+</script>
+
 {% endblock %}

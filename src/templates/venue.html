@@ -34,7 +34,7 @@
     font-size: 13px;
     font-weight: 700;
   }
-  .pill.sport { background: #e0f2fe; color: #0369a1; }
+  .pill.sport { background: #e9efdf; color: #355e3e; }
   .pill.area { background: #f1f5f9; color: #475569; }
   .pill.rating { background: #fef3c7; color: #b45309; }
 
@@ -140,7 +140,7 @@
       <div class="venue-pills">
         <span class="pill sport">{{ venue.sport }}</span>
         <span class="pill area">📍 {{ venue.area }}</span>
-        <span class="pill rating">★ 4.9 Verified Court</span>
+        {% if rating_summary and rating_summary.avg_rating %}<span class="pill rating">★ {{ rating_summary.avg_rating }} · {{ rating_summary.review_count }} review{% if rating_summary.review_count > 1 %}s{% endif %}</span>{% endif %}
       </div>
     </div>
     <a class="button" href="/booking/{{ venue.id }}" style="padding: 12px 26px; font-size: 15px;">Book This Venue</a>
@@ -157,20 +157,7 @@
     </div>
     <div class="fact-item">
       <div class="label">Standard Hourly Rate</div>
-      <div class="value" style="color: #0284c7;">{{ "{:,}".format(venue.hourly_price) }} VND <small style="font-weight: 500; color: var(--text-muted); font-size: 13px;">/ hour</small></div>
-    </div>
-  </div>
-
-  <!-- Court Amenities & Highlights -->
-  <div class="amenities-section">
-    <div class="amenities-title">Facility Highlights &amp; Amenities</div>
-    <div class="amenities-grid">
-      <div class="amenity-chip"><span>⚽</span> FIFA Quality Turf</div>
-      <div class="amenity-chip"><span>💡</span> Night LED Match Lights</div>
-      <div class="amenity-chip"><span>🚿</span> Changing Rooms &amp; Shower</div>
-      <div class="amenity-chip"><span>🅿️</span> Free Secure Parking</div>
-      <div class="amenity-chip"><span>🥤</span> Refreshment Canteen</div>
-      <div class="amenity-chip"><span>🛡️</span> Instant Confirmation Guarantee</div>
+      <div class="value" style="color: #286b45;">{{ "{:,}".format(venue.hourly_price) }} VND <small style="font-weight: 500; color: var(--text-muted); font-size: 13px;">/ hour</small></div>
     </div>
   </div>
 
@@ -188,7 +175,9 @@
     {% for p in photos %}<img src="/venues/{{ venue.id }}/photos/{{ p.id }}" alt="Photo {{ loop.index }} of {{ venue.name }}">{% endfor %}
   </div>
   {% else %}
-  <p class="muted" style="margin-top: 16px;">No photos uploaded for this facility yet.</p>
+  <div class="venue-photo-placeholder sport-{{ venue.sport|lower }} image-{{ venue.id % (4 if venue.sport == 'Football' else 5) }}" role="img" aria-label="Illustrative photo {{ venue.sport }}">
+    <span>Illustrative photo · {{ venue.sport }}</span>
+  </div>
   {% endif %}
 </div>
 
@@ -292,18 +281,19 @@ function asDisplayDate(iso) {             // 2026-10-20 -> 20/10/2026
 }
 
 function slotCell(slot) {
+  const text = (label) => window.arenaText ? window.arenaText(label) : label;
   if (slot.status === "free") {
     const a = document.createElement("a");
     a.className = "slot free";
     const startH = parseInt(slot.start.split(":")[0]);
     a.href = `/booking/${venueId}?date=${encodeURIComponent(dayInput.value)}&start_hour=${startH}&hours=1`;
-    a.title = `Click to book ${slot.start}-${slot.end}`;
-    a.innerHTML = `<b>${slot.start}-${slot.end}</b><span style="font-size:11px; font-weight:700; text-transform:uppercase;">Book now &rarr;</span>`;
+    a.title = `${text("Click to book")} ${slot.start}-${slot.end}`;
+    a.innerHTML = `<b>${slot.start}-${slot.end}</b><span style="font-size:11px; font-weight:700; text-transform:uppercase;">${text("Book now")} &rarr;</span>`;
     return a;
   }
   const cell = document.createElement("div");
   cell.className = `slot ${slot.status}`;
-  cell.innerHTML = `<b>${slot.start}-${slot.end}</b><span style="font-size:11px; text-transform:uppercase;">${slot.status}</span>`;
+  cell.innerHTML = `<b>${slot.start}-${slot.end}</b><span style="font-size:11px; text-transform:uppercase;">${text(slot.status)}</span>`;
   return cell;
 }
 
@@ -316,22 +306,25 @@ async function loadSlots() {
     response = await fetch(`/api/venues/${venueId}?date=${encodeURIComponent(day)}`);
     body = await response.json();
   } catch (err) {
-    document.getElementById("error-text").textContent =
-      "We can't reach the server. Check that the app is still running, then try again.";
+    document.getElementById("error-text").textContent = window.arenaText
+      ? window.arenaText("We can't reach the server. Check that the app is still running, then try again.")
+      : "We can't reach the server. Check that the app is still running, then try again.";
     return show("error");
   }
   if (!response.ok) {                     // e.g. a date in the past (BR10): the server says why
-    document.getElementById("error-text").textContent = body.error;
+    document.getElementById("error-text").textContent = window.arenaText ? window.arenaText(body.error) : body.error;
     return show("error");
   }
   const grid = document.getElementById("slots");
   grid.replaceChildren(...body.slots.map((slot) => slotCell(slot)));
+  if (window.arenaTranslate) window.arenaTranslate(grid);
+  const word = (value) => window.arenaText ? window.arenaText(value) : value;
   document.getElementById("summary").textContent =
-    `${asDisplayDate(body.date)}: ${body.free} free, ${body.booked} booked` +
-    (body.blocked ? `, ${body.blocked} closed for maintenance` : "");
+    `${asDisplayDate(body.date)}: ${body.free} ${word("free")}, ${body.booked} ${word("booked")}` +
+    (body.blocked ? `, ${body.blocked} ${word("closed for maintenance")}` : "");
   if (body.free === 0) {
     document.getElementById("empty").textContent =
-      `No free hours on ${asDisplayDate(body.date)} - every hour is booked, closed or over. Try another date.`;
+      `${word("No free hours on")} ${asDisplayDate(body.date)} — ${word("every hour is booked, closed or over. Try another date.")}`;
     return show("empty", "data");
   }
   show("data");

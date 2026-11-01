@@ -5,8 +5,10 @@ Sport and area come from the fixed lists below, never from typed text (BR9), so
 "Cau Giay", "cau giay" and "Q. Cau Giay" can never become three different areas.
 """
 import uuid
+import unicodedata
 from datetime import date, datetime, timedelta
 
+import storage
 from errors import BusinessRuleError
 
 SPORTS = ["Football", "Badminton", "Tennis", "Pickleball"]          # same list as the CHECK in schema.py
@@ -18,16 +20,22 @@ AREAS = ["Ba Dinh", "Bac Tu Liem", "Cau Giay", "Dong Da", "Ha Dong", "Hai Ba Tru
 NO_MATCH = "No venues found"                                         # BR9
 
 # BR9: sport AND area must both match; an empty filter means "any".
-# q narrows by name or sport (US03 criterion 3); parameters are bound, never pasted in.
+# Text search is applied after the fixed sport/area filters so it can consistently search
+# venue name, sport, area, and address, including Vietnamese text without diacritics.
 SEARCH_SQL = """
-SELECT v.id, v.name, v.sport, v.area, v.address, v.hourly_price, v.open_hour, v.close_hour
+SELECT v.id, v.name, v.sport, v.area, v.address, v.hourly_price, v.open_hour, v.close_hour,
+       (SELECT p.id FROM venue_photo p WHERE p.venue_id = v.id ORDER BY p.id LIMIT 1) AS cover_photo_id
 FROM venue v
 WHERE v.active = 1
   AND (:sport = '' OR v.sport = :sport)
   AND (:area  = '' OR v.area  = :area)
-  AND (:q = '' OR v.name LIKE '%' || :q || '%' OR v.sport LIKE '%' || :q || '%')
 ORDER BY v.area, v.sport, v.name
 """
+
+
+def _fold_search_text(value):
+    decomposed = unicodedata.normalize("NFD", str(value)).casefold()
+    return "".join(char for char in decomposed if unicodedata.category(char) != "Mn")
 
 
 def search(conn, sport="", area="", q=""):
@@ -36,7 +44,12 @@ def search(conn, sport="", area="", q=""):
         raise BusinessRuleError(400, "Please choose a sport from the list", "BR9", "sport")
     if area and area not in AREAS:
         raise BusinessRuleError(400, "Please choose an area from the list", "BR9", "area")
-    return conn.execute(SEARCH_SQL, {"sport": sport, "area": area, "q": q.strip()}).fetchall()
+    rows = conn.execute(SEARCH_SQL, {"sport": sport, "area": area}).fetchall()
+    query = _fold_search_text(q.strip())
+    if not query:
+        return rows
+    return [row for row in rows if query in _fold_search_text(
+        f"{row['name']} {row['sport']} {row['area']} {row['address']}")]
 
 
 def get_venue(conn, venue_id):
@@ -154,11 +167,11 @@ def create_venue(conn, owner, values):
 
 
 def save_photo(conn, upload_dir, venue_id, photo):
-    """Store an uploaded photo under a random name - never the name the browser sent."""
-    extension = "." + photo.filename.rsplit(".", 1)[-1].lower()
-    file_name = f"venue{venue_id}-{uuid.uuid4().hex}{extension}"
-    upload_dir.mkdir(parents=True, exist_ok=True)
-    photo.save(upload_dir / file_name)
+    """Store an uploaded photo under a random name - never the name the browser sent.
+
+    Uses Cloudinary when CLOUDINARY_URL is configured, otherwise the local upload dir.
+    """
+    file_name = storage.save_photo(upload_dir, photo, venue_id)
     conn.execute("INSERT INTO venue_photo (venue_id, file_name) VALUES (?, ?)", (venue_id, file_name))
     conn.commit()
 
