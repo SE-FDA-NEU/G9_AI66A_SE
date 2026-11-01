@@ -188,6 +188,10 @@ tests/test_venue.py::test_gallery_shows_only_this_venues_photos PASSED   [100%]
 ============================= 89 passed in 22.50s ==============================
 ```
 
+The output above is the baseline captured when this guide was first written. After the
+Sprint 4 test additions, `python -m pytest -q` passed **253 tests** on 01/11/2026
+(`253 passed in 96.41s`); the run time varies by machine.
+
 ---
 
 ## 4. What the tests found
@@ -226,4 +230,3 @@ tests/test_venue.py::test_gallery_shows_only_this_venues_photos PASSED   [100%]
   ).fetchone()[0] == 1
   ```
   This guarantees that even if dynamic seed data places other bookings on the same calendar day, the test accurately and strictly verifies that the collision on `18:00` was blocked by the database constraint.
-

@@ -281,3 +281,67 @@ question or change request pointed at a concrete line before approval.
 ### SM Sprint 4
 
 @lequangk2006-sys
+
+---
+
+## Sprint 4 - 19/10/2026 to 01/11/2026
+
+### Sprint goal
+
+Build automated normal, error and boundary coverage for every P0 story, fix regressions
+found while testing, and document the test strategy and setup for Milestone 4.
+
+### Committed
+
+Planned under Sprint 4 refinement issue #85. The project board assigns 5 points to each
+of the five testing and documentation issues below. Chores #85 and #91 carry no points.
+
+| Issue | Work | Points | Owner |
+|-------|------|--------|-------|
+| #86 | P0 tests for US01 registration and US02 login | 5 | @htngochan2802 |
+| #87 | P0 tests for US03 search and US04 venue detail/availability | 5 | @peng543 |
+| #88 | Fix date-dependent US05 test and add booking boundary tests | 5 | @thunopro |
+| #89 | P0 tests for US06 owner venue management | 5 | @PhunghoaAI |
+| #90 | Milestone 4 testing guide and setup instructions | 5 | @lequangk2006-sys |
+
+**Total committed: 25 points.**
+
+### Result
+
+| Issue | Points | Status | PR | If not done, why |
+|-------|--------|--------|----|------------------|
+| #86 | 5 | Done | #99 | |
+| #87 | 5 | Done | #97 | |
+| #88 | 5 | Done | #92 | |
+| #89 | 5 | Done | #95 | |
+| #90 | 5 | Done | #96 | |
+
+**Completed: 25 points. Velocity: 25 points** (all five planned issues are closed and
+their linked Pull Requests are merged). The board does not have a Sprint iteration set
+for these five issues; their points and scope are recorded in the Sprint 4 work items
+under refinement issue #85. Sprint chores carry no points.
+
+PR #94 also delivered the previously specified customer cancellation/history and owner
+schedule/booking work (#19, #20, #22, #23), plus peak pricing and reviews (#24, #25).
+Those issues have no Sprint 4 point commitments recorded, so they are not included in
+the 25-point velocity.
+
+### Sprint Review
+
+- **What we demonstrated:** The test suite currently passes all 253 tests with
+  `python -m pytest -q`; automated tests cover normal, error and boundary behavior across
+  the P0 stories, and `docs/testing.md` describes the risk-based strategy and how to run
+  them.
+- **Feedback received:** The review on PR #96 praised the risk-based test strategy and
+  the traceability of normal, error and boundary cases. No instructor feedback is
+  recorded in the issue or Pull Request history.
+- **What the tests found:** PR #92 fixed a date-dependent booking uniqueness test that
+  had queried every booking on a day instead of the exact slot under test. The assertion
+  now checks the precise slot, avoiding collisions with dynamic seed data.
+
+### Retrospective
+
+Full notes in `docs/retro.md`. The Sprint 3 action asked the Scrum Master to check open
+Pull Requests each Wednesday for a reviewer response. The five planned issue Pull
+Requests received reviews, but the repository does not record whether the Wednesday
+checks or reassignments happened, so that part of the action cannot be verified.
