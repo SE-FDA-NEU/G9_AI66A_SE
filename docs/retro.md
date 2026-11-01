@@ -59,3 +59,23 @@ of opening. Checked at the Sprint 3 retrospective.
 **Action for Sprint 4 (owner: @lequangk2006-sys):** as the next Scrum Master, check on
 Wednesday of each week that every open PR has a reviewer who has replied, and reassign the
 review if not. Checked at the Sprint 4 retrospective.
+
+---
+
+## Sprint 4 - 19/10/2026 to 01/11/2026
+
+**Velocity:** 25 points completed of 25 committed (five planned testing/documentation
+issues at 5 points each, all closed with merged Pull Requests).
+
+| Keep | Stop | Try |
+|------|------|-----|
+| Give each P0 story normal, error and boundary tests with traceable TC IDs; the PR #96 review recognized the risk-based coverage | Day-wide queries for slot-level booking uniqueness; dynamic seed data made the assertion flaky until PR #92 narrowed it to the exact slot | Refresh the documented full-suite result whenever test work is merged; the original 89-test output in `docs/testing.md` was no longer current after Sprint 4 additions |
+| Use teammate reviews to challenge test assumptions; PR #95 asked whether owner venue listing should require email verification | Leaving test documentation's full-suite count stale as new cases are added | Keep the current `python -m pytest -q` result visible in both `docs/testing.md` and `docs/SETUP.md` |
+
+**Action for Sprint 5 (owner: @lequangk2006-sys):** after each test-focused merge, rerun
+the full suite and update the expected test count in `docs/testing.md` and `docs/SETUP.md`.
+Check that both documents match the test run at the Sprint 5 retrospective.
+
+**Sprint 3 action checked:** The five planned issue Pull Requests received reviews, but
+the repository does not record the Wednesday checks or any reviewer reassignments;
+completion of that specific action cannot be confirmed.
