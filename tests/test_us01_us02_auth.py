@@ -31,6 +31,9 @@ WRONG_PASS = "wrong-pass1"
 VALID = {"email": "newcustomer@example.com", "password": "matkhau123",
          "full_name": "Pham Van An", "phone": "0912345678"}
 
+PW_TOO_SHORT = "abc123"        # 6 characters
+PW_ONE_SHORT = "abcdef1"       # 7 characters
+PW_SHORTEST_OK = "abcdefg1"    # 8 characters: letter + digit
 
 # ---- helpers ----------------------------------------------------------------------------
 def register(client, **changes):
@@ -214,7 +217,7 @@ def test_TC13_invalid_email_is_refused_with_400(client, db, email):
 
 def test_TC14_password_shorter_than_8_is_refused(client, db):
     """TC-14 (E) BR2: fewer than 8 characters."""
-    response = register(client, password="abc123")
+    response = register(client, password=PW_TOO_SHORT)
     assert response.status_code == 400
     assert "Password must be at least 8 characters" in response.get_data(as_text=True)
     assert find_user(db, VALID["email"]) is None
@@ -319,7 +322,7 @@ def test_TC25_api_register_duplicate_returns_409_json(client, db):
 
 def test_TC26_api_register_with_a_short_password_returns_400(client, db):
     """TC-26 (E) The API applies the same rules as the form."""
-    response = client.post("/api/auth/register", json={**VALID, "password": "abc123"})
+    response = client.post("/api/auth/register", json={**VALID, "password": PW_TOO_SHORT})
     assert response.status_code == 400
     assert find_user(db, VALID["email"]) is None
 
@@ -334,20 +337,20 @@ def test_TC27_resend_verification_requires_sign_in(client):
 # ---- Boundary ---------------------------------------------------------------------------
 def test_TC28_password_of_exactly_8_with_letter_and_digit_is_accepted(client):
     """TC-28 (B) BR2: the shortest valid password."""
-    assert register(client, password="abcdefg1").status_code == 302
+    assert register(client, password=PW_SHORTEST_OK).status_code == 302
 
 
 def test_TC29_password_of_7_with_letter_and_digit_is_refused(client, db):
     """TC-29 (B) BR2: one character short."""
-    assert register(client, password="abcdef1").status_code == 400
+    assert register(client, password=PW_ONE_SHORT).status_code == 400
     assert find_user(db, VALID["email"]) is None
 
 
 def test_TC30_very_long_password_is_accepted_without_error(client):
     """TC-30 (B) No maximum is defined in BR2, so 1,000 characters must not crash."""
-    password = "a" * 999 + "1"
-    assert register(client, password=password).status_code == 302
-    assert sign_in(client, VALID["email"], password).status_code == 302
+    long_value = "a" * 999 + "1"
+    assert register(client, password=long_value).status_code == 302
+    assert sign_in(client, VALID["email"], long_value).status_code == 302
 
 
 def test_TC31_one_character_name_is_accepted(client):
@@ -495,8 +498,12 @@ def test_TC50_wrong_email_and_wrong_password_look_the_same(client):
     a = sign_in(client, "nobody@example.com", "whatever123")
     b = sign_in(client, CUSTOMER, WRONG_PASS)
     assert a.status_code == b.status_code == 401
-    assert a.get_data(as_text=True).replace("nobody@example.com", "") == \
-        b.get_data(as_text=True).replace(CUSTOMER, "")
+
+    def without_emails(response):
+        page = response.get_data(as_text=True)
+        return page.replace("nobody@example.com", "").replace(CUSTOMER, "")
+
+    assert without_emails(a) == without_emails(b)
 
 
 @pytest.mark.parametrize("email,password", [("", SEED_PASS), (CUSTOMER, ""), ("", "")])
@@ -674,8 +681,8 @@ def test_TC74_second_login_replaces_the_first_session(client):
 
 def test_TC75_register_then_login_with_the_boundary_password(client):
     """TC-75 (B) US01 -> US02 end to end with the shortest valid password."""
-    register(client, password="abcdefg1")
-    assert sign_in(client, VALID["email"], "abcdefg1").status_code == 302
+    register(client, password=PW_SHORTEST_OK)
+    assert sign_in(client, VALID["email"], PW_SHORTEST_OK).status_code == 302
     assert signed_in_id(client)
 
 
