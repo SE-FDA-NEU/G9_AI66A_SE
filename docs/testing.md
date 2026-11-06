@@ -191,8 +191,8 @@ tests/test_venue.py::test_gallery_shows_only_this_venues_photos PASSED   [100%]
 ```
 
 The output above is the baseline captured when this guide was first written. After the
-Sprint 4 test additions, `python -m pytest -q` passed **253 tests** on 01/11/2026
-(`253 passed in 96.41s`); the run time varies by machine.
+Following Milestone 5 operations and monitoring test additions, `python -m pytest -q` passed **268 tests** on 06/11/2026
+(`268 passed in 117.82s`); the run time varies by machine.
 
 ---
 
