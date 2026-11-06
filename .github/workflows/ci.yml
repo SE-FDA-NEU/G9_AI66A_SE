@@ -133,3 +133,35 @@ jobs:
             exit 1
           fi
           echo "Clean."
+
+  deployment-readiness:
+    name: Deployment verification & schema check
+    needs: [python, secrets]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Verify deployment configuration and entrypoints
+        run: |
+          test -f vercel.json || { echo "Missing vercel.json"; exit 1; }
+          test -f Procfile || { echo "Missing Procfile"; exit 1; }
+          test -f render.yaml || { echo "Missing render.yaml"; exit 1; }
+          test -f runtime.txt || { echo "Missing runtime.txt"; exit 1; }
+          python -c "import api.index; print('Serverless API entrypoint OK')"
+
+      - name: Verify database schemas and initialization
+        run: |
+          python -c "import src.pg_schema as pg; assert len(pg.PG_SCHEMA) > 100; print('PostgreSQL schema OK')"
+          python src/init_db.py
+          test -f data/venues.db || { echo "SQLite init failed"; exit 1; }
+          python -c "import sqlite3; conn=sqlite3.connect('data/venues.db'); assert conn.execute('SELECT COUNT(*) FROM venue').fetchone()[0] == 24; print('SQLite seed verified (24 venues)')"
