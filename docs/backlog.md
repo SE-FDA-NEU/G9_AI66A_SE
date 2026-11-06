@@ -171,3 +171,43 @@ request and a review of their own.
 New rules found in Sprint 3 keep using each member's range from Sprint 2 (@peng543
 BR20-29, @PhunghoaAI BR30-39, @lequangk2006-sys BR40-49, @htngochan2802 BR50-59,
 @thunopro BR60-69).
+
+---
+
+# Sprint 4 backlog - 19/10/2026 to 01/11/2026
+
+Agreed at Sprint 4 Planning (issue #85). Product Owner: @thunopro. Scrum Master: @lequangk2006-sys.
+
+**Sprint goal:** Build automated normal, error and boundary coverage for every P0 story, fix regressions
+found while testing, and document the test strategy and setup for Milestone 4.
+
+| Issue | Work | Points | Owner | Reviewer |
+|-------|------|--------|-------|----------|
+| #85 | [Chore] Refine backlog for Sprint 4 | - | @thunopro | @lequangk2006-sys |
+| #86 | P0 tests for US01 registration and US02 login | 5 | @htngochan2802 | @thunopro |
+| #87 | P0 tests for US03 search and US04 venue detail/availability | 5 | @peng543 | @PhunghoaAI |
+| #88 | Fix date-dependent US05 test and add booking boundary tests | 5 | @thunopro | @peng543 |
+| #89 | P0 tests for US06 owner venue management | 5 | @PhunghoaAI | @htngochan2802 |
+| #90 | Milestone 4 testing guide and setup instructions | 5 | @lequangk2006-sys | @thunopro |
+| #91 | [Chore] Sprint 4 wrap-up | - | @lequangk2006-sys | @thunopro |
+
+**Committed: 25 points.** Chores carry no points.
+
+---
+
+# Sprint 5 backlog - 02/11/2026 to 15/11/2026
+
+Agreed at Sprint 5 Planning (issue #103). Product Owner: @thunopro. Scrum Master: @htngochan2802.
+
+**Sprint goal:** Software is finished when anyone can open it on the internet at a public https:// address, a robot checks every change before it goes live, and operations/monitoring procedures ensure reliability for the final demo in week 15.
+
+| Issue | Work | Points | Owner | Reviewer |
+|-------|------|--------|-------|----------|
+| #101 | Modernize commercial web UI, add PostgreSQL compatibility and Cloudinary storage | 8 | @thunopro | @peng543 |
+| #103 | [Chore] Refine backlog for Sprint 5 | - | @thunopro | @htngochan2802 |
+| #104 | [Ops] Health check resilience and production monitoring tests | 5 | @peng543 | @PhunghoaAI |
+| #105 | [CI] Enhance CI pipeline with deployment verification and branch protection audit | 5 | @PhunghoaAI | @lequangk2006-sys |
+| #106 | [Docs] Update README first screen with production URL, test accounts, and CI badge | 3 | @lequangk2006-sys | @htngochan2802 |
+| #107 | [Chore] Sprint 5 wrap-up: operations guide, five-sprint velocity log, retrospective, and v1.0 release | - | @htngochan2802 | @thunopro |
+
+**Committed: 21 points.** Chores carry no points.
