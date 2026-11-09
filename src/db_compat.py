@@ -72,11 +72,23 @@ class CompatCursor:
         # Postgres path
         translated = sql
 
-        # Convert date(col) -> col::date
-        translated = re.sub(r"\bdate\(\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\)", r"\1::date", translated)
+        # Convert SQLite BEGIN IMMEDIATE to standard BEGIN
+        if re.match(r"^\s*BEGIN\s+IMMEDIATE", translated, re.IGNORECASE):
+            translated = re.sub(r"^\s*BEGIN\s+IMMEDIATE", "BEGIN", translated, flags=re.IGNORECASE)
+
+        # Convert date(col) -> col::date (including table.column or alias.column)
+        translated = re.sub(r"\bdate\(\s*([a-zA-Z_][a-zA-Z0-9_.]*)\s*\)", r"\1::date", translated)
 
         # Convert datetime('now') -> NOW()
         translated = re.sub(r"datetime\(\s*'now'\s*\)", "NOW()", translated, flags=re.IGNORECASE)
+
+        # Handle Postgres timestamp parameter typecast in COALESCE
+        translated = re.sub(
+            r"COALESCE\s*\(\s*email_verified_at\s*,\s*\?\s*\)",
+            "COALESCE(email_verified_at, (?)::timestamp)",
+            translated,
+            flags=re.IGNORECASE,
+        )
 
         # Convert strftime('%w', col) -> EXTRACT(DOW FROM col)::int
         translated = re.sub(
@@ -212,6 +224,12 @@ class CompatConnection:
 
     @property
     def in_transaction(self):
+        if self._backend == "postgres":
+            try:
+                import psycopg2.extensions
+                return self._conn.status == psycopg2.extensions.STATUS_IN_TRANSACTION
+            except Exception:
+                return False
         return getattr(self._conn, "in_transaction", False)
 
     def __getattr__(self, name):

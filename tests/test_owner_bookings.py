@@ -9,8 +9,8 @@ from db import connect
 import booking as svc
 
 
-NOW = datetime(2026, 10, 11, 9, 0)
-TODAY = "2026-10-11"
+NOW = datetime(2026, 12, 15, 9, 0)
+TODAY = "2026-12-15"
 
 
 @pytest.fixture
@@ -40,7 +40,7 @@ def test_owner_bookings_defaults_to_current_date_and_shows_title(app_with_now, d
         svc.create_booking(conn, minh, 1, TODAY, 16, 2, NOW)
 
     page = client.get("/owner/bookings").get_data(as_text=True)
-    assert f"2 bookings on 11/10/2026" in page
+    assert f"2 bookings on 15/12/2026" in page
     assert "Thong Nhat Football Pitch" in page
 
 
@@ -84,11 +84,11 @@ def test_owner_bookings_filter_by_venue(app_with_now, db):
 
     # Filter venue 1
     page1 = client.get(f"/owner/bookings?date={TODAY}&venue_id=1").get_data(as_text=True)
-    assert "1 booking on 11/10/2026 - Thong Nhat Football Pitch" in page1
+    assert "1 booking on 15/12/2026 - Thong Nhat Football Pitch" in page1
 
     # Filter venue 2
     page2 = client.get(f"/owner/bookings?date={TODAY}&venue_id=2").get_data(as_text=True)
-    assert "1 booking on 11/10/2026 - Lan Anh Badminton Court" in page2
+    assert "1 booking on 15/12/2026 - Lan Anh Badminton Court" in page2
 
 
 def test_owner_cannot_view_booking_detail_of_another_owner(app_with_now, db):

@@ -120,8 +120,44 @@ def my_bookings():
             return redirect("/login?next=" + request.path)
         status_filter = request.args.get("status")
         bookings = svc.list_for_customer(conn, user["id"], status_filter=status_filter)
-        return render_template("my_bookings.html", bookings=bookings,
-                               current_filter=status_filter or "all", now=_now())
+        now = _now()
+        enriched = []
+        for b in bookings:
+            d = dict(b)
+            try:
+                start_dt = datetime.strptime(str(b["start_at"])[:16], "%Y-%m-%d %H:%M")
+                end_dt = datetime.strptime(str(b["end_at"])[:16], "%Y-%m-%d %H:%M")
+                diff_hours = (start_dt - now).total_seconds() / 3600.0
+            except Exception:
+                start_dt = now
+                end_dt = now
+                diff_hours = 0
+
+            if b["status"] == "confirmed":
+                if now >= end_dt:
+                    d["match_state"] = "completed"
+                    d["can_cancel"] = False
+                elif start_dt <= now < end_dt:
+                    d["match_state"] = "in_progress"
+                    d["can_cancel"] = False
+                elif diff_hours < 2:
+                    d["match_state"] = "starting_soon"
+                    d["can_cancel"] = False
+                elif diff_hours >= 24:
+                    d["match_state"] = "upcoming"
+                    d["can_cancel"] = True
+                    d["refund_pct"] = 100
+                else:
+                    d["match_state"] = "upcoming"
+                    d["can_cancel"] = True
+                    d["refund_pct"] = 50
+            else:
+                d["match_state"] = b["status"]
+                d["can_cancel"] = False
+            enriched.append(d)
+
+        return render_template("my_bookings.html", bookings=enriched,
+                               current_filter=status_filter or "all", now=now)
 
 
 @bp.route("/my-bookings/<code>/cancel", methods=["POST"])
