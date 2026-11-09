@@ -18,6 +18,7 @@ from errors import BusinessRuleError
 from guards import SESSION_TIMEOUT, load_user
 from pg_schema import PG_SCHEMA
 from schema import SCHEMA
+from time_utils import vn_now
 
 load_dotenv()
 
@@ -45,6 +46,7 @@ def wants_json():
 
 def create_app(database=None):
     app = Flask(__name__)
+    app.config.setdefault("NOW", vn_now)
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-only")
     app.config["DATABASE"] = database
     app.config["PERMANENT_SESSION_LIFETIME"] = SESSION_TIMEOUT        # BR8
