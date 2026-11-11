@@ -1436,3 +1436,18 @@ tbody tr:hover { background: #fafbf8; }
   .auth-card { padding: 25px 21px; }
   .owner-container .table-responsive-wrapper { overflow-x: auto; }
 }
+
+/* Scroll-to-top button */
+#scroll-to-top:hover {
+  transform: translateY(-3px) scale(1.08);
+  box-shadow: 0 8px 24px rgba(2, 132, 199, 0.55);
+}
+
+/* Sign-out modal overlay */
+#signout-modal {
+  animation: fadeInOverlay 0.15s ease;
+}
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

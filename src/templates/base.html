@@ -16,7 +16,9 @@
   <body>
     <header class="top">
       <a class="brand" href="/search" aria-label="Sports Arena, home">
-        <span class="brand-icon" aria-hidden="true">SN</span>
+        <span class="brand-icon" aria-hidden="true">
+          <img src="{{ url_for('static', filename='images/sports-icon.png') }}" alt="Sports Arena icon" width="22" height="22" style="display:block; filter: brightness(0) invert(1);">
+        </span>
         <span class="brand-text"><span class="brand-name">Sports Arena<span class="brand-period">.</span></span><small>HANOI COURT BOOKING</small></span>
       </a>
       <nav>
@@ -35,9 +37,7 @@
             <span class="user-avatar">{{ g.user.full_name[0] | upper }}</span>
             <span class="who">{{ g.user.full_name }}</span>
           </div>
-          <form method="post" action="/logout">
-            <button class="link btn-logout" type="submit">Sign out</button>
-          </form>
+          <button class="link btn-logout" type="button" onclick="document.getElementById('signout-modal').style.display='flex'" aria-haspopup="dialog">Sign out</button>
         {% else %}
           <a href="/login" class="nav-link btn-login">Sign in</a>
           <a href="/register" class="nav-link btn-register-nav">Register</a>
@@ -323,7 +323,16 @@
         "Venue Photo (optional)": "Ảnh sân bãi (tùy chọn)",
         "Choose a sport": "Chọn môn thể thao",
         "Choose an area": "Chọn khu vực",
+        "Are you sure?": "Bạn có chắc không?",
+        "You'll be signed out of your account.": "Bạn sẽ được đăng xuất khỏi tài khoản.",
+        "Confirm": "Xác nhận",
         "Cancel": "Hủy bỏ",
+        "Back to top": "Lên đầu trang",
+        "Scroll back to top": "Lên đầu trang",
+        "Cards": "Thẻ",
+        "Table": "Bảng",
+        "🗂️ Cards": "🗂️ Thẻ",
+        "📋 Table": "📋 Bảng",
         "Add venue": "Thêm sân",
         "📋 Owner Bookings · Daily Reservations": "📋 Quản lý đơn đặt sân · Theo ngày",
         "Review all customer bookings across your venues and manage player check-ins.": "Theo dõi các đơn đặt sân tại các cụm sân của bạn và quản lý đón khách.",
@@ -529,6 +538,50 @@
         }
       });
     })();
+    </script>
+    <!-- Sign Out Confirmation Modal -->
+    {% if g.user %}
+    <div id="signout-modal" role="dialog" aria-modal="true" aria-labelledby="signout-modal-title" style="display:none; position:fixed; inset:0; z-index:9000; align-items:center; justify-content:center; background:rgba(15,23,42,0.6); backdrop-filter:blur(4px);">
+      <div style="background:#fff; border-radius:16px; padding:36px 40px; box-shadow:0 24px 48px -8px rgba(15,23,42,0.35); max-width:360px; width:90%; text-align:center;">
+        <div style="font-size:40px; margin-bottom:12px;">👋</div>
+        <h2 id="signout-modal-title" style="margin:0 0 8px; font-size:20px; font-weight:800; color:#0f172a;">Are you sure?</h2>
+        <p style="margin:0 0 28px; color:#64748b; font-size:14px;">You'll be signed out of your account.</p>
+        <div style="display:flex; gap:12px; justify-content:center;">
+          <form method="post" action="/logout" style="margin:0;">
+            <button type="submit" style="padding:10px 28px; background:linear-gradient(135deg,#f43f5e,#e11d48); color:#fff; border:none; border-radius:9px; font-size:15px; font-weight:700; cursor:pointer;">Confirm</button>
+          </form>
+          <button type="button" onclick="document.getElementById('signout-modal').style.display='none'" style="padding:10px 28px; background:#f1f5f9; color:#334155; border:1px solid #e2e8f0; border-radius:9px; font-size:15px; font-weight:700; cursor:pointer;">Cancel</button>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Scroll To Top Button -->
+    <button id="scroll-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Scroll back to top" title="Back to top" style="display:none; position:fixed; bottom:28px; right:28px; z-index:8000; width:46px; height:46px; background:linear-gradient(135deg,#0ea5e9,#0284c7); color:#fff; border:none; border-radius:50%; font-size:20px; cursor:pointer; box-shadow:0 4px 16px rgba(2,132,199,0.4); align-items:center; justify-content:center; transition:opacity 0.3s, transform 0.3s;">&#8679;</button>
+
+    <script>
+    // Scroll-to-top visibility
+    (function() {
+      var btn = document.getElementById('scroll-to-top');
+      window.addEventListener('scroll', function() {
+        if (window.scrollY > 300) {
+          btn.style.display = 'flex';
+        } else {
+          btn.style.display = 'none';
+        }
+      }, { passive: true });
+    })();
+
+    // Close signout modal on backdrop click
+    var modal = document.getElementById('signout-modal');
+    if (modal) {
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) modal.style.display = 'none';
+      });
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') modal.style.display = 'none';
+      });
+    }
     </script>
   </body>
 </html>

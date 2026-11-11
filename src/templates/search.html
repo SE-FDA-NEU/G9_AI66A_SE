@@ -460,13 +460,26 @@
     <p class="count" style="margin: 0; font-size: 16px; font-weight: 700;">
       <strong id="count">{{ venues|length }}</strong> venue(s) found
     </p>
-    <span class="tag-badge" style="background:#e9efdf; color:#355e3e; border-color:#d6e2ca; font-weight:700; font-size:12px; padding:6px 12px;">
-      Live slot availability by date
-    </span>
+    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+      <!-- View As toggle -->
+      <div style="display:inline-flex; align-items:center; gap:6px;">
+        <button id="btn-view-cards" onclick="setView('cards')" type="button"
+          style="padding:7px 16px; border:1px solid #286b45; background:#286b45; color:#fff; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px; border-radius:8px; box-shadow:var(--shadow-sm); transition:all 0.15s ease;">
+          &#9646;&#9646;&#9646; Cards
+        </button>
+        <button id="btn-view-table" onclick="setView('table')" type="button"
+          style="padding:7px 16px; border:1px solid var(--border-color); background:#fff; color:#355e3e; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px; border-radius:8px; box-shadow:var(--shadow-sm); transition:all 0.15s ease;">
+          &#9776; Table
+        </button>
+      </div>
+      <span class="tag-badge" style="background:#e9efdf; color:#355e3e; border-color:#d6e2ca; font-weight:700; font-size:12px; padding:6px 12px;">
+        Live slot availability by date
+      </span>
+    </div>
   </div>
 
   <!-- Modern Grid Showcase Cards -->
-  <div class="venue-cards-grid">
+  <div id="view-cards" class="venue-cards-grid">
     {% for v in venues %}
     <div class="venue-card-item venue-card-filter-target" data-text="{{ (v.name ~ ' ' ~ v.sport ~ ' ' ~ v.area ~ ' ' ~ v.address)|lower }}">
       <div class="venue-card-img sport-{{ v.sport|lower }} image-{{ v.id % (4 if v.sport == 'Football' else 5) }}" {% if not v.cover_photo_id %}role="img" aria-label="Illustrative photo {{ v.sport }}"{% endif %}>
@@ -495,13 +508,13 @@
     {% endfor %}
   </div>
 
-  <details class="directory-details">
-  <summary>Show table view</summary>
+  <!-- Table View -->
+  <div id="view-table" style="display:none; overflow-x:auto;">
   <table>
     <thead><tr><th>#</th><th>Venue</th><th>Sport</th><th>Area</th><th>Address</th>
       <th>Opening hours</th><th class="num">Price / hour (VND)</th><th>Action</th></tr></thead>
     <tbody>
-    {% for v in venues %}
+    {% for v in venues|sort(attribute='id') %}
       <tr data-text="{{ (v.name ~ ' ' ~ v.sport ~ ' ' ~ v.area ~ ' ' ~ v.address)|lower }}">
         <td>{{ v.id }}</td>
         <td>
@@ -520,7 +533,7 @@
     {% endfor %}
     </tbody>
   </table>
-  </details>
+  </div>
 </div>
 
 <div class="empty" id="no-match" {% if venues or error %}hidden{% endif %}>
@@ -555,11 +568,45 @@
 <p class="muted" style="margin-top: 24px; text-align: center;">Showing {{ total }} venues currently taking bookings.</p>
 
 <script>
+// View toggle: Cards / Table
+function setView(mode) {
+  var cards = document.getElementById('view-cards');
+  var table = document.getElementById('view-table');
+  var btnCards = document.getElementById('btn-view-cards');
+  var btnTable = document.getElementById('btn-view-table');
+  if (mode === 'cards') {
+    cards.style.display = '';
+    table.style.display = 'none';
+    btnCards.style.background = '#286b45';
+    btnCards.style.color = '#fff';
+    btnCards.style.borderColor = '#286b45';
+    btnTable.style.background = '#fff';
+    btnTable.style.color = '#355e3e';
+    btnTable.style.borderColor = 'var(--border-color)';
+    localStorage.setItem('arena_view', 'cards');
+  } else {
+    cards.style.display = 'none';
+    table.style.display = 'block';
+    btnCards.style.background = '#fff';
+    btnCards.style.color = '#355e3e';
+    btnCards.style.borderColor = 'var(--border-color)';
+    btnTable.style.background = '#286b45';
+    btnTable.style.color = '#fff';
+    btnTable.style.borderColor = '#286b45';
+    localStorage.setItem('arena_view', 'table');
+  }
+}
+// Restore saved view preference
+document.addEventListener('DOMContentLoaded', function() {
+  var saved = localStorage.getItem('arena_view');
+  if (saved === 'table') setView('table');
+});
+
 // US03 criterion 3: from the 3rd character typed, narrow the list to venues whose name or
 // venue name, sport, area, or address contains the text - without reloading the page. Fewer than 3 characters shows all.
 const q = document.getElementById("q");
 const normalizeSearch = value => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-const rows = [...document.querySelectorAll("#results tbody tr")];
+const rows = [...document.querySelectorAll("#view-table tbody tr")];
 const cards = [...document.querySelectorAll(".venue-card-filter-target")];
 
 q.addEventListener("input", () => {

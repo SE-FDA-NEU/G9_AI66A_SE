@@ -1,4 +1,4 @@
-﻿"""Tests for US09 (US22: Venue owner manages availability schedule).
+"""Tests for US09 (US22: Venue owner manages availability schedule).
 Business Rules: BR13, BR14, BR15 (BR16, BR17 in requirements.md).
 """
 from datetime import date, datetime, timedelta
@@ -15,6 +15,7 @@ DAY_1 = (_BASE_DAY + timedelta(days=1)).isoformat()
 DAY_2 = (_BASE_DAY + timedelta(days=2)).isoformat()
 DAY_3 = (_BASE_DAY + timedelta(days=3)).isoformat()
 TOMORROW = DAY_1
+SCHEDULE_DAY = DAY_1
 
 
 @pytest.fixture
@@ -33,29 +34,29 @@ def test_schedule_requires_owner_role(client, login):
 
 
 def test_owner_blocks_slot_and_it_disappears_from_customer_view(app_with_now, db):
-    # US22 AC 1, BR13: Block slot 18:00-19:00 on TOMORROW with reason
+    # US22 AC 1, BR13: Block slot 18:00-19:00 with reason
     client = app_with_now.test_client()
     client.post("/login", data={"email": "lan.owner@example.com", "password": "sanbong1"})
 
     # Check slot is initially free in customer API
-    slots_before = client.get(f"/api/venues/1?date={TOMORROW}").get_json()["slots"]
+    slots_before = client.get(f"/api/venues/1?date={SCHEDULE_DAY}").get_json()["slots"]
     s18_before = next(s for s in slots_before if s["hour"] == 18)
     assert s18_before["status"] == "free"
 
     # Owner blocks 18:00
     res = client.post("/owner/venues/1/schedule/block", data={
-        "date": TOMORROW,
+        "date": SCHEDULE_DAY,
         "hour": 18,
         "reason": "Grass maintenance",
     }, follow_redirects=True)
     assert res.status_code == 200
 
     # On owner schedule, slot shows "Blocked - Grass maintenance"
-    owner_page = client.get(f"/owner/venues/1/schedule?date={TOMORROW}").get_data(as_text=True)
+    owner_page = client.get(f"/owner/venues/1/schedule?date={SCHEDULE_DAY}").get_data(as_text=True)
     assert "Blocked - Grass maintenance" in owner_page
 
     # On customer API /venues/1, slot is now blocked / no longer free (BR13)
-    slots_after = client.get(f"/api/venues/1?date={TOMORROW}").get_json()["slots"]
+    slots_after = client.get(f"/api/venues/1?date={SCHEDULE_DAY}").get_json()["slots"]
     s18_after = next(s for s in slots_after if s["hour"] == 18)
     assert s18_after["status"] == "blocked"
 
@@ -67,17 +68,17 @@ def test_owner_unblocks_slot_and_it_becomes_free_immediately(app_with_now, db):
 
     # Block 19:00
     client.post("/owner/venues/1/schedule/block", data={
-        "date": TOMORROW, "hour": 19, "reason": "Sửa đèn"
+        "date": SCHEDULE_DAY, "hour": 19, "reason": "Sửa đèn"
     })
 
     # Unblock 19:00
     res = client.post("/owner/venues/1/schedule/unblock", data={
-        "date": TOMORROW, "hour": 19
+        "date": SCHEDULE_DAY, "hour": 19
     }, follow_redirects=True)
     assert res.status_code == 200
 
     # Slot is immediately free for customers
-    slots = client.get(f"/api/venues/1?date={TOMORROW}").get_json()["slots"]
+    slots = client.get(f"/api/venues/1?date={SCHEDULE_DAY}").get_json()["slots"]
     s19 = next(s for s in slots if s["hour"] == 19)
     assert s19["status"] == "free"
 
@@ -87,15 +88,15 @@ def test_block_slot_with_active_booking_is_refused(app_with_now, db):
     client = app_with_now.test_client()
     client.post("/login", data={"email": "lan.owner@example.com", "password": "sanbong1"})
 
-    # Minh books slot 19:00-20:00 on TOMORROW
+    # Minh books slot 19:00-20:00
     with connect(db) as conn:
         minh = conn.execute("SELECT * FROM user WHERE email = 'minh@example.com'").fetchone()
-        b = svc.create_booking(conn, minh, 1, TOMORROW, 19, 1, NOW)
+        b = svc.create_booking(conn, minh, 1, SCHEDULE_DAY, 19, 1, NOW)
         code = b["code"]
 
     # Owner attempts to block 19:00
     res = client.post("/api/owner/venues/1/block", json={
-        "date": TOMORROW, "hour": 19, "reason": "Bảo trì"
+        "date": SCHEDULE_DAY, "hour": 19, "reason": "Bảo trì"
     })
     assert res.status_code == 409
     body = res.get_json()
@@ -103,13 +104,13 @@ def test_block_slot_with_active_booking_is_refused(app_with_now, db):
 
 
 def test_block_slot_in_the_past_is_refused(app_with_now):
-    # US22 AC 4, BR15: Cannot block past slots (NOW is 2026-10-11 09:00)
+    # US22 AC 4, BR15: Cannot block past slots (NOW is 09:00 on _BASE_DAY)
     client = app_with_now.test_client()
     client.post("/login", data={"email": "lan.owner@example.com", "password": "sanbong1"})
 
-    # Try to block 08:00 on 2026-10-11 (past)
+    # Try to block 08:00 today (past)
     res = client.post("/api/owner/venues/1/block", json={
-        "date": "2026-10-11", "hour": 8, "reason": "Bảo trì"
+        "date": NOW.date().isoformat(), "hour": 8, "reason": "Bảo trì"
     })
     assert res.status_code == 400
     assert "Can only block slots starting after current time" in res.get_json()["error"]
