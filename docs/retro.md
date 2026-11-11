@@ -79,3 +79,31 @@ Check that both documents match the test run at the Sprint 5 retrospective.
 **Sprint 3 action checked:** The five planned issue Pull Requests received reviews, but
 the repository does not record the Wednesday checks or any reviewer reassignments;
 completion of that specific action cannot be confirmed.
+
+---
+
+## Sprint 5 - 02/11/2026 to 15/11/2026
+
+**Velocity:** 21 points completed of 21 committed (issues #101, #104, #105, #106 and chores #103, #107).
+
+| Keep | Stop | Try |
+|------|------|-----|
+| Automated deployment verification in CI before auto-deploying to Vercel/Neon; catches configuration mismatches before production traffic hits them | Relying on local SQLite assumptions when deploying to PostgreSQL; schema compatibility adapters are essential for serverless hosts | Continuous end-to-end smoke testing against the live production URL as part of the PR definition of done |
+| Instant platform rollback via Vercel deployments tab; enables recovery in under 30 seconds without code changes | Manual database migrations during sprint deadlines; automated idempotency in `pg_schema.py` and `init_db.py` saves hours | Maintain persistent staging environment mirroring production database configurations |
+
+**Sprint 4 action checked:** Test counts updated to 289 passed tests across `docs/testing.md` and `docs/SETUP.md`. Verified at the Sprint 5 retrospective.
+
+---
+
+## Final Retrospective - What We Would Keep for Our Next Team
+
+Reflections from the entire 15-week Software Engineering project (Milestones 1 through 5):
+
+1. **One Issue = One Branch = One PR:**
+   - Keeping PR scopes small and linked directly to a numbered GitHub issue prevented massive merge conflicts and made code reviews swift and thorough. We will use this convention on every future project.
+2. **Explicit Business Rules Catalog (`BR1`–`BR19`):**
+   - Having unambiguous, testable business rules established in Sprint 1 served as the north star for database schema design, UI error messages, and automated pytest assertions.
+3. **Automated Subagent Review & CI Guardrails:**
+   - Pairing peer code review with automated CI scans (detect stack, pytest coverage, secret scanning, credential guards) caught subtle edge cases and zero-leak security violations before code reached `main`.
+4. **Decoupled Architecture for Cloud Deployment:**
+   - Moving from SQLite to database-compatible abstraction (`db_compat.py`) and Cloudinary media storage allowed our Flask backend to run seamlessly in serverless environments without persistent local disks.

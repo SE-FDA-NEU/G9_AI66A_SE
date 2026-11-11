@@ -149,7 +149,7 @@ python -m pytest -v
 
 Expected output:
 ```text
-============================= 253 passed in ~96s =============================
+============================= 289 passed in ~115s =============================
 ```
 
 ## 7. Test accounts & short P0 walk-through

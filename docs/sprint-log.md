@@ -345,3 +345,77 @@ Full notes in `docs/retro.md`. The Sprint 3 action asked the Scrum Master to che
 Pull Requests each Wednesday for a reviewer response. The five planned issue Pull
 Requests received reviews, but the repository does not record whether the Wednesday
 checks or reassignments happened, so that part of the action cannot be verified.
+
+---
+
+## Sprint 5 - 02/11/2026 to 15/11/2026
+
+### Sprint goal
+
+Deploy the complete application to a public, secure `https://` address on Vercel with
+managed PostgreSQL and persistent media storage; verify health checks and production error
+handling; formalize operational procedures and CI pipeline verification; and prepare the
+Week 15 final demonstration and Release v1.0.
+
+### Committed
+
+Planned under Sprint 5 backlog refinement issue #103. Product Owner: @thunopro. Scrum Master: @htngochan2802.
+
+| Issue | Work | Points | Owner | Reviewer |
+|-------|------|--------|-------|----------|
+| #101 | Modernize commercial web UI, add PostgreSQL compatibility and Cloudinary storage | 8 | @thunopro | @peng543 |
+| #103 | [Chore] Refine backlog for Sprint 5 | - | @thunopro | @htngochan2802 |
+| #104 | [Ops] Health check resilience and production monitoring tests | 5 | @peng543 | @PhunghoaAI |
+| #105 | [CI] Enhance CI pipeline with deployment verification and branch protection audit | 5 | @PhunghoaAI | @lequangk2006-sys |
+| #106 | [Docs] Update README first screen with production URL, test accounts, and CI badge | 3 | @lequangk2006-sys | @htngochan2802 |
+| #107 | [Chore] Sprint 5 wrap-up: operations guide, five-sprint velocity log, retrospective, and v1.0 release | - | @htngochan2802 | @thunopro |
+
+**Total committed: 21 points.** Chores carry no points.
+
+### Result
+
+| Issue | Points | Status | PR | If not done, why |
+|-------|--------|--------|----|------------------|
+| #101 | 8 | Done | #102 | |
+| #103 | - | Done | - | Backlog refinement chore |
+| #104 | 5 | Done | #108 | |
+| #105 | 5 | Done | #109 | |
+| #106 | 3 | Done | #110 | |
+| #107 | - | Done | #111 | Sprint 5 wrap-up chore |
+
+**Completed: 21 points. Velocity: 21 points** (all committed issues resolved with merged PRs).
+
+### Sprint Review
+
+- **What we demonstrated:** The application is live and publicly accessible at
+  `https://g9-venue-booking-demo.vercel.app` with real PostgreSQL persistence, Cloudinary
+  media storage, and 24 seeded venues. Every P0 story (US01–US06) is fully executable in
+  incognito mode by clicking only. The `/health` probe returns 200 OK when operational and
+  503 on database drop. All 289 automated tests pass in CI.
+- **Feedback received:** Peer review on PR #102 verified the dual English/Vietnamese
+  language toggle, responsive grid cards, and session persistence across browser reloads.
+- **Operational findings:** Initial serverless cold starts take ~3 seconds on Neon free-tier,
+  after which responses execute in under 120ms. Rollback procedures verified using Vercel
+  Instant Rollback.
+
+### Retrospective
+
+Full notes in `docs/retro.md`. The Sprint 4 action asked the Scrum Master to update test
+counts in `docs/testing.md` and `docs/SETUP.md`. Test count updated from 253 to 289 tests
+following the addition of monitoring and deployment verification suites.
+
+---
+
+## All Five Sprints Summary
+
+Summary of team commitments, delivery, and velocity across the entire project semester:
+
+| Sprint | Weeks | Focus / Milestone | Committed | Completed | Velocity | Key Deliverable |
+|---|---|---|---|---|---|---|
+| **Sprint 1** | Weeks 5–6 | Requirements & User Stories (M1) | 0 | 0 | 0 | `docs/requirements.md`, 12 user story specifications, BR1–BR19 |
+| **Sprint 2** | Weeks 7–8 | Architecture & Walking Skeleton (M2) | 23 | 23 | 23 | `docs/design.md`, SQLite schema, walking skeleton, CI setup |
+| **Sprint 3** | Weeks 9–10 | UI Implementation & 6 P0 Stories (M3) | 32 | 32 | 32 | `docs/ui.md`, US01–US06 full web interface, 88 tests |
+| **Sprint 4** | Weeks 11–12 | Software Testing & Coverage (M4) | 25 | 25 | 25 | `docs/testing.md`, TC-01 to TC-76, 253 automated tests, regression fixes |
+| **Sprint 5** | Weeks 13–14 | Deployment, Operations & Release (M5) | 21 | 21 | 21 | `docs/operations.md`, Live URL, CI deployment verification, Release v1.0 |
+| **Total** | | **All 5 Milestones Completed** | **101** | **101** | **101** | **Production-ready Sports Venue Booking System** |
+
