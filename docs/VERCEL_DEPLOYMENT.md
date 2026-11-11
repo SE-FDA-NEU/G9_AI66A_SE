@@ -39,17 +39,28 @@ The variables are also documented in `.env.example`.
 
 ## Project configuration
 
-`vercel.json` is already configured at the repository root:
+`vercel.json` is configured at the repository root with regional co-location and Edge CDN caching:
 
 ```json
 {
   "version": 2,
+  "regions": ["sin1"],
   "builds": [
+    { "src": "src/static/**", "use": "@vercel/static" },
     { "src": "api/index.py", "use": "@vercel/python" }
   ],
   "routes": [
-    { "src": "/static/(.*)", "dest": "/src/static/$1" },
-    { "src": "/(.*)", "dest": "api/index.py" }
+    {
+      "src": "/static/(.*)",
+      "dest": "/src/static/$1",
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
+      "src": "/(.*)",
+      "dest": "api/index.py"
+    }
   ],
   "env": {
     "PYTHONPATH": "src"
@@ -59,9 +70,9 @@ The variables are also documented in `.env.example`.
 
 This tells Vercel to:
 
-- Build the Python function at `api/index.py`.
-- Serve static assets from `src/static/`.
-- Route every other request to the Flask app.
+- Execute serverless functions in **`sin1` (Singapore)**, co-located in the same region as the Neon PostgreSQL database (`ap-southeast-1`), reducing cross-regional roundtrip latency from ~240ms to ~1-2ms.
+- Build and cache static assets (`src/static/`) directly on Vercel's Edge CDN with immutable cache headers without invoking Python Lambda functions.
+- Route dynamic requests to `api/index.py` using thread-safe connection caching and fast schema probes.
 
 ## How the backend switches
 
