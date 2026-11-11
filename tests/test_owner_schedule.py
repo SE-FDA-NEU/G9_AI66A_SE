@@ -1,16 +1,16 @@
-"""Tests for US09 (US22: Venue owner manages availability schedule).
+﻿"""Tests for US09 (US22: Venue owner manages availability schedule).
 Business Rules: BR13, BR14, BR15 (BR16, BR17 in requirements.md).
 """
-from datetime import datetime
+from datetime import date, datetime, timedelta
 
 import pytest
 
-from db import connect
 import booking as svc
+from db import connect
 
-
-NOW = datetime(2026, 10, 11, 9, 0)
-TOMORROW = "2026-10-12"
+_BASE_DAY = date.today() + timedelta(days=20)
+NOW = datetime.combine(_BASE_DAY, datetime.min.time()).replace(hour=9)
+TOMORROW = (_BASE_DAY + timedelta(days=1)).isoformat()
 
 
 @pytest.fixture
@@ -119,12 +119,12 @@ def test_batch_block_slots_reports_blocked_and_skipped(app_with_now, db):
     # Create a booking on 2026-10-13 06:00
     with connect(db) as conn:
         minh = conn.execute("SELECT * FROM user WHERE email = 'minh@example.com'").fetchone()
-        svc.create_booking(conn, minh, 1, "2026-10-13", 6, 1, NOW)
+        svc.create_booking(conn, minh, 1, (_BASE_DAY + timedelta(days=2)).isoformat(), 6, 1, NOW)
 
     # Batch block 2026-10-12 to 2026-10-14 from 06:00 to 07:00 (3 days)
     res = client.post("/owner/venues/1/schedule/batch-block", data={
-        "start_date": "2026-10-12",
-        "end_date": "2026-10-14",
+        "start_date": TOMORROW,
+        "end_date": (_BASE_DAY + timedelta(days=3)).isoformat(),
         "start_hour": 6,
         "end_hour": 7,
         "reason": "Regular maintenance",

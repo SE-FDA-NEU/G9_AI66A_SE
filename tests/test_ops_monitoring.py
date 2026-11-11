@@ -8,7 +8,6 @@ Verifies:
 """
 import time
 from unittest.mock import patch
-import pytest
 
 
 def test_health_returns_200_and_seeded_venues_count(client):

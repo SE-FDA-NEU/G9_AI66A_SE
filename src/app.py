@@ -85,8 +85,9 @@ def create_app(database=None):
         try:
             venues = get_db().execute("SELECT COUNT(*) FROM venue").fetchone()[0]
             return jsonify(status="ok", venues=venues), 200
-        except Exception as exc:
-            return jsonify(status="error", error="Database connection failure", details=str(exc)), 503
+        except Exception:
+            app.logger.exception("Health check database failure")
+            return jsonify(status="error", error="Database connection failure"), 503
 
     return app
 
