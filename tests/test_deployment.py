@@ -48,7 +48,7 @@ def test_postgres_backend_selected_when_database_url_set(monkeypatch, tmp_path):
     mock_extras.register_uuid = lambda: None
     mock_extras.RealDictCursor = object
     mock_conn = MagicMock()
-    mock_pg.connect = lambda url, cursor_factory=None: mock_conn
+    mock_pg.connect = lambda url, cursor_factory=None, **kwargs: mock_conn
     mock_pg.extras = mock_extras
     sys.modules["psycopg2"] = mock_pg
     sys.modules["psycopg2.extras"] = mock_extras
@@ -226,4 +226,80 @@ def test_postgres_executescript():
     conn = db_compat.CompatConnection(mock_raw_conn, "postgres")
     conn.executescript("CREATE TABLE test (id int);")
     mock_cursor.execute.assert_called_once_with("CREATE TABLE test (id int);")
+
+
+def test_vercel_config_regional_colocation_and_edge_routing():
+    """Verify vercel.json contains sin1 co-location and static Edge routing with caching."""
+    import json
+    vpath = Path(__file__).parent.parent / "vercel.json"
+    assert vpath.exists()
+    config = json.loads(vpath.read_text())
+    assert config.get("regions") == ["sin1"]
+    build_uses = [b.get("use") for b in config.get("builds", [])]
+    assert "@vercel/static" in build_uses
+    assert "@vercel/python" in build_uses
+
+    static_route = next((r for r in config.get("routes", []) if r.get("src") == "/static/(.*)"), None)
+    assert static_route is not None
+    assert "public, max-age=31536000, immutable" in static_route["headers"]["cache-control"]
+
+
+def test_photo_route_includes_cache_headers(monkeypatch, tmp_path):
+    """Photo endpoint returns Cache-Control headers for both Cloudinary and disk storage."""
+    import db
+    import app
+    from init_db import seed
+
+    db_path = tmp_path / "test_photos.db"
+    with db.connect(db_path) as conn:
+        seed(conn)
+        conn.execute(
+            "INSERT INTO venue_photo (venue_id, file_name) VALUES (?, ?)",
+            (1, "venue1-test.jpg"),
+        )
+    # 1. Local disk photo response
+    uploads_dir = tmp_path / "uploads"
+    uploads_dir.mkdir(parents=True, exist_ok=True)
+    (uploads_dir / "venue1-test.jpg").write_bytes(b"image bytes")
+
+    application = app.create_app(database=db_path)
+    application.config["UPLOAD_DIR"] = uploads_dir
+    with application.test_client() as client:
+        resp = client.get("/venues/1/photos/1")
+        assert resp.status_code == 200
+        assert "max-age=86400" in resp.headers.get("Cache-Control", "")
+
+
+def test_ensure_schema_postgres_skips_ddl_when_tables_exist(monkeypatch):
+    """When tables exist, _ensure_schema skips executescript to prevent cold-start latency."""
+    monkeypatch.setenv("DATABASE_URL", "postgres://u:p@localhost/db")
+
+    mock_pg = types.ModuleType("psycopg2")
+    mock_extras = types.ModuleType("psycopg2.extras")
+    mock_extras.register_uuid = lambda: None
+    mock_extras.RealDictCursor = object
+    mock_conn = MagicMock()
+    # SELECT 1 FROM venue LIMIT 1 succeeds
+    mock_pg.connect = lambda url, cursor_factory=None, **kwargs: mock_conn
+    mock_pg.extras = mock_extras
+    sys.modules["psycopg2"] = mock_pg
+    sys.modules["psycopg2.extras"] = mock_extras
+
+    import app
+    import db
+
+    mock_compat_conn = MagicMock()
+    mock_compat_conn.__enter__.return_value = mock_compat_conn
+    mock_compat_conn._backend = "postgres"
+    mock_compat_conn.execute.return_value.fetchone.return_value = (1,)
+    monkeypatch.setattr(app, "connect", lambda *args, **kwargs: mock_compat_conn)
+
+    app._ensure_schema()
+    mock_compat_conn.execute.assert_called_with("SELECT 1 FROM venue LIMIT 1")
+    # executescript should NOT be called because tables exist
+    mock_compat_conn.executescript.assert_not_called()
+
+    del sys.modules["psycopg2"]
+    del sys.modules["psycopg2.extras"]
+
 

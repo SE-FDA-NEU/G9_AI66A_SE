@@ -45,8 +45,12 @@ def venue_photo(venue_id, photo_id):
     if photo is None:
         raise BusinessRuleError(404, "Photo not found.")
     if storage.using_cloudinary():
-        return redirect(storage.photo_url(photo["file_name"]))
-    return send_from_directory(current_app.config["UPLOAD_DIR"], photo["file_name"])
+        resp = redirect(storage.photo_url(photo["file_name"]))
+        resp.headers["Cache-Control"] = "public, max-age=86400, stale-while-revalidate=604800"
+        return resp
+    resp = send_from_directory(current_app.config["UPLOAD_DIR"], photo["file_name"], max_age=86400)
+    resp.headers["Cache-Control"] = "public, max-age=86400, stale-while-revalidate=604800"
+    return resp
 
 
 @bp.get("/api/venues/<int:venue_id>")

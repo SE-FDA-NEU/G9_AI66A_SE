@@ -1,48 +1,18 @@
-# G9_AI66A_SE - Sports Venue Booking System
+# 🌐 Live Application: https://g9-venue-booking-demo.vercel.app
+
+**Health Endpoint:** [`https://g9-venue-booking-demo.vercel.app/health`](https://g9-venue-booking-demo.vercel.app/health)  
+[![CI](https://github.com/SE-FDA-NEU/G9_AI66A_SE/actions/workflows/ci.yml/badge.svg)](https://github.com/SE-FDA-NEU/G9_AI66A_SE/actions/workflows/ci.yml)
+
+# Sports Venue Booking System (Hanoi amateur pitches/courts)
 
 A time-slot booking platform for amateur sports players in Hanoi: players see which pitch
 is free at which hour and reserve it in minutes, instead of messaging venue owners one by
 one and waiting for a reply; owners see the whole schedule of every venue they manage on
 one screen instead of keeping it in a paper notebook.
 
-## Team
+## Test Accounts
 
-| Name | GitHub username | Role |
-| --- | --- | --- |
-| Nguyen Khac Thu | [@thunopro](https://github.com/thunopro) | Leader · **Product Owner** |
-| Nguyen Khoi Nguyen | [@peng543](https://github.com/peng543) | Developer · Scrum Master (Sprint 2) |
-| Hoang Thi Ngoc Han | [@htngochan2802](https://github.com/htngochan2802) | Developer · Scrum Master (Sprint 1) |
-| Nguyen Phung Hoa | [@PhunghoaAI](https://github.com/PhunghoaAI) | Developer · **Scrum Master (Sprint 3)** |
-| Le Quang | [@lequangk2006-sys](https://github.com/lequangk2006-sys) | Developer |
-
-- **Product Owner:** @thunopro
-- **Scrum Master (Sprint 3):** @PhunghoaAI
-- Scrum Master (Sprint 2): @peng543
-- Scrum Master (Sprint 1): @htngochan2802
-
-## Project board
-
-https://github.com/orgs/SE-FDA-NEU/projects/25
-
-**New machine? Start with [`docs/SETUP.md`](docs/SETUP.md).**
-**Deploying? See [`docs/DEPLOY.md`](docs/DEPLOY.md) (Render, free tier, persistent disk).**
-
-## Core Features & P0 Stories
-
-Every P0 story is implemented and testable in the browser interface:
-
-| Story | What it does | Starting screen | Test account |
-|---|---|---|---|
-| **US01** Customer registration (#14) | Register account, receive on-screen verification link (BR4) | [`/register`](http://localhost:5000/register) | Guest / New user |
-| **US02** User login (#15) | Sign in with role-based routing (customer → `/dashboard`, owner → `/owner/venues`) | [`/login`](http://localhost:5000/login) | Any test account below |
-| **US03** Customer searches for venues (#16) | Search & filter venues by sport, district area, or keyword | [`/search`](http://localhost:5000/search) (or `/`) | Guest / Anyone |
-| **US04** Customer views venue details (#17) | View venue photos, pricing, amenities, and hourly availability grid | [`/venues/1`](http://localhost:5000/venues/1) | Guest / Anyone |
-| **US05** Customer books a venue (#18) | Reserve time slots with segmented pricing & booking code confirmation | [`/booking/1`](http://localhost:5000/booking/1) | `minh@example.com` (Customer) |
-| **US06** Venue owner adds a new venue (#21) | View owned venues, manage venue schedule, add a new venue | [`/owner/venues`](http://localhost:5000/owner/venues) | `lan.owner@example.com` (Owner) |
-
-### Test Accounts
-
-All pre-seeded test accounts share the test password **`sanbong1`** (8 characters, letter + digit, enforcing BR2).
+All pre-seeded test accounts share the test password **`sanbong1`** (8 characters, letter + digit, enforcing BR2). Real passwords are never committed.
 
 | Role | Email | Name | Status / Purpose |
 |---|---|---|---|
@@ -53,6 +23,36 @@ All pre-seeded test accounts share the test password **`sanbong1`** (8 character
 | Venue owner | `hung.owner@example.com` | Tran Van Hung | Owns *My Dinh Football Pitch*. |
 | Venue owner | `son.owner@example.com` | Le Hoang Son | Owns *Chua Boc Badminton Court*. |
 | Administrator | `admin@example.com` | Admin | Administrative role (`admin`). |
+
+## Core Features & P0 Stories
+
+Every P0 story is implemented and complete by clicking, starting from the first page:
+
+| Story | What it does | Live starting screen | Local screen | Test account |
+|---|---|---|---|---|
+| **US01** Customer registration (#14) | Register account, receive on-screen verification link (BR4) | [`/register`](https://g9-venue-booking-demo.vercel.app/register) | [`/register`](http://localhost:5000/register) | Guest / New user |
+| **US02** User login (#15) | Sign in with role-based routing (customer → `/dashboard`, owner → `/owner/venues`) | [`/login`](https://g9-venue-booking-demo.vercel.app/login) | [`/login`](http://localhost:5000/login) | Any test account above |
+| **US03** Customer searches for venues (#16) | Search & filter venues by sport, district area, or keyword | [`/search`](https://g9-venue-booking-demo.vercel.app/search) | [`/search`](http://localhost:5000/search) | Guest / Anyone |
+| **US04** Customer views venue details (#17) | View venue photos, pricing, amenities, and hourly availability grid | [`/venues/1`](https://g9-venue-booking-demo.vercel.app/venues/1) | [`/venues/1`](http://localhost:5000/venues/1) | Guest / Anyone |
+| **US05** Customer books a venue (#18) | Reserve time slots with segmented pricing & booking code confirmation | [`/booking/1`](https://g9-venue-booking-demo.vercel.app/booking/1) | [`/booking/1`](http://localhost:5000/booking/1) | `minh@example.com` (Customer) |
+| **US06** Venue owner adds a new venue (#21) | View owned venues, manage venue schedule, add a new venue | [`/owner/venues`](https://g9-venue-booking-demo.vercel.app/owner/venues) | [`/owner/venues`](http://localhost:5000/owner/venues) | `lan.owner@example.com` (Owner) |
+
+## Team
+
+| Name | GitHub username | Role |
+| --- | --- | --- |
+| Nguyen Khac Thu | [@thunopro](https://github.com/thunopro) | Leader · **Product Owner (All Sprints)** |
+| Hoang Thi Ngoc Han | [@htngochan2802](https://github.com/htngochan2802) | Developer · **Scrum Master (Sprint 1 & Sprint 5)** |
+| Nguyen Khoi Nguyen | [@peng543](https://github.com/peng543) | Developer · **Scrum Master (Sprint 2)** |
+| Nguyen Phung Hoa | [@PhunghoaAI](https://github.com/PhunghoaAI) | Developer · **Scrum Master (Sprint 3)** |
+| Le Quang | [@lequangk2006-sys](https://github.com/lequangk2006-sys) | Developer · **Scrum Master (Sprint 4)** |
+
+- **Product Owner:** @thunopro
+- **Scrum Master (Sprint 5):** @htngochan2802
+- **Scrum Master (Sprint 4):** @lequangk2006-sys
+- **Scrum Master (Sprint 3):** @PhunghoaAI
+- **Scrum Master (Sprint 2):** @peng543
+- **Scrum Master (Sprint 1):** @htngochan2802
 
 ## Definition of Done
 

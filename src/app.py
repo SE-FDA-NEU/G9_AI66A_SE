@@ -18,6 +18,7 @@ from errors import BusinessRuleError
 from guards import SESSION_TIMEOUT, load_user
 from pg_schema import PG_SCHEMA
 from schema import SCHEMA
+from time_utils import vn_now
 
 load_dotenv()
 
@@ -26,6 +27,14 @@ def _ensure_schema(database=None):
     """Create tables if they do not exist. Never drops or reseeds data."""
     if os.environ.get("DATABASE_URL"):
         with connect() as conn:
+            try:
+                conn.execute("SELECT 1 FROM venue LIMIT 1")
+                return
+            except Exception:
+                pass
+            from db import POSTGRES_SCHEMA
+            with conn._conn.cursor() as cur:
+                cur.execute(f'CREATE SCHEMA IF NOT EXISTS "{POSTGRES_SCHEMA}"')
             conn.executescript(PG_SCHEMA)
             from pg_seed import seed_postgres
             seed_postgres(conn)
@@ -45,16 +54,32 @@ def wants_json():
 
 def create_app(database=None):
     app = Flask(__name__)
+    app.config.setdefault("NOW", vn_now)
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-only")
     app.config["DATABASE"] = database
     app.config["PERMANENT_SESSION_LIFETIME"] = SESSION_TIMEOUT        # BR8
     app.config["UPLOAD_DIR"] = Path(os.environ.get("UPLOAD_DIR", ROOT / "data" / "uploads"))  # venue photos, git-ignored
     app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024                   # largest photo upload: 5 MB
+    app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 31536000
 
     _ensure_schema(database)
 
     app.before_request(load_user)
     app.teardown_appcontext(close_db)
+
+    @app.after_request
+    def apply_security_and_cache_headers(response):
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("X-XSS-Protection", "1; mode=block")
+        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        if request.path.startswith("/static/") or "/photos/" in request.path:
+            return response
+        if "Cache-Control" not in response.headers:
+            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0, private"
+            response.headers["Pragma"] = "no-cache"
+        return response
+
     for module in pkgutil.iter_modules(routes.__path__):
         app.register_blueprint(importlib.import_module(f"routes.{module.name}").bp)
 

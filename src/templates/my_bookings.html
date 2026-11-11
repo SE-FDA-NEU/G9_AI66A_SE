@@ -70,13 +70,21 @@
           🎟️ View Voucher
         </a>
 
-        {% if b.status == 'confirmed' %}
+        {% if b.can_cancel %}
         <form method="post" action="/my-bookings/{{ b.code }}/cancel" onsubmit="return confirmCancelBooking('{{ b.code }}');">
-          <button type="submit" class="button" style="font-size: 13px; font-weight: 700; background: #ef4444; color: #fff; width: 140px; text-align: center;">
+          <button type="submit" class="button danger" style="font-size: 13px; font-weight: 700; background: #dc2626; color: #fff; width: 140px; text-align: center;">
             ✕ Cancel Booking
           </button>
         </form>
-        {% elif b.status == 'completed' %}
+        {% elif b.match_state == 'starting_soon' %}
+        <button type="button" class="button secondary" disabled style="font-size: 11px; font-weight: 700; width: 140px; text-align: center; opacity: 0.65; cursor: not-allowed;" title="Cannot cancel less than 2 hours before match start time (BR15)">
+          ✕ Non-cancellable (&lt;2h)
+        </button>
+        {% elif b.match_state == 'in_progress' %}
+        <span style="font-size: 12px; font-weight: 700; padding: 6px 10px; border-radius: 6px; background: #fef3c7; color: #92400e; width: 140px; text-align: center; display: inline-block;">
+          ⚽ Match in progress
+        </span>
+        {% elif b.status == 'completed' or b.match_state == 'completed' %}
         <details style="width: 140px;">
           <summary class="button secondary" style="font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; list-style: none;">
             ⭐ Rate Venue
