@@ -10,6 +10,7 @@ from datetime import date, datetime, timedelta
 
 from errors import BusinessRuleError
 from pricing import hour_prices, segments
+from time_utils import vn_now
 
 MAX_HOURS = 4            # BR11
 SEARCH_AHEAD_DAYS = 30   # how far nearest_free_day() looks
@@ -40,17 +41,24 @@ def get_venue(conn, venue_id):
 
 def taken_hours(conn, venue_id, day):
     """Hours of that day held by a booking (BR11) or blocked by the owner (BR16)."""
-    prefix = day.isoformat() + " %"
+    day_str = day.isoformat()
     rows = conn.execute(
-        "SELECT slot_start FROM booking_slot WHERE venue_id = ? AND slot_start LIKE ?"
-        " UNION SELECT slot_start FROM blocked_slot WHERE venue_id = ? AND slot_start LIKE ?",
-        (venue_id, prefix, venue_id, prefix))
-    return {int(r[0][11:13]) for r in rows}
+        "SELECT slot_start FROM booking_slot WHERE venue_id = ? AND date(slot_start) = ?"
+        " UNION SELECT slot_start FROM blocked_slot WHERE venue_id = ? AND date(slot_start) = ?",
+        (venue_id, day_str, venue_id, day_str))
+    hours = set()
+    for r in rows:
+        val = str(r[0])
+        try:
+            hours.add(int(val[11:13]))
+        except (ValueError, IndexError):
+            pass
+    return hours
 
 
 def free_hours(conn, venue, day, now=None):
     """Start hours still bookable on that day: open, not taken, not blocked, not past."""
-    now = now or datetime.now()
+    now = now or vn_now()
     taken = taken_hours(conn, venue["id"], day)
     return [h for h in range(venue["open_hour"], venue["close_hour"])
             if h not in taken and datetime(day.year, day.month, day.day, h) > now]
@@ -67,7 +75,7 @@ def nearest_free_day(conn, venue, day, now=None):
 
 def check_request(conn, user, venue_id, day, start_hour, hours, now=None):
     """Validate a booking request; return (venue, day, start_hour, hours) or raise."""
-    now = now or datetime.now()
+    now = now or vn_now()
     if user["role"] != "customer":
         raise BusinessRuleError("BR14", "Only customer accounts can book a venue", 403)
     if user["email_verified_at"] is None:
@@ -205,7 +213,7 @@ def cancel_booking(conn, code, user, now=None):
     - < 2h before start: refused (BR15)
     - Releases booking_slot rows immediately so others can book (BR15).
     """
-    now = now or datetime.now()
+    now = now or vn_now()
     row = conn.execute(
         "SELECT b.*, v.name AS venue_name FROM booking b"
         " JOIN venue v ON v.id = b.venue_id WHERE b.code = ?", (code,)).fetchone()
@@ -216,7 +224,7 @@ def cancel_booking(conn, code, user, now=None):
     if row["status"] != "confirmed":
         raise BusinessRuleError("BR15", "Only confirmed bookings can be cancelled", 400)
 
-    start_dt = datetime.strptime(row["start_at"], "%Y-%m-%d %H:%M")
+    start_dt = datetime.strptime(str(row["start_at"])[:16], "%Y-%m-%d %H:%M")
     diff_seconds = (start_dt - now).total_seconds()
     diff_hours = diff_seconds / 3600.0
 

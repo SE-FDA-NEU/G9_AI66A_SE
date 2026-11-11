@@ -10,6 +10,7 @@ from datetime import date, datetime, timedelta
 
 import storage
 from errors import BusinessRuleError
+from time_utils import vn_now
 
 SPORTS = ["Football", "Badminton", "Tennis", "Pickleball"]          # same list as the CHECK in schema.py
 
@@ -77,12 +78,13 @@ def parse_day(text, now):
     return day
 
 
-def day_slots(conn, venue, day, now):
+def day_slots(conn, venue, day, now=None):
     """Every 1-hour slot of exactly `day` (BR10), each one free, booked, blocked or past.
 
     A slot is booked when a booking_slot row holds it - cancelled bookings have none (BR15) -
     and blocked when the owner closed it (BR16). An hour that has already started is past.
     """
+    now = now or vn_now()
     taken = {r[0] for r in conn.execute(
         "SELECT slot_start FROM booking_slot WHERE venue_id = ? AND date(slot_start) = ?",
         (venue["id"], day.isoformat()))}
@@ -280,7 +282,7 @@ def venue_schedule_slots(conn, venue, day, now):
 
 def block_single_slot(conn, owner, venue_id, slot_day, hour, reason="Under maintenance", now=None):
     """Block one slot for maintenance (US22, BR13, BR14, BR15)."""
-    now = now or datetime.now()
+    now = now or vn_now()
     venue = check_venue_owner(conn, venue_id, owner["id"])
     slot_start = f"{slot_day.isoformat()} {hour:02d}:00"
 
@@ -320,7 +322,7 @@ def unblock_single_slot(conn, owner, venue_id, slot_day, hour):
 
 def batch_block_slots(conn, owner, venue_id, start_day, end_day, start_hour, end_hour, reason="Under maintenance", now=None):
     """Batch block date range & hours (US22 AC 5). Returns (blocked_count, skipped_messages)."""
-    now = now or datetime.now()
+    now = now or vn_now()
     check_venue_owner(conn, venue_id, owner["id"])
     blocked_count = 0
     skipped = []
