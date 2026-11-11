@@ -27,6 +27,14 @@ def _ensure_schema(database=None):
     """Create tables if they do not exist. Never drops or reseeds data."""
     if os.environ.get("DATABASE_URL"):
         with connect() as conn:
+            try:
+                conn.execute("SELECT 1 FROM venue LIMIT 1")
+                return
+            except Exception:
+                pass
+            from db import POSTGRES_SCHEMA
+            with conn._conn.cursor() as cur:
+                cur.execute(f'CREATE SCHEMA IF NOT EXISTS "{POSTGRES_SCHEMA}"')
             conn.executescript(PG_SCHEMA)
             from pg_seed import seed_postgres
             seed_postgres(conn)
@@ -52,11 +60,26 @@ def create_app(database=None):
     app.config["PERMANENT_SESSION_LIFETIME"] = SESSION_TIMEOUT        # BR8
     app.config["UPLOAD_DIR"] = Path(os.environ.get("UPLOAD_DIR", ROOT / "data" / "uploads"))  # venue photos, git-ignored
     app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024                   # largest photo upload: 5 MB
+    app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 31536000
 
     _ensure_schema(database)
 
     app.before_request(load_user)
     app.teardown_appcontext(close_db)
+
+    @app.after_request
+    def apply_security_and_cache_headers(response):
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("X-XSS-Protection", "1; mode=block")
+        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        if request.path.startswith("/static/") or "/photos/" in request.path:
+            return response
+        if "Cache-Control" not in response.headers:
+            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0, private"
+            response.headers["Pragma"] = "no-cache"
+        return response
+
     for module in pkgutil.iter_modules(routes.__path__):
         app.register_blueprint(importlib.import_module(f"routes.{module.name}").bp)
 
@@ -82,9 +105,14 @@ def create_app(database=None):
 
     @app.route("/health")
     def health():
-        # Used by docs/SETUP.md: proves the app can reach the database.
-        venues = get_db().execute("SELECT COUNT(*) FROM venue").fetchone()[0]
-        return jsonify(status="ok", venues=venues)
+        # Used by docs/SETUP.md and production uptime monitoring:
+        # Returns 200 when app and database are healthy, 503 when not.
+        try:
+            venues = get_db().execute("SELECT COUNT(*) FROM venue").fetchone()[0]
+            return jsonify(status="ok", venues=venues), 200
+        except Exception:
+            app.logger.exception("Health check database failure")
+            return jsonify(status="error", error="Database connection failure"), 503
 
     return app
 

@@ -5,12 +5,17 @@ from datetime import date, datetime, timedelta
 
 import pytest
 
-from db import connect
 import booking as svc
+from db import connect
 
 
-NOW = datetime.combine(date.today(), datetime.min.time()).replace(hour=9)
-SCHEDULE_DAY = (NOW.date() + timedelta(days=30)).isoformat()
+_BASE_DAY = date.today() + timedelta(days=20)
+NOW = datetime.combine(_BASE_DAY, datetime.min.time()).replace(hour=9, minute=0, second=0)
+DAY_1 = (_BASE_DAY + timedelta(days=1)).isoformat()
+DAY_2 = (_BASE_DAY + timedelta(days=2)).isoformat()
+DAY_3 = (_BASE_DAY + timedelta(days=3)).isoformat()
+TOMORROW = DAY_1
+SCHEDULE_DAY = DAY_1
 
 
 @pytest.fixture
@@ -99,13 +104,13 @@ def test_block_slot_with_active_booking_is_refused(app_with_now, db):
 
 
 def test_block_slot_in_the_past_is_refused(app_with_now):
-    # US22 AC 4, BR15: Cannot block past slots (NOW is 2026-10-11 09:00)
+    # US22 AC 4, BR15: Cannot block past slots (NOW is 09:00 on _BASE_DAY)
     client = app_with_now.test_client()
     client.post("/login", data={"email": "lan.owner@example.com", "password": "sanbong1"})
 
-    # Try to block 08:00 on 2026-10-11 (past)
+    # Try to block 08:00 today (past)
     res = client.post("/api/owner/venues/1/block", json={
-        "date": "2026-10-11", "hour": 8, "reason": "Bảo trì"
+        "date": NOW.date().isoformat(), "hour": 8, "reason": "Bảo trì"
     })
     assert res.status_code == 400
     assert "Can only block slots starting after current time" in res.get_json()["error"]
@@ -116,26 +121,22 @@ def test_batch_block_slots_reports_blocked_and_skipped(app_with_now, db):
     client = app_with_now.test_client()
     client.post("/login", data={"email": "lan.owner@example.com", "password": "sanbong1"})
 
-    batch_start = NOW.date() + timedelta(days=30)
-    booked_day = batch_start + timedelta(days=1)
-    batch_end = batch_start + timedelta(days=2)
-
-    # Create a booking on the middle day at 06:00
+    # Create a booking on DAY_2 06:00
     with connect(db) as conn:
         minh = conn.execute("SELECT * FROM user WHERE email = 'minh@example.com'").fetchone()
-        svc.create_booking(conn, minh, 1, booked_day, 6, 1, NOW)
+        svc.create_booking(conn, minh, 1, DAY_2, 6, 1, NOW)
 
-    # Batch block three days from 06:00 to 07:00
+    # Batch block DAY_1 to DAY_3 from 06:00 to 07:00 (3 days)
     res = client.post("/owner/venues/1/schedule/batch-block", data={
-        "start_date": batch_start.isoformat(),
-        "end_date": batch_end.isoformat(),
+        "start_date": DAY_1,
+        "end_date": DAY_3,
         "start_hour": 6,
         "end_hour": 7,
         "reason": "Regular maintenance",
     }, follow_redirects=True)
     assert res.status_code == 200
     page = res.get_data(as_text=True)
-    # 2 blocked, 1 skipped
+    # 2 blocked (DAY_1 and DAY_3), 1 skipped (DAY_2)
     assert "Blocked 2 slot(s)" in page
     assert "Skipped 1 already booked slot(s)" in page
 
