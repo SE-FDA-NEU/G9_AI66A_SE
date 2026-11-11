@@ -391,7 +391,7 @@ Planned under Sprint 5 backlog refinement issue #103. Product Owner: @thunopro. 
   `https://g9-venue-booking-demo.vercel.app` with real PostgreSQL persistence, Cloudinary
   media storage, and 24 seeded venues. Every P0 story (US01–US06) is fully executable in
   incognito mode by clicking only. The `/health` probe returns 200 OK when operational and
-  503 on database drop. All 268 automated tests pass in CI.
+  503 on database drop. All 289 automated tests pass in CI.
 - **Feedback received:** Peer review on PR #102 verified the dual English/Vietnamese
   language toggle, responsive grid cards, and session persistence across browser reloads.
 - **Operational findings:** Initial serverless cold starts take ~3 seconds on Neon free-tier,
@@ -401,7 +401,7 @@ Planned under Sprint 5 backlog refinement issue #103. Product Owner: @thunopro. 
 ### Retrospective
 
 Full notes in `docs/retro.md`. The Sprint 4 action asked the Scrum Master to update test
-counts in `docs/testing.md` and `docs/SETUP.md`. Test count updated from 253 to 268 tests
+counts in `docs/testing.md` and `docs/SETUP.md`. Test count updated from 253 to 289 tests
 following the addition of monitoring and deployment verification suites.
 
 ---

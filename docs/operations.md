@@ -13,7 +13,7 @@ Operational runbook and release management for the Sports Venue Booking System.
 ### Release Workflow
 A new release reaches production strictly via continuous deployment from `main`:
 1. **Branch & PR:** Every change is developed on a dedicated issue branch (`<issue>-<slug>`) and submitted via a Pull Request into `main`.
-2. **Automated Verification:** GitHub Actions CI executes automated linting, credential leak scanning, full test suite execution (263+ pytest cases), and deployment readiness checks.
+2. **Automated Verification:** GitHub Actions CI executes automated linting, credential leak scanning, full test suite execution (289 pytest cases), and deployment readiness checks.
 3. **Peer Review:** Base branch rulesets require at least one approving peer review with substantive comments. Self-approvals are strictly blocked.
 4. **Merge & Continuous Deployment:** Once green and approved, the PR is merged into `main`. Vercel automatically detects the green merge commit, builds the serverless package via `api/index.py`, connects to Neon PostgreSQL, and activates the new deployment.
 
@@ -41,7 +41,7 @@ The repository CI workflow is defined in [`.github/workflows/ci.yml`](../.github
 | **deployment-readiness** | Verifies existence and validity of production manifests (`vercel.json`, `Procfile`, `render.yaml`, `runtime.txt`, `api/index.py`), verifies schema syntax, and validates seed idempotency. | ~12s |
 
 - **Total CI Run Time:** Approximately 1 minute 20 seconds.
-- **Latest Green Run on `main`:** [https://github.com/SE-FDA-NEU/G9_AI66A_SE/actions/runs/41329399157](https://github.com/SE-FDA-NEU/G9_AI66A_SE/actions/runs/41329399157)
+- **Latest Green Run on `main`:** [https://github.com/SE-FDA-NEU/G9_AI66A_SE/actions/runs/43042880115](https://github.com/SE-FDA-NEU/G9_AI66A_SE/actions/runs/43042880115)
 
 ### Branch Protection Settings
 The `main` branch is protected by organization ruleset `main-protection` (ID: 21296815):
@@ -125,6 +125,6 @@ Runbook for the Week 15 final demonstration.
 |---|---|---|---|
 | **1 min** | Problem & Personas | Introduce amateur sports booking problem in Hanoi; present Customer and Venue Owner personas; list 6 core P0 stories. | Nguyen Khac Thu (@thunopro) |
 | **5 min** | Live P0 Walkthrough | Open [https://g9-venue-booking-demo.vercel.app](https://g9-venue-booking-demo.vercel.app) in an incognito private window. Complete US01–US06 by clicking only. Create booking `BK-000105`, refresh to demonstrate persistence. Intentionally break BR12 (booking past closing) to show user-friendly error handling. Showcase 2 M3 feedback improvements (dual language switcher, responsive sports grid cards). | Nguyen Khoi Nguyen (@peng543) & Hoang Thi Ngoc Han (@htngochan2802) |
-| **2 min** | Automated Test Suite | Open GitHub Actions test run showing 263+ passed tests. Open `docs/testing.md` at selected P0 story. Introduce intentional boundary failure locally in `src/venues.py`, run pytest to turn test RED, undo to return to GREEN. | Le Quang (@lequangk2006-sys) |
+| **2 min** | Automated Test Suite | Open GitHub Actions test run showing 289 passed tests. Open `docs/testing.md` at selected P0 story. Introduce intentional boundary failure locally in `src/venues.py`, run pytest to turn test RED, undo to return to GREEN. | Le Quang (@lequangk2006-sys) |
 | **2 min** | Pipeline & Operations | Display GitHub Actions CI run on `main`, demonstrate `main-protection` branch ruleset, explain instant rollback on Vercel, curl `/health` live (200 OK). Defend PostgreSQL serverless architectural decision. | Nguyen Phung Hoa (@PhunghoaAI) |
 | **2 min** | Lessons & Technical Debt | Present one key lesson learned (SQLite-Postgres compatibility) and explain cold-start technical debt mitigation plan. Address jury questions. | Full Team |

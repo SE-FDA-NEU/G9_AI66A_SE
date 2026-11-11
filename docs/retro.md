@@ -91,7 +91,7 @@ completion of that specific action cannot be confirmed.
 | Automated deployment verification in CI before auto-deploying to Vercel/Neon; catches configuration mismatches before production traffic hits them | Relying on local SQLite assumptions when deploying to PostgreSQL; schema compatibility adapters are essential for serverless hosts | Continuous end-to-end smoke testing against the live production URL as part of the PR definition of done |
 | Instant platform rollback via Vercel deployments tab; enables recovery in under 30 seconds without code changes | Manual database migrations during sprint deadlines; automated idempotency in `pg_schema.py` and `init_db.py` saves hours | Maintain persistent staging environment mirroring production database configurations |
 
-**Sprint 4 action checked:** Test counts updated to 268 passed tests across `docs/testing.md` and `docs/SETUP.md`. Verified at the Sprint 5 retrospective.
+**Sprint 4 action checked:** Test counts updated to 289 passed tests across `docs/testing.md` and `docs/SETUP.md`. Verified at the Sprint 5 retrospective.
 
 ---
 
