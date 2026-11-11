@@ -1,7 +1,7 @@
 """Tests for US09 (US22: Venue owner manages availability schedule).
 Business Rules: BR13, BR14, BR15 (BR16, BR17 in requirements.md).
 """
-from datetime import datetime
+from datetime import date, datetime, timedelta
 
 import pytest
 
@@ -9,8 +9,8 @@ from db import connect
 import booking as svc
 
 
-NOW = datetime(2026, 10, 11, 9, 0)
-TOMORROW = "2026-10-12"
+NOW = datetime.combine(date.today(), datetime.min.time()).replace(hour=9)
+SCHEDULE_DAY = (NOW.date() + timedelta(days=30)).isoformat()
 
 
 @pytest.fixture
@@ -29,29 +29,29 @@ def test_schedule_requires_owner_role(client, login):
 
 
 def test_owner_blocks_slot_and_it_disappears_from_customer_view(app_with_now, db):
-    # US22 AC 1, BR13: Block slot 18:00-19:00 on TOMORROW with reason
+    # US22 AC 1, BR13: Block slot 18:00-19:00 with reason
     client = app_with_now.test_client()
     client.post("/login", data={"email": "lan.owner@example.com", "password": "sanbong1"})
 
     # Check slot is initially free in customer API
-    slots_before = client.get(f"/api/venues/1?date={TOMORROW}").get_json()["slots"]
+    slots_before = client.get(f"/api/venues/1?date={SCHEDULE_DAY}").get_json()["slots"]
     s18_before = next(s for s in slots_before if s["hour"] == 18)
     assert s18_before["status"] == "free"
 
     # Owner blocks 18:00
     res = client.post("/owner/venues/1/schedule/block", data={
-        "date": TOMORROW,
+        "date": SCHEDULE_DAY,
         "hour": 18,
         "reason": "Grass maintenance",
     }, follow_redirects=True)
     assert res.status_code == 200
 
     # On owner schedule, slot shows "Blocked - Grass maintenance"
-    owner_page = client.get(f"/owner/venues/1/schedule?date={TOMORROW}").get_data(as_text=True)
+    owner_page = client.get(f"/owner/venues/1/schedule?date={SCHEDULE_DAY}").get_data(as_text=True)
     assert "Blocked - Grass maintenance" in owner_page
 
     # On customer API /venues/1, slot is now blocked / no longer free (BR13)
-    slots_after = client.get(f"/api/venues/1?date={TOMORROW}").get_json()["slots"]
+    slots_after = client.get(f"/api/venues/1?date={SCHEDULE_DAY}").get_json()["slots"]
     s18_after = next(s for s in slots_after if s["hour"] == 18)
     assert s18_after["status"] == "blocked"
 
@@ -63,17 +63,17 @@ def test_owner_unblocks_slot_and_it_becomes_free_immediately(app_with_now, db):
 
     # Block 19:00
     client.post("/owner/venues/1/schedule/block", data={
-        "date": TOMORROW, "hour": 19, "reason": "Sửa đèn"
+        "date": SCHEDULE_DAY, "hour": 19, "reason": "Sửa đèn"
     })
 
     # Unblock 19:00
     res = client.post("/owner/venues/1/schedule/unblock", data={
-        "date": TOMORROW, "hour": 19
+        "date": SCHEDULE_DAY, "hour": 19
     }, follow_redirects=True)
     assert res.status_code == 200
 
     # Slot is immediately free for customers
-    slots = client.get(f"/api/venues/1?date={TOMORROW}").get_json()["slots"]
+    slots = client.get(f"/api/venues/1?date={SCHEDULE_DAY}").get_json()["slots"]
     s19 = next(s for s in slots if s["hour"] == 19)
     assert s19["status"] == "free"
 
@@ -83,15 +83,15 @@ def test_block_slot_with_active_booking_is_refused(app_with_now, db):
     client = app_with_now.test_client()
     client.post("/login", data={"email": "lan.owner@example.com", "password": "sanbong1"})
 
-    # Minh books slot 19:00-20:00 on TOMORROW
+    # Minh books slot 19:00-20:00
     with connect(db) as conn:
         minh = conn.execute("SELECT * FROM user WHERE email = 'minh@example.com'").fetchone()
-        b = svc.create_booking(conn, minh, 1, TOMORROW, 19, 1, NOW)
+        b = svc.create_booking(conn, minh, 1, SCHEDULE_DAY, 19, 1, NOW)
         code = b["code"]
 
     # Owner attempts to block 19:00
     res = client.post("/api/owner/venues/1/block", json={
-        "date": TOMORROW, "hour": 19, "reason": "Bảo trì"
+        "date": SCHEDULE_DAY, "hour": 19, "reason": "Bảo trì"
     })
     assert res.status_code == 409
     body = res.get_json()
@@ -116,22 +116,26 @@ def test_batch_block_slots_reports_blocked_and_skipped(app_with_now, db):
     client = app_with_now.test_client()
     client.post("/login", data={"email": "lan.owner@example.com", "password": "sanbong1"})
 
-    # Create a booking on 2026-10-13 06:00
+    batch_start = NOW.date() + timedelta(days=30)
+    booked_day = batch_start + timedelta(days=1)
+    batch_end = batch_start + timedelta(days=2)
+
+    # Create a booking on the middle day at 06:00
     with connect(db) as conn:
         minh = conn.execute("SELECT * FROM user WHERE email = 'minh@example.com'").fetchone()
-        svc.create_booking(conn, minh, 1, "2026-10-13", 6, 1, NOW)
+        svc.create_booking(conn, minh, 1, booked_day, 6, 1, NOW)
 
-    # Batch block 2026-10-12 to 2026-10-14 from 06:00 to 07:00 (3 days)
+    # Batch block three days from 06:00 to 07:00
     res = client.post("/owner/venues/1/schedule/batch-block", data={
-        "start_date": "2026-10-12",
-        "end_date": "2026-10-14",
+        "start_date": batch_start.isoformat(),
+        "end_date": batch_end.isoformat(),
         "start_hour": 6,
         "end_hour": 7,
         "reason": "Regular maintenance",
     }, follow_redirects=True)
     assert res.status_code == 200
     page = res.get_data(as_text=True)
-    # 2 blocked (Oct 12 and Oct 14), 1 skipped (Oct 13)
+    # 2 blocked, 1 skipped
     assert "Blocked 2 slot(s)" in page
     assert "Skipped 1 already booked slot(s)" in page
 
