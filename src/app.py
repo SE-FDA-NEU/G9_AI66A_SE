@@ -105,9 +105,14 @@ def create_app(database=None):
 
     @app.route("/health")
     def health():
-        # Used by docs/SETUP.md: proves the app can reach the database.
-        venues = get_db().execute("SELECT COUNT(*) FROM venue").fetchone()[0]
-        return jsonify(status="ok", venues=venues)
+        # Used by docs/SETUP.md and production uptime monitoring:
+        # Returns 200 when app and database are healthy, 503 when not.
+        try:
+            venues = get_db().execute("SELECT COUNT(*) FROM venue").fetchone()[0]
+            return jsonify(status="ok", venues=venues), 200
+        except Exception:
+            app.logger.exception("Health check database failure")
+            return jsonify(status="error", error="Database connection failure"), 503
 
     return app
 

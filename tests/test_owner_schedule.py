@@ -1,12 +1,12 @@
-"""Tests for US09 (US22: Venue owner manages availability schedule).
+﻿"""Tests for US09 (US22: Venue owner manages availability schedule).
 Business Rules: BR13, BR14, BR15 (BR16, BR17 in requirements.md).
 """
 from datetime import date, datetime, timedelta
 
 import pytest
 
-from db import connect
 import booking as svc
+from db import connect
 
 
 _BASE_DAY = date.today() + timedelta(days=20)
