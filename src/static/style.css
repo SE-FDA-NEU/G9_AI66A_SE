@@ -1107,6 +1107,18 @@ a.slot.free span {
   color: #ffffff;
   background: rgba(255, 255, 255, 0.15);
 }
+.lang-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.lang-btn .flag {
+  width: 20px;
+  height: 14px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  display: block;
+}
 
 /* Sân Nhà product refresh: grounded in Hanoi's local court culture. */
 :root {
