@@ -105,6 +105,7 @@
       </tbody>
     </table></div>
     <form method="post" class="quote-confirm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       <input type="hidden" name="date" value="{{ day.isoformat() }}">
       <input type="hidden" name="start_hour" value="{{ start }}">
       <input type="hidden" name="hours" value="{{ hours }}">

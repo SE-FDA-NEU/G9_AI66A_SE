@@ -15,6 +15,7 @@ import booking as svc
 import reviews
 from db import connect
 from errors import BusinessRuleError
+from guards import login_required
 
 bp = Blueprint("booking", __name__)
 
@@ -112,12 +113,11 @@ def api_create_booking():
 
 
 @bp.route("/my-bookings")
+@login_required("customer")
 def my_bookings():
     """Customer views their booking history (US20, BR14)."""
     with _connect() as conn:
-        user = _current_user(conn)
-        if user is None:
-            return redirect("/login?next=" + request.path)
+        user = g.user
         status_filter = request.args.get("status")
         bookings = svc.list_for_customer(conn, user["id"], status_filter=status_filter)
         now = _now()
@@ -162,61 +162,56 @@ def my_bookings():
 
 @bp.route("/my-bookings/<code>/cancel", methods=["POST"])
 @bp.route("/bookings/<code>/cancel", methods=["POST"])
+@login_required("customer")
 def cancel_booking_route(code):
     """Customer cancels an upcoming booking with refund policy (US19, BR14, BR15)."""
     with _connect() as conn:
-        user = _current_user(conn)
-        if user is None:
-            return redirect("/login?next=" + request.path)
+        user = g.user
         try:
             res = svc.cancel_booking(conn, code, user, _now())
             flash(res["message"], "success")
         except BusinessRuleError as e:
             flash(e.message, "error")
             if e.status == 403:
-                return render_template("error.html", error=e.message), 403
+                return render_template("error.html", message=e.message), 403
     return redirect("/my-bookings")
 
 
 @bp.route("/api/bookings/my-history")
+@login_required("customer")
 def api_my_history():
     """API for customer booking history (US20)."""
     with _connect() as conn:
-        user = _current_user(conn)
-        if user is None:
-            return jsonify(error="Please sign in", rule="BR14"), 401
         status = request.args.get("status")
-        bookings = svc.list_for_customer(conn, user["id"], status)
+        bookings = svc.list_for_customer(conn, g.user["id"], status)
         return jsonify(bookings=[dict(b) for b in bookings])
 
 
 @bp.route("/api/bookings/<code>/cancel", methods=["POST"])
+@login_required("customer")
 def api_cancel_booking(code):
     """API for booking cancellation (US19)."""
     with _connect() as conn:
-        user = _current_user(conn)
-        if user is None:
-            return jsonify(error="Please sign in", rule="BR14"), 401
         try:
-            res = svc.cancel_booking(conn, code, user, _now())
+            res = svc.cancel_booking(conn, code, g.user, _now())
             return jsonify(res), 200
         except BusinessRuleError as e:
             return jsonify(e.as_json()), e.status
 
 
 @bp.route("/my-bookings/<code>/review", methods=["POST"])
+@login_required("customer")
 def submit_review_route(code):
     """Customer submits a review for a completed booking (US12, BR18)."""
     with _connect() as conn:
-        user = _current_user(conn)
-        if user is None:
-            return redirect("/login?next=" + request.path)
         rating = request.form.get("rating")
         comment = request.form.get("comment")
         try:
-            reviews.submit_review(conn, code, user, rating, comment)
+            reviews.submit_review(conn, code, g.user, rating, comment, now=_now())
             flash("Thank you for submitting your review!", "success")
         except BusinessRuleError as e:
+            if e.status == 403:
+                return render_template("error.html", message=e.message), 403
             flash(e.message, "error")
     return redirect("/my-bookings")
 

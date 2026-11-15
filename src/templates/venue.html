@@ -253,6 +253,7 @@
         <div style="display: flex; align-items: center; gap: 12px;">
           <span class="muted" style="font-size: 12px;">{{ r.created_at[:10] }}</span>
           <form method="post" action="/venues/{{ venue.id }}/reviews/{{ r.id }}/report" style="margin: 0; display: inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <button type="submit" title="Report review for moderation" style="background: none; border: 0; color: #94a3b8; font-size: 12px; cursor: pointer; text-decoration: underline; padding: 0;">
               🚩 Report
             </button>

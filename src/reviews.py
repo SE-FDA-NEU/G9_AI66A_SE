@@ -1,16 +1,30 @@
 """Customer reviews and ratings (US12, BR18, BR19)."""
+from datetime import datetime
+
 from errors import BusinessRuleError
+from security import is_integrity_error
+from time_utils import vn_now
 
 
-def submit_review(conn, booking_code, user, rating, comment=""):
-    """Customer submits a review for their completed booking (BR18)."""
+def submit_review(conn, booking_code, user, rating, comment="", now=None):
+    """Customer submits a review for their completed booking whose end time has passed (BR18)."""
+    now = now or vn_now()
     booking = conn.execute(
-        "SELECT id, customer_id, status FROM booking WHERE code = ?", (booking_code,)).fetchone()
+        "SELECT id, customer_id, status, end_at FROM booking WHERE code = ?", (booking_code,)).fetchone()
     if booking is None:
         raise BusinessRuleError(404, "Booking not found")
     if booking["customer_id"] != user["id"]:
         raise BusinessRuleError(403, "You do not have permission to review this booking", "BR14")
-    if booking["status"] != "completed":
+
+    try:
+        end_dt = datetime.strptime(str(booking["end_at"])[:16], "%Y-%m-%d %H:%M")
+    except (ValueError, TypeError):
+        end_dt = now
+
+    is_completed = booking["status"] == "completed" or (
+        booking["status"] == "confirmed" and end_dt <= now
+    )
+    if not is_completed:
         raise BusinessRuleError(400, "Only completed bookings can be reviewed", "BR18")
 
     try:
@@ -63,11 +77,33 @@ def venue_rating_summary(conn, venue_id):
     return {"avg_rating": avg, "review_count": count}
 
 
-def report_review(conn, review_id):
-    """Report a review for abuse; automatically hide after 3 reports (BR19)."""
-    rev = conn.execute("SELECT id, report_count FROM review WHERE id = ?", (review_id,)).fetchone()
+def report_review(conn, review_id, user_id=None, venue_id=None):
+    """Report a review for abuse; automatically hide after 3 valid reports (BR19)."""
+    if venue_id is not None:
+        rev = conn.execute(
+            """
+            SELECT r.id, r.report_count
+            FROM review r
+            JOIN booking b ON b.id = r.booking_id
+            WHERE r.id = ? AND b.venue_id = ?
+            """,
+            (review_id, venue_id),
+        ).fetchone()
+    else:
+        rev = conn.execute("SELECT id, report_count FROM review WHERE id = ?", (review_id,)).fetchone()
     if rev is None:
         raise BusinessRuleError(404, "Review not found")
+
+    if user_id is not None:
+        try:
+            conn.execute(
+                "INSERT INTO review_report (review_id, user_id) VALUES (?, ?)",
+                (review_id, user_id),
+            )
+        except Exception as exc:
+            if is_integrity_error(exc):
+                raise BusinessRuleError(409, "You have already reported this review", "BR19")
+            raise
 
     new_count = rev["report_count"] + 1
     hidden = 1 if new_count >= 3 else 0

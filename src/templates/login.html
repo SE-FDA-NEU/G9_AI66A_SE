@@ -86,6 +86,7 @@
     {% if error %}<div class="flash error" role="alert">{{ error }}</div>{% endif %}
 
     <form class="stack" method="post" action="/login">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       <input type="hidden" name="next" value="{{ next }}">
       <label>Email Address
         <input type="email" id="login-email" name="email" value="{{ email }}" autocomplete="email" placeholder="you@example.com" required autofocus>

@@ -98,7 +98,7 @@ def test_free_hours_filters_out_past_hours_for_today(db):
 
 def test_free_hours_tomorrow_keeps_all_open_hours(db):
     """free_hours() for a future date (e.g. tomorrow) retains open hours not taken."""
-    simulated_vn_now = datetime(2026, 10, 15, 14, 30)
+    simulated_vn_now = datetime(2026, 12, 1, 14, 30)
     tomorrow = simulated_vn_now.date() + timedelta(days=1)
 
     with connect(db) as conn:

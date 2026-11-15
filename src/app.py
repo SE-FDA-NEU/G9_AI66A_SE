@@ -18,6 +18,7 @@ from errors import BusinessRuleError
 from guards import SESSION_TIMEOUT, load_user
 from pg_schema import PG_SCHEMA
 from schema import SCHEMA
+from security import generate_csrf_token, validate_csrf
 from time_utils import vn_now
 
 load_dotenv()
@@ -55,16 +56,24 @@ def wants_json():
 def create_app(database=None):
     app = Flask(__name__)
     app.config.setdefault("NOW", vn_now)
-    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-only")
+    secret_key = os.environ.get("SECRET_KEY", "dev-only")
+    if secret_key == "dev-only" and (os.environ.get("VERCEL") or os.environ.get("FLASK_ENV") == "production"):
+        app.logger.warning("SECRET_KEY is using the insecure default 'dev-only' in production!")
+    app.config["SECRET_KEY"] = secret_key
     app.config["DATABASE"] = database
     app.config["PERMANENT_SESSION_LIFETIME"] = SESSION_TIMEOUT        # BR8
+    app.config["SESSION_COOKIE_HTTPONLY"] = True
+    app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+    app.config["SESSION_COOKIE_SECURE"] = bool(os.environ.get("VERCEL") or os.environ.get("HTTPS"))
     app.config["UPLOAD_DIR"] = Path(os.environ.get("UPLOAD_DIR", ROOT / "data" / "uploads"))  # venue photos, git-ignored
     app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024                   # largest photo upload: 5 MB
     app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 31536000
 
     _ensure_schema(database)
 
+    app.jinja_env.globals["csrf_token"] = generate_csrf_token
     app.before_request(load_user)
+    app.before_request(validate_csrf)
     app.teardown_appcontext(close_db)
 
     @app.after_request
@@ -103,6 +112,14 @@ def create_app(database=None):
             return jsonify(error=message), 413
         return render_template("error.html", message=message), 413
 
+    @app.errorhandler(500)
+    def internal_error(err):
+        app.logger.exception("Unhandled server error: %s", err)
+        message = "Something went wrong on our side. Please try again in a moment."
+        if wants_json():
+            return jsonify(error=message), 500
+        return render_template("error.html", message=message), 500
+
     @app.route("/health")
     def health():
         # Used by docs/SETUP.md and production uptime monitoring:
@@ -118,4 +135,8 @@ def create_app(database=None):
 
 
 if __name__ == "__main__":
-    create_app().run(host="127.0.0.1", port=int(os.environ.get("PORT", "5000")), debug=True)
+    create_app().run(
+        host="127.0.0.1",
+        port=int(os.environ.get("PORT", "5000")),
+        debug=os.environ.get("FLASK_DEBUG", "0") == "1",
+    )

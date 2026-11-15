@@ -12,6 +12,7 @@ from itsdangerous import BadSignature, URLSafeSerializer
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from errors import BusinessRuleError
+from security import is_integrity_error
 
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
@@ -95,9 +96,11 @@ def register(conn, email, password, full_name, phone):
         cur = conn.execute(
             "INSERT INTO user (email, password_hash, full_name, phone, role) VALUES (?, ?, ?, ?, 'customer')",
             (email, generate_password_hash(password), full_name, phone))
-    except sqlite3.IntegrityError:
-        # BR1: someone registered the same email between the check above and this insert
-        raise BusinessRuleError(409, "This email is already in use", "BR1", "email") from None
+    except Exception as exc:
+        if is_integrity_error(exc):
+            # BR1: someone registered the same email between the check above and this insert
+            raise BusinessRuleError(409, "This email is already in use", "BR1", "email") from None
+        raise
     conn.commit()
     return cur.lastrowid
 

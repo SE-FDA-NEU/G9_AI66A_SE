@@ -61,6 +61,7 @@
     {% if errors %}<div class="flash error" role="alert">Please fix the {{ errors|length }} field(s) marked below.</div>{% endif %}
 
     <form class="stack" method="post" action="/register" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       {{ field("email", "Email Address", "email", autocomplete="email") }}
       {{ field("password", "Password", "password", "At least 8 characters, with a letter and a digit", "new-password") }}
       {{ field("full_name", "Full Name", autocomplete="name") }}

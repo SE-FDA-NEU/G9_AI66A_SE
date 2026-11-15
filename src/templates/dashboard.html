@@ -26,6 +26,7 @@
     <div class="callout-body">
       <strong>Verification pending:</strong> Please verify your email before booking. This demo does not send email; use the verification link shown on the sign-in page.
       <form method="post" action="/verify/resend" style="margin-top: 10px">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         <button type="submit" class="secondary">Send a new link</button>
       </form>
     </div>

@@ -23,6 +23,7 @@
   {% endif %}
 
   <form class="stack" method="post" action="/owner/venues/new" enctype="multipart/form-data" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
     <label>
       <span class="label-title">Venue name <span class="required">*</span></span>
       <input name="name" value="{{ form.get('name', '') }}" maxlength="100" placeholder="e.g., Thong Nhat Football Pitch" {{ invalid('name') }}>

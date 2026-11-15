@@ -81,8 +81,9 @@ def login_page():
 def login_submit():
     email = request.form.get("email", "")
     next_page = request.form.get("next", "")
+    now = current_app.config.get("NOW", datetime.now)()
     try:
-        user = auth.sign_in(get_db(), email, request.form.get("password", ""), datetime.now())
+        user = auth.sign_in(get_db(), email, request.form.get("password", ""), now)
     except BusinessRuleError as err:
         return render_template("login.html", email=email, next=next_page, error=err.message), err.status
     start_session(user)
@@ -97,26 +98,42 @@ def logout():
     return redirect("/search")
 
 
+def _str_field(data, key):
+    val = data.get(key, "")
+    if val is None:
+        return ""
+    if not isinstance(val, str):
+        raise BusinessRuleError(400, f"Invalid field '{key}': expected text")
+    return val
+
+
 @bp.post("/api/auth/register")
 def api_register():
     data = request.get_json(silent=True) or request.form
-    user_id = auth.register(get_db(), data.get("email", ""), data.get("password", ""),
-                            data.get("full_name", ""), data.get("phone", ""))
-    send_verification_link(data.get("email", "").strip(), user_id)
+    email = _str_field(data, "email")
+    password = _str_field(data, "password")
+    full_name = _str_field(data, "full_name")
+    phone = _str_field(data, "phone")
+    user_id = auth.register(get_db(), email, password, full_name, phone)
+    send_verification_link(email.strip(), user_id)
     return jsonify(user_id=user_id), 201
 
 
 @bp.get("/api/auth/verify")
 def api_verify():
+    now = current_app.config.get("NOW", datetime.now)()
     user_id = auth.verify_email(get_db(), current_app.config["SECRET_KEY"],
-                                request.args.get("token", ""), datetime.now())
+                                request.args.get("token", ""), now)
     return jsonify(user_id=user_id, verified=True)
 
 
 @bp.post("/api/auth/login")
 def api_login():
     data = request.get_json(silent=True) or request.form
-    user = auth.sign_in(get_db(), data.get("email", ""), data.get("password", ""), datetime.now())
+    now = current_app.config.get("NOW", datetime.now)()
+    email = _str_field(data, "email")
+    password = _str_field(data, "password")
+    user = auth.sign_in(get_db(), email, password, now)
     start_session(user)
     return jsonify(role=user["role"], redirect=auth.LANDING_PAGE[user["role"]])
 

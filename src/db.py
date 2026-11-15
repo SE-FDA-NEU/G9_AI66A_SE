@@ -50,6 +50,14 @@ def _postgres_connect(url):
     except TypeError:
         # Fallback for unit tests where connect() mock lacks options or keepalive arguments
         conn = psycopg2.connect(url, cursor_factory=psycopg2.extras.RealDictCursor)
+    except psycopg2.OperationalError as exc:
+        if "search_path" not in str(exc):
+            raise
+        # Neon pooled endpoints reject startup `options`; set search_path after connecting
+        conn = psycopg2.connect(url, **kwargs)
+        with conn.cursor() as cur:
+            cur.execute(f"SET search_path TO {POSTGRES_SCHEMA}, public")
+        conn.commit()
 
     psycopg2.extras.register_uuid()
     return CompatConnection(conn, "postgres")

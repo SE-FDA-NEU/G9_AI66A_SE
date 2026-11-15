@@ -10,6 +10,7 @@ from datetime import date, datetime, timedelta
 
 from errors import BusinessRuleError
 from pricing import hour_prices, segments
+from security import is_integrity_error
 from time_utils import vn_now
 
 MAX_HOURS = 4            # BR11
@@ -151,11 +152,10 @@ def create_booking(conn, user, venue_id, day, start_hour, hours, now=None):
             conn.execute("INSERT INTO booking_slot (booking_id, venue_id, slot_start, price)"
                          " VALUES (?, ?, ?, ?)", (cur.lastrowid, venue["id"], slot_key(day, h),
                                                   prices[h]))
-    except sqlite3.IntegrityError:
+    except BaseException as exc:
         conn.rollback()
-        raise BusinessRuleError("BR11", SLOT_TAKEN, 409)
-    except BaseException:
-        conn.rollback()
+        if is_integrity_error(exc):
+            raise BusinessRuleError("BR11", SLOT_TAKEN, 409) from None
         raise
     conn.commit()
     return {"code": code, **q}

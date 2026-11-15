@@ -478,7 +478,7 @@
         <span class="venue-card-district-pill">📍 {{ v.area }}</span>
       </div>
       <div class="venue-card-body">
-        <h3 class="venue-card-title"><a href="/venues/{{ v.id }}">{{ v.name }}</a></h3>
+        <h2 class="venue-card-title"><a href="/venues/{{ v.id }}">{{ v.name }}</a></h2>
         <div class="venue-card-address">
           <span>{{ v.address }}</span>
         </div>
@@ -497,6 +497,7 @@
 
   <details class="directory-details">
   <summary>Show table view</summary>
+  <div class="table-responsive-wrapper">
   <table>
     <thead><tr><th>#</th><th>Venue</th><th>Sport</th><th>Area</th><th>Address</th>
       <th>Opening hours</th><th class="num">Price / hour (VND)</th><th>Action</th></tr></thead>
@@ -520,6 +521,7 @@
     {% endfor %}
     </tbody>
   </table>
+  </div>
   </details>
 </div>
 

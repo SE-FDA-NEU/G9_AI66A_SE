@@ -118,6 +118,14 @@ CREATE TABLE review (
     created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE review_report (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    review_id   INTEGER NOT NULL REFERENCES review(id) ON DELETE CASCADE,
+    user_id     INTEGER NOT NULL REFERENCES user(id) ON DELETE CASCADE,
+    created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
+    UNIQUE (review_id, user_id)                                              -- BR19 one report per user
+);
+
 CREATE INDEX idx_venue_sport_area ON venue (sport, area);                    -- BR9 search
 CREATE INDEX idx_booking_customer ON booking (customer_id);
 """

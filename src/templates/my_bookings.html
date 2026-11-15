@@ -30,8 +30,8 @@
 
   {% if not bookings %}
   <div class="empty card" style="text-align: center; padding: 48px 20px; margin-top: 20px;">
-    <div style="font-size: 48px; margin-bottom: 12px;">🏟️</div>
-    <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 700;">You have no bookings yet</h3>
+    <div style="font-size: 48px; margin-bottom: 12px;" aria-hidden="true">🏟️</div>
+    <h2 style="margin: 0 0 8px; font-size: 18px; font-weight: 700;">You have no bookings yet</h2>
     <p class="muted" style="margin: 0 0 20px; font-size: 14px;">Find football pitches, badminton, tennis, and pickleball courts near you and reserve in seconds.</p>
     <a href="/search" class="button" style="font-weight: 700;">Find a venue now</a>
   </div>
@@ -47,12 +47,12 @@
           </span>
           <span class="muted" style="font-size: 12px;">Booked on {{ b.created_at[:16] }}</span>
         </div>
-        <h3 style="margin: 0 0 6px; font-size: 18px; font-weight: 800;">
+        <h2 style="margin: 0 0 6px; font-size: 18px; font-weight: 800;">
           <a href="/venues/{{ b.venue_id }}" style="text-decoration: none; color: inherit;">{{ b.venue_name }}</a>
-        </h3>
+        </h2>
         <p class="muted" style="margin: 0 0 10px; font-size: 13px;">📍 {{ b.address }} &middot; 🏅 {{ b.sport }}</p>
         
-        <div style="display: flex; align-items: center; gap: 16px; font-size: 14px; background: #f8fafc; padding: 8px 14px; border-radius: 8px; border: 1px solid #e2e8f0; width: fit-content;">
+        <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 16px; font-size: 14px; background: #f8fafc; padding: 8px 14px; border-radius: 8px; border: 1px solid #e2e8f0; width: fit-content; max-width: 100%;">
           <div><strong>🕒 Match Time:</strong> {{ b.start_at[8:10] }}/{{ b.start_at[5:7] }}/{{ b.start_at[:4] }} &middot; {{ b.start_at[11:] }} - {{ b.end_at[11:] }}</div>
           <div style="color: #cbd5e1;">|</div>
           <div><strong>💰 Total:</strong> <span style="color: var(--brand); font-weight: 800;">{{ "{:,}".format(b.total_price) }} VND</span></div>
@@ -72,6 +72,7 @@
 
         {% if b.can_cancel %}
         <form method="post" action="/my-bookings/{{ b.code }}/cancel" onsubmit="return confirmCancelBooking('{{ b.code }}');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           <button type="submit" class="button danger" style="font-size: 13px; font-weight: 700; background: #dc2626; color: #fff; width: 140px; text-align: center;">
             ✕ Cancel Booking
           </button>
@@ -85,22 +86,23 @@
           ⚽ Match in progress
         </span>
         {% elif b.status == 'completed' or b.match_state == 'completed' %}
-        <details style="width: 140px;">
+        <details style="width: 140px; position: relative;">
           <summary class="button secondary" style="font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; list-style: none;">
             ⭐ Rate Venue
           </summary>
-          <div style="position: absolute; right: 20px; z-index: 10; background: #fff; border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; box-shadow: var(--shadow-lg); width: 280px; margin-top: 6px;">
+          <div style="position: absolute; right: 0; z-index: 10; background: #fff; border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; box-shadow: var(--shadow-lg); width: 280px; max-width: calc(100vw - 48px); margin-top: 6px;">
             <form method="post" action="/my-bookings/{{ b.code }}/review">
-              <label style="font-size: 13px; font-weight: 700; display: block; margin-bottom: 6px;">Rating:</label>
-              <select name="rating" style="width: 100%; padding: 6px; border-radius: 4px; margin-bottom: 10px;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+              <label for="rating-{{ b.code }}" style="font-size: 13px; font-weight: 700; display: block; margin-bottom: 6px;">Rating:</label>
+              <select id="rating-{{ b.code }}" name="rating" style="width: 100%; padding: 6px; border-radius: 4px; margin-bottom: 10px;">
                 <option value="5">★★★★★ (5 stars - Excellent)</option>
                 <option value="4">★★★★☆ (4 stars - Very Good)</option>
                 <option value="3">★★★☆☆ (3 stars - Average)</option>
                 <option value="2">★★☆☆☆ (2 stars - Below Average)</option>
                 <option value="1">★☆☆☆☆ (1 star - Poor)</option>
               </select>
-              <label style="font-size: 13px; font-weight: 700; display: block; margin-bottom: 6px;">Comment:</label>
-              <textarea name="comment" rows="3" placeholder="Pitch turf quality, lighting, staff service..." style="width: 100%; padding: 6px; font-size: 13px; border-radius: 4px; margin-bottom: 10px;"></textarea>
+              <label for="comment-{{ b.code }}" style="font-size: 13px; font-weight: 700; display: block; margin-bottom: 6px;">Comment:</label>
+              <textarea id="comment-{{ b.code }}" name="comment" rows="3" placeholder="Pitch turf quality, lighting, staff service..." style="width: 100%; padding: 6px; font-size: 13px; border-radius: 4px; margin-bottom: 10px;"></textarea>
               <button type="submit" class="button" style="width: 100%; font-size: 13px; font-weight: 700;">Submit Review</button>
             </form>
           </div>

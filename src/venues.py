@@ -344,7 +344,13 @@ def batch_block_slots(conn, owner, venue_id, start_day, end_day, start_hour, end
             if booked:
                 skipped.append(f"{cur_day.strftime('%d/%m/%Y')} {start_hour:02d}:00-{end_hour:02d}:00")
                 break
-            else:
+        else:
+            # All hours in this day are unbooked: block them atomically for the day (BR17)
+            for hour in range(start_hour, end_hour):
+                slot_start = f"{cur_day.isoformat()} {hour:02d}:00"
+                slot_dt = datetime(cur_day.year, cur_day.month, cur_day.day, hour)
+                if slot_dt <= now:
+                    continue
                 conn.execute(
                     "INSERT OR REPLACE INTO blocked_slot (venue_id, slot_start, reason) VALUES (?, ?, ?)",
                     (venue_id, slot_start, reason or "Under maintenance"))

@@ -116,6 +116,14 @@ CREATE TABLE IF NOT EXISTS review (
     created_at    TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS review_report (
+    id          SERIAL PRIMARY KEY,
+    review_id   INTEGER NOT NULL REFERENCES review(id) ON DELETE CASCADE,
+    user_id     INTEGER NOT NULL REFERENCES user(id) ON DELETE CASCADE,
+    created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+    UNIQUE (review_id, user_id)
+);
+
 CREATE INDEX IF NOT EXISTS idx_venue_sport_area ON venue (sport, area);
 CREATE INDEX IF NOT EXISTS idx_booking_customer ON booking (customer_id);
 """

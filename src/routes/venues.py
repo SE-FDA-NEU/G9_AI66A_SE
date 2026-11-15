@@ -2,13 +2,14 @@
 from collections import Counter
 from datetime import datetime
 
-from flask import Blueprint, current_app, flash, jsonify, redirect, render_template, request, send_from_directory
+from flask import Blueprint, current_app, flash, g, jsonify, redirect, render_template, request, send_from_directory
 
 import venues
 import reviews
 import storage
 from db import get_db
 from errors import BusinessRuleError
+from guards import login_required
 
 bp = Blueprint("venues", __name__)
 
@@ -27,10 +28,11 @@ def venue_page(venue_id):
 
 
 @bp.post("/venues/<int:venue_id>/reviews/<int:review_id>/report")
+@login_required()
 def report_review_route(venue_id, review_id):
     conn = get_db()
     try:
-        reviews.report_review(conn, review_id)
+        reviews.report_review(conn, review_id, user_id=g.user["id"], venue_id=venue_id)
         flash("Review report submitted successfully.", "success")
     except BusinessRuleError as e:
         flash(e.message, "error")

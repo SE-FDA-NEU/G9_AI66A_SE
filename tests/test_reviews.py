@@ -45,20 +45,23 @@ def test_cannot_review_another_users_booking(client, login, db):
     assert "You do not have permission to review this booking" in page
 
 
-def test_report_review_hides_automatically_after_3_reports(client, db):
-    # BR19: A review with 3 valid abuse reports is hidden automatically
+def test_report_review_hides_automatically_after_3_reports(client, login, db):
+    # BR19: A review with 3 valid abuse reports from distinct signed-in users is hidden automatically
     with connect(db) as conn:
         rev_id = conn.execute("SELECT id FROM review LIMIT 1").fetchone()[0]
 
-    # Report 1
+    # Report 1 (user 1)
+    login("minh@example.com")
     client.post(f"/venues/1/reviews/{rev_id}/report")
     with connect(db) as conn:
         assert conn.execute("SELECT report_count, hidden FROM review WHERE id = ?", (rev_id,)).fetchone()["report_count"] == 1
 
-    # Report 2
+    # Report 2 (user 2)
+    login("trang@example.com")
     client.post(f"/venues/1/reviews/{rev_id}/report")
 
-    # Report 3 -> automatically hidden!
+    # Report 3 (user 3) -> automatically hidden!
+    login("lan.owner@example.com")
     client.post(f"/venues/1/reviews/{rev_id}/report")
     with connect(db) as conn:
         row = conn.execute("SELECT report_count, hidden FROM review WHERE id = ?", (rev_id,)).fetchone()
