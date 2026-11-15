@@ -39,7 +39,7 @@
   <div class="bookings-list" style="display: flex; flex-direction: column; gap: 16px;">
     {% for b in bookings %}
     <div class="card booking-item-card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; padding: 22px; border-radius: 12px; border-left: 6px solid {% if b.status == 'confirmed' %}#10b981{% elif b.status == 'completed' %}#286b45{% else %}#ef4444{% endif %};">
-      <div style="flex: 1; min-width: 280px;">
+      <div style="flex: 1; min-width: min(280px, 100%);">
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
           <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: var(--brand); background: #f0f9ff; padding: 3px 8px; border-radius: 6px; border: 1px solid #bae6fd;">{{ b.code }}</span>
           <span style="font-size: 12px; font-weight: 700; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; {% if b.status == 'confirmed' %}background: #ecfdf5; color: #047857;{% elif b.status == 'completed' %}background: #f0fdf4; color: #15803d;{% else %}background: #fef2f2; color: #b91c1c;{% endif %}">
@@ -86,6 +86,11 @@
           ⚽ Match in progress
         </span>
         {% elif b.status == 'completed' or b.match_state == 'completed' %}
+        {% if b.has_review %}
+        <span style="font-size: 12px; font-weight: 700; padding: 6px 10px; border-radius: 6px; background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; width: 140px; text-align: center; display: inline-block;">
+          ★ Reviewed
+        </span>
+        {% else %}
         <details style="width: 140px; position: relative;">
           <summary class="button secondary" style="font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; list-style: none;">
             ⭐ Rate Venue
@@ -107,6 +112,7 @@
             </form>
           </div>
         </details>
+        {% endif %}
         {% endif %}
       </div>
     </div>

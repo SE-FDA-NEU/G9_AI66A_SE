@@ -420,3 +420,53 @@ def test_booking_done_renders_h1_white_color_contrast(db):
     assert "color: #ffffff !important;" in html
     assert '<h1 id="ticket-title">Your court is reserved</h1>' in html
     assert "ticket-top" in html
+
+
+def test_global_css_enforces_hidden_attribute_for_flex_and_grid_cards(db):
+    """style.css defines [hidden] { display: none !important; } so /search cards hide properly."""
+    client, _ = _client_for(db, "minh@example.com")
+    res = client.get("/static/style.css")
+    assert res.status_code == 200
+    css = res.get_data(as_text=True)
+    assert "[hidden] { display: none !important; }" in css
+
+
+def test_my_bookings_hides_rate_form_when_already_reviewed(db):
+    """Completed bookings that already have a review show 'Reviewed' badge instead of Rate Venue form."""
+    simulated_now = datetime(2026, 10, 15, 10, 0)
+    with connect(db) as conn:
+        u = _user(conn, "minh@example.com")
+        b = svc.create_booking(conn, u, 1, "2026-10-15", 16, 1, simulated_now)
+        code = b["code"]
+        booking_row = conn.execute("SELECT id FROM booking WHERE code = ?", (code,)).fetchone()
+        conn.execute(
+            "INSERT INTO review (booking_id, rating, comment) VALUES (?, ?, ?)",
+            (booking_row["id"], 5, "Great pitch!"),
+        )
+        conn.commit()
+
+    # After match end time (18:00), booking is completed and already reviewed
+    after_match = datetime(2026, 10, 15, 18, 0)
+    client, _ = _client_for(db, "minh@example.com", now_fn=lambda: after_match)
+    res = client.get("/my-bookings")
+    assert res.status_code == 200
+    html = res.get_data(as_text=True)
+    assert code in html
+    assert "★ Reviewed" in html
+    assert f"/my-bookings/{code}/review" not in html
+
+
+def test_owner_bookings_rejects_malformed_date_cleanly(db):
+    """Malformed ?date= on /owner/bookings falls back safely and /api/owner/bookings returns 400."""
+    simulated_now = datetime(2026, 10, 15, 10, 0)
+    client, _ = _client_for(db, "lan.owner@example.com", now_fn=lambda: simulated_now)
+
+    res = client.get("/owner/bookings?date=invalid-date")
+    assert res.status_code == 200
+    html = res.get_data(as_text=True)
+    assert "//invalid" not in html
+    assert "15/10/2026" in html
+
+    api_res = client.get("/api/owner/bookings?date=invalid-date")
+    assert api_res.status_code == 400
+    assert "Invalid date format" in api_res.get_json()["error"]

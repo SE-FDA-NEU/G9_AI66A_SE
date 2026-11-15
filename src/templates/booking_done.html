@@ -32,6 +32,7 @@
   @media (max-width: 640px) {
     .ticket-top, .ticket-body { padding: 20px; }
     .ticket-top { flex-direction: column; }
+    .ticket-code-row { flex-wrap: wrap; gap: 10px; }
     .ticket-facts { grid-template-columns: 1fr 1fr; }
     .ticket-facts > :first-child { grid-column: 1 / -1; }
     .ticket-actions { align-items: flex-start; flex-direction: column; }
@@ -140,7 +141,13 @@
 <script>
 function copyCode() {
   const code = document.getElementById('bookingCode').innerText;
-  navigator.clipboard.writeText(code).then(() => alert(`${window.arenaText('Booking code')} ${code} ${window.arenaText('copied')}`));
+  if (!navigator.clipboard || !navigator.clipboard.writeText) {
+    alert(`${window.arenaText('Booking code')}: ${code}`);
+    return;
+  }
+  navigator.clipboard.writeText(code)
+    .then(() => alert(`${window.arenaText('Booking code')} ${code} ${window.arenaText('copied')}`))
+    .catch(() => alert(`${window.arenaText('Booking code')}: ${code}`));
 }
 </script>
 {% endblock %}

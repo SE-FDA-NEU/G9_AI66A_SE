@@ -65,7 +65,7 @@
               </div>
             </div>
           {% else %}
-            <div class="flash {{ category }}" role="status">
+            <div class="flash {{ category }}" role="{{ 'alert' if category == 'error' else 'status' }}">
               {% if category == 'success' %}
                 <span class="flash-icon" aria-hidden="true">✓</span>
               {% elif category == 'error' %}
@@ -521,6 +521,9 @@
         });
         translateTree(document.body, lang);
       };
+
+      const savedLangInitial = localStorage.getItem("arena_lang") || "en";
+      document.documentElement.lang = savedLangInitial;
 
       document.addEventListener("DOMContentLoaded", () => {
         const savedLang = localStorage.getItem("arena_lang") || "en";

@@ -14,7 +14,7 @@
         <p style="margin: 0; font-size: 14px; color: #d0ddd2;">📍 {{ venue.address }} &middot; 🕒 Hours: {{ "%02d:00" | format(venue.open_hour) }} - {{ "%02d:00" | format(venue.close_hour) }}</p>
       </div>
       <div>
-        <a href="/venues/{{ venue.id }}" target="_blank" class="button secondary" style="font-size: 13px; font-weight: 700;">
+        <a href="/venues/{{ venue.id }}" target="_blank" rel="noopener noreferrer" class="button secondary" style="font-size: 13px; font-weight: 700;">
           👁️ View Public Page
         </a>
       </div>
@@ -88,11 +88,11 @@
         </div>
 
         {% elif s.status == 'free' %}
-        <form method="post" action="/owner/venues/{{ venue.id }}/schedule/block" style="display: flex; gap: 6px; align-items: center;">
+        <form method="post" action="/owner/venues/{{ venue.id }}/schedule/block" style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           <input type="hidden" name="date" value="{{ day_str }}">
           <input type="hidden" name="hour" value="{{ s.hour }}">
-          <input type="text" name="reason" aria-label="Block reason" placeholder="Reason (e.g. Grass maintenance)" value="Grass maintenance" style="font-size: 12px; padding: 6px 8px; flex: 1; border: 1px solid var(--border-color); border-radius: 4px;" required>
+          <input type="text" name="reason" aria-label="Block reason" placeholder="Reason (e.g. Grass maintenance)" value="Grass maintenance" style="font-size: 12px; padding: 6px 8px; flex: 1 1 140px; min-width: 0; border: 1px solid var(--border-color); border-radius: 4px;" required>
           <button type="submit" class="button" style="font-size: 12px; font-weight: 700; padding: 6px 10px; background: #475569; color: #fff;">
             🔒 Block
           </button>

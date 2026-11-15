@@ -74,7 +74,15 @@ def api_create_venue():
 def owner_bookings_page():
     """Venue owner views bookings across their venues (US23, BR16, BR17, BR18)."""
     now = current_app.config.get("NOW", datetime.now)()
-    date_str = request.args.get("date") or now.date().isoformat()
+    raw_date = request.args.get("date")
+    if raw_date:
+        try:
+            date_str = date.fromisoformat(raw_date).isoformat()
+        except ValueError:
+            flash("Invalid date format. Showing today's schedule.", "error")
+            date_str = now.date().isoformat()
+    else:
+        date_str = now.date().isoformat()
     venue_id = request.args.get("venue_id", type=int)
 
     conn = get_db()
@@ -220,7 +228,14 @@ def batch_block_route(venue_id):
 def api_owner_bookings():
     """API for owner bookings (US23)."""
     now = current_app.config.get("NOW", datetime.now)()
-    date_str = request.args.get("date") or now.date().isoformat()
+    raw_date = request.args.get("date")
+    if raw_date:
+        try:
+            date_str = date.fromisoformat(raw_date).isoformat()
+        except ValueError:
+            return jsonify(error="Invalid date format. Expected YYYY-MM-DD."), 400
+    else:
+        date_str = now.date().isoformat()
     venue_id = request.args.get("venue_id", type=int)
     booking_list = venues.owner_bookings(get_db(), g.user, date_str, venue_id=venue_id)
     return jsonify(bookings=[dict(b) for b in booking_list])

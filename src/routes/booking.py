@@ -120,10 +120,16 @@ def my_bookings():
         user = g.user
         status_filter = request.args.get("status")
         bookings = svc.list_for_customer(conn, user["id"], status_filter=status_filter)
+        reviewed_rows = conn.execute(
+            "SELECT r.booking_id FROM review r JOIN booking b ON b.id = r.booking_id WHERE b.customer_id = ?",
+            (user["id"],),
+        ).fetchall()
+        reviewed_booking_ids = {r["booking_id"] for r in reviewed_rows}
         now = _now()
         enriched = []
         for b in bookings:
             d = dict(b)
+            d["has_review"] = b["id"] in reviewed_booking_ids
             try:
                 start_dt = datetime.strptime(str(b["start_at"])[:16], "%Y-%m-%d %H:%M")
                 end_dt = datetime.strptime(str(b["end_at"])[:16], "%Y-%m-%d %H:%M")
