@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash
 
 from db import ROOT, connect, database_path
+from hanoi_popular_venues import get_venue_coords
 from schema import SCHEMA
 
 load_dotenv()
@@ -97,12 +98,13 @@ def seed(conn):
 
     with open(ROOT / "data" / "venues.csv", encoding="utf-8", newline="") as f:
         for row in csv.DictReader(f):
+            lat, lng = get_venue_coords(row["area"])
             conn.execute(
                 "INSERT INTO venue (owner_id, name, sport, area, address, hourly_price,"
-                " open_hour, close_hour) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                " open_hour, close_hour, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (user_id[row["owner_email"]], row["name"], row["sport"], row["area"],
                  row["address"], int(row["hourly_price"]), int(row["open_hour"]),
-                 int(row["close_hour"])),
+                 int(row["close_hour"]), lat, lng),
             )
     venue = {r["name"]: (r["id"], r["hourly_price"])
              for r in conn.execute("SELECT id, name, hourly_price FROM venue")}

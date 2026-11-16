@@ -27,6 +27,13 @@ load_dotenv()
 
 def _migrate_postgres_columns(conn):
     """Idempotently add columns required by newer features to existing Postgres tables."""
+    already_migrated = conn.execute(
+        "SELECT 1 FROM information_schema.columns"
+        " WHERE table_schema = current_schema() AND table_name = 'venue' AND column_name = 'latitude'"
+        " LIMIT 1"
+    ).fetchone()
+    if already_migrated is not None:
+        return
     statements = (
         'ALTER TABLE "user" ADD COLUMN IF NOT EXISTS suspended INTEGER NOT NULL DEFAULT 0 CHECK (suspended IN (0, 1))',
         'ALTER TABLE "user" ADD COLUMN IF NOT EXISTS suspended_at TIMESTAMP',
@@ -36,6 +43,8 @@ def _migrate_postgres_columns(conn):
         "ALTER TABLE review ADD COLUMN IF NOT EXISTS moderation_status TEXT NOT NULL DEFAULT 'active' CHECK (moderation_status IN ('active', 'pending', 'approved', 'rejected'))",
         'ALTER TABLE review ADD COLUMN IF NOT EXISTS moderated_at TIMESTAMP',
         'ALTER TABLE review ADD COLUMN IF NOT EXISTS moderated_by INTEGER REFERENCES "user"(id)',
+        'ALTER TABLE venue ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION',
+        'ALTER TABLE venue ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION',
     )
     for stmt in statements:
         conn.execute(stmt)
@@ -69,6 +78,13 @@ def _migrate_sqlite_columns(conn):
         if "moderated_by" not in review_cols:
             conn.execute('ALTER TABLE review ADD COLUMN moderated_by INTEGER REFERENCES user(id)')
 
+    venue_cols = {r[1] for r in conn.execute('PRAGMA table_info("venue")').fetchall()}
+    if venue_cols:
+        if "latitude" not in venue_cols:
+            conn.execute('ALTER TABLE venue ADD COLUMN latitude REAL')
+        if "longitude" not in venue_cols:
+            conn.execute('ALTER TABLE venue ADD COLUMN longitude REAL')
+
     conn.commit()
 
 
@@ -79,6 +95,18 @@ def _ensure_schema(database=None):
             try:
                 conn.execute("SELECT 1 FROM venue LIMIT 1")
                 _migrate_postgres_columns(conn)
+                try:
+                    has_popular = conn.execute(
+                        "SELECT 1 FROM venue WHERE name = 'San Bong C500 (Hoc vien An Ninh)' LIMIT 1"
+                    ).fetchone()
+                    if has_popular is None:
+                        from hanoi_popular_venues import sync_popular_venues
+                        from pg_seed import sync_missing_venues_postgres
+                        sync_missing_venues_postgres(conn)
+                        sync_popular_venues(conn)
+                except Exception as sync_exc:
+                    import logging
+                    logging.warning("Popular venue sync skipped: %s", sync_exc)
                 return
             except Exception as exc:
                 if getattr(exc, "pgcode", None) != "42P01" and "does not exist" not in str(exc).lower():

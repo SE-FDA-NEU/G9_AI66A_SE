@@ -5,6 +5,7 @@ from datetime import date, timedelta
 from werkzeug.security import generate_password_hash
 
 from db import ROOT
+from hanoi_popular_venues import get_venue_coords, sync_popular_venues
 
 
 USERS = [
@@ -29,9 +30,50 @@ def _next_weekday(weekday, today):
     return today + timedelta(days=(weekday - today.weekday() - 1) % 7 + 1)
 
 
+def sync_missing_venues_postgres(conn):
+    """Idempotently insert any venues from data/venues.csv not yet present in Postgres."""
+    owner_rows = conn.execute('SELECT id, email FROM "user"').fetchall()
+    owner_ids = {r[1]: r[0] for r in owner_rows}
+    if not owner_ids:
+        return
+
+    existing_names = {r[0] for r in conn.execute("SELECT name FROM venue").fetchall()}
+    inserted = False
+    with (ROOT / "data" / "venues.csv").open(encoding="utf-8", newline="") as source:
+        for row in csv.DictReader(source):
+            if row["name"] in existing_names:
+                continue
+            owner_id = owner_ids.get(row["owner_email"])
+            if not owner_id:
+                continue
+            lat, lng = get_venue_coords(row["area"])
+            conn.execute(
+                "INSERT INTO venue (owner_id, name, sport, area, address, hourly_price, open_hour, close_hour, latitude, longitude) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    owner_id,
+                    row["name"],
+                    row["sport"],
+                    row["area"],
+                    row["address"],
+                    int(row["hourly_price"]),
+                    int(row["open_hour"]),
+                    int(row["close_hour"]),
+                    lat,
+                    lng,
+                ),
+            )
+            existing_names.add(row["name"])
+            inserted = True
+    if inserted:
+        conn.commit()
+
+
 def seed_postgres(conn):
     """Populate only when this app's isolated schema has no users yet."""
     if conn.execute('SELECT COUNT(*) FROM "user"').fetchone()[0]:
+        sync_missing_venues_postgres(conn)
+        sync_popular_venues(conn)
         return
 
     hashed = generate_password_hash("sanbong1")
@@ -54,11 +96,12 @@ def seed_postgres(conn):
     venues = {}
     with (ROOT / "data" / "venues.csv").open(encoding="utf-8", newline="") as source:
         for row in csv.DictReader(source):
+            lat, lng = get_venue_coords(row["area"])
             cur = conn.execute(
-                "INSERT INTO venue (owner_id, name, sport, area, address, hourly_price, open_hour, close_hour) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO venue (owner_id, name, sport, area, address, hourly_price, open_hour, close_hour, latitude, longitude) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (user_ids[row["owner_email"]], row["name"], row["sport"], row["area"], row["address"],
-                 int(row["hourly_price"]), int(row["open_hour"]), int(row["close_hour"])),
+                 int(row["hourly_price"]), int(row["open_hour"]), int(row["close_hour"]), lat, lng),
             )
             venues[row["name"]] = (cur.lastrowid, int(row["hourly_price"]))
 
@@ -126,3 +169,5 @@ def seed_postgres(conn):
             "VALUES (?, ?, ?, ?, ?, ?)",
             (review_booking, rating, comment, report_count, hidden, mod_status),
         )
+    sync_missing_venues_postgres(conn)
+    sync_popular_venues(conn)

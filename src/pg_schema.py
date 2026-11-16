@@ -55,6 +55,8 @@ CREATE TABLE IF NOT EXISTS venue (
     hourly_price  INTEGER NOT NULL CHECK (hourly_price BETWEEN 1000 AND 100000000),
     open_hour     INTEGER NOT NULL CHECK (open_hour BETWEEN 0 AND 23),
     close_hour    INTEGER NOT NULL CHECK (close_hour BETWEEN 1 AND 24),
+    latitude      DOUBLE PRECISION,
+    longitude     DOUBLE PRECISION,
     active        INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0, 1)),
     created_at    TIMESTAMP NOT NULL DEFAULT NOW(),
     CHECK (open_hour < close_hour)
