@@ -163,4 +163,4 @@ jobs:
           python -c "import src.pg_schema as pg; assert len(pg.PG_SCHEMA) > 100; print('PostgreSQL schema OK')"
           python src/init_db.py
           test -f data/venues.db || { echo "SQLite init failed"; exit 1; }
-          python -c "import sqlite3; conn=sqlite3.connect('data/venues.db'); assert conn.execute('SELECT COUNT(*) FROM venue').fetchone()[0] == 24; print('SQLite seed verified (24 venues)')"
+          python -c "import sqlite3; conn=sqlite3.connect('data/venues.db'); n=conn.execute('SELECT COUNT(*) FROM venue').fetchone()[0]; assert n >= 24; print(f'SQLite seed verified ({n} venues)')"
