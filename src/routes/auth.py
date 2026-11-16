@@ -2,8 +2,18 @@
 import os
 from urllib.parse import urlsplit
 
-from flask import (Blueprint, current_app, flash, g, jsonify, redirect, render_template, request,
-                   session, url_for)
+from flask import (
+    Blueprint,
+    current_app,
+    flash,
+    g,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
 
 import auth
 from db import get_db

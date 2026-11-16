@@ -2,12 +2,21 @@
 from collections import Counter
 from datetime import date, datetime
 
-from flask import Blueprint, current_app, flash, jsonify, redirect, render_template, request, send_from_directory
+from flask import (
+    Blueprint,
+    current_app,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+)
 
 import pricing
-import venues
 import reviews
 import storage
+import venues
 from db import get_db
 from errors import BusinessRuleError
 

@@ -2133,7 +2133,7 @@ main:has(.hero-container) > .directory-details { width: min(1600px, calc(100% - 
 .cat-pill:hover, .cat-pill.active { background: #e8efd9; border-color: #cfdbbc; color: #21482e; }
 form.filters:not(.hero-filters) { background: #fff; border: 1px solid #e1e5dc; }
 .venue-cards-grid { gap: 18px; }
-.venue-cards-grid .venue-card-item { overflow: hidden; border-color: #e3e7df; border-radius: 12px; box-shadow: 0 2px 8px rgba(29,48,36,.045); }
+.venue-cards-grid .venue-card-item { overflow: hidden; border-color: #e3e7df; border-radius: 12px; box-shadow: 0 2px 8px rgba(29,48,36,.045); content-visibility: auto; contain-intrinsic-size: 0 360px; }
 .venue-cards-grid .venue-card-item:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(29,48,36,.11); }
 .venue-cards-grid .venue-card-img { height: 205px; }
 .venue-cards-grid .venue-card-body { min-height: 154px; }

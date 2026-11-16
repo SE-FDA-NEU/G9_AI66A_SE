@@ -127,6 +127,11 @@ CREATE TABLE review (
     created_at        TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE INDEX idx_venue_sport_area ON venue (sport, area);                    -- BR9 search
-CREATE INDEX idx_booking_customer ON booking (customer_id);
+CREATE INDEX IF NOT EXISTS idx_venue_sport_area ON venue (sport, area);                    -- BR9 search
+CREATE INDEX IF NOT EXISTS idx_venue_active_sport_area ON venue (active, sport, area);
+CREATE INDEX IF NOT EXISTS idx_booking_customer ON booking (customer_id);
+CREATE INDEX IF NOT EXISTS idx_booking_venue_status ON booking (venue_id, status);
+CREATE INDEX IF NOT EXISTS idx_booking_slot_venue_slot ON booking_slot (venue_id, slot_start);
+CREATE INDEX IF NOT EXISTS idx_blocked_slot_venue_slot ON blocked_slot (venue_id, slot_start);
+CREATE INDEX IF NOT EXISTS idx_pricing_rule_venue_day ON pricing_rule (venue_id, weekday);
 """

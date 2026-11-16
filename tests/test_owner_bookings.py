@@ -5,9 +5,8 @@ from datetime import datetime
 
 import pytest
 
-from db import connect
 import booking as svc
-
+from db import connect
 
 NOW = datetime(2026, 12, 15, 9, 0)
 TODAY = "2026-12-15"
@@ -41,7 +40,7 @@ def test_owner_bookings_defaults_to_current_date_and_shows_title(app_with_now, d
         svc.create_booking(conn, minh, 1, TODAY, 16, 2, NOW)
 
     page = client.get("/owner/bookings").get_data(as_text=True)
-    assert f"2 bookings on 15/12/2026" in page
+    assert "2 bookings on 15/12/2026" in page
     assert "Thong Nhat Football Pitch" in page
 
 

@@ -450,7 +450,7 @@
 
 <section class="hero-container" aria-labelledby="hero-title">
   <div class="hero-media-stage" aria-hidden="true">
-    <video id="hero-video" class="hero-bg-video {% if sport %}is-hidden{% endif %}" autoplay muted loop playsinline poster="/static/images/hero-candidates/unsplash-green-field-night.jpg">
+    <video id="hero-video" class="hero-bg-video {% if sport %}is-hidden{% endif %}" preload="metadata" autoplay muted loop playsinline poster="/static/images/hero-candidates/unsplash-green-field-night.jpg">
       <source src="{{ url_for('static', filename='videos/hero-courts.mp4') }}" type="video/mp4">
     </video>
     <div class="hero-bg-slide {% if sport == 'Football' %}is-active{% endif %}" data-scene="football"></div>
@@ -603,7 +603,7 @@
     {% for v in venues %}
     <div class="venue-card-item venue-card-filter-target" data-venue-id="{{ v.id }}" data-text="{{ (v.name ~ ' ' ~ v.sport ~ ' ' ~ v.area ~ ' ' ~ v.address)|lower }}">
       <div class="venue-card-img sport-{{ v.sport|lower }} image-{{ v.id % (4 if v.sport == 'Football' else 5) }}" {% if not v.cover_photo_id %}role="img" aria-label="{{ v.sport }} court"{% endif %}>
-        {% if v.cover_photo_id %}<img class="venue-cover" loading="lazy" src="/venues/{{ v.id }}/photos/{{ v.cover_photo_id }}" alt="Photo of {{ v.name }}">{% endif %}
+        {% if v.cover_photo_id %}<img class="venue-cover" loading="lazy" decoding="async" src="/venues/{{ v.id }}/photos/{{ v.cover_photo_id }}" alt="Photo of {{ v.name }}">{% endif %}
         <span class="venue-card-sport-pill">{{ v.sport }}</span>
         <span class="venue-card-district-pill">{{ v.area }}</span>
       </div>

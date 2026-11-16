@@ -2,22 +2,32 @@
 Only owners get in (BR7, BR14, BR18); a customer gets 403."""
 from datetime import date, datetime
 
-from flask import Blueprint, Response, current_app, flash, g, jsonify, redirect, render_template, request
+from flask import (
+    Blueprint,
+    Response,
+    current_app,
+    flash,
+    g,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+)
 
 import owner_analytics
-import venues
 import pricing
+import venues
 from db import get_db
 from errors import BusinessRuleError
 from guards import login_required
 
 bp = Blueprint("owner", __name__)
 
-HOURS = list(range(0, 25))
+HOURS = list(range(25))
 
 WEEKDAY_PRESETS = {
     "all": (range(7), "all weekdays"),
-    "weekdays": (range(0, 5), "weekdays (Mon-Fri)"),
+    "weekdays": (range(5), "weekdays (Mon-Fri)"),
     "weekends": (range(5, 7), "weekends (Sat-Sun)"),
 }
 

@@ -6,7 +6,6 @@ Sport and area come from the fixed lists below, never from typed text (BR9), so
 """
 import math
 import re
-import uuid
 import unicodedata
 from datetime import date, datetime, timedelta
 
@@ -197,18 +196,19 @@ def search(conn, sport="", area="", q="", sort="", min_price="", max_price="",
 
     rows = conn.execute(SEARCH_SQL, {"sport": sport, "area": area}).fetchall()
     day_iso = target_day.isoformat()
-    booked_set = {
+    day_start = f"{day_iso} 00:00"
+    next_day_start = f"{(target_day + timedelta(days=1)).isoformat()} 00:00"
+    unavailable_set = {
         (r[0], r[1])
         for r in conn.execute(
-            "SELECT venue_id, slot_start FROM booking_slot WHERE date(slot_start) = ?",
-            (day_iso,),
-        )
-    }
-    blocked_set = {
-        (r[0], r[1])
-        for r in conn.execute(
-            "SELECT venue_id, slot_start FROM blocked_slot WHERE date(slot_start) = ?",
-            (day_iso,),
+            """
+            SELECT venue_id, slot_start FROM booking_slot
+            WHERE slot_start >= ? AND slot_start < ?
+            UNION
+            SELECT venue_id, slot_start FROM blocked_slot
+            WHERE slot_start >= ? AND slot_start < ?
+            """,
+            (day_start, next_day_start, day_start, next_day_start),
         )
     }
 
@@ -232,8 +232,7 @@ def search(conn, sport="", area="", q="", sort="", min_price="", max_price="",
         for h in range(v["open_hour"], v["close_hour"]):
             key = f"{day_iso} {h:02d}:00"
             if (
-                (v["id"], key) not in booked_set
-                and (v["id"], key) not in blocked_set
+                (v["id"], key) not in unavailable_set
                 and datetime(target_day.year, target_day.month, target_day.day, h) > now_dt
             ):
                 free_count += 1
@@ -244,8 +243,7 @@ def search(conn, sport="", area="", q="", sort="", min_price="", max_price="",
                 continue
             hour_key = f"{day_iso} {hour_int:02d}:00"
             if (
-                (v["id"], hour_key) in booked_set
-                or (v["id"], hour_key) in blocked_set
+                (v["id"], hour_key) in unavailable_set
                 or datetime(target_day.year, target_day.month, target_day.day, hour_int) <= now_dt
             ):
                 continue
@@ -302,15 +300,28 @@ def day_slots(conn, venue, day, now=None):
     and blocked when the owner closed it (BR16). An hour that has already started is past.
     """
     now = now or vn_now()
-    taken = {r[0] for r in conn.execute(
-        "SELECT slot_start FROM booking_slot WHERE venue_id = ? AND date(slot_start) = ?",
-        (venue["id"], day.isoformat()))}
-    blocked = {r[0] for r in conn.execute(
-        "SELECT slot_start FROM blocked_slot WHERE venue_id = ? AND date(slot_start) = ?",
-        (venue["id"], day.isoformat()))}
+    day_iso = day.isoformat()
+    day_start = f"{day_iso} 00:00"
+    next_day_start = f"{(day + timedelta(days=1)).isoformat()} 00:00"
+    taken = set()
+    blocked = set()
+    for r in conn.execute(
+        """
+        SELECT slot_start, 'booked' AS kind FROM booking_slot
+        WHERE venue_id = ? AND slot_start >= ? AND slot_start < ?
+        UNION ALL
+        SELECT slot_start, 'blocked' AS kind FROM blocked_slot
+        WHERE venue_id = ? AND slot_start >= ? AND slot_start < ?
+        """,
+        (venue["id"], day_start, next_day_start, venue["id"], day_start, next_day_start),
+    ):
+        if r[1] == "booked":
+            taken.add(r[0])
+        else:
+            blocked.add(r[0])
     slots = []
     for hour in range(venue["open_hour"], venue["close_hour"]):
-        key = f"{day.isoformat()} {hour:02d}:00"
+        key = f"{day_iso} {hour:02d}:00"
         if key in taken:
             status = "booked"
         elif key in blocked:
@@ -516,14 +527,18 @@ def venue_schedule_slots(conn, venue, day, now):
         if datetime(day.year, day.month, day.day, hour) <= now:
             slots_map[key]["status"] = "past"
 
+    day_iso = day.isoformat()
+    day_start = f"{day_iso} 00:00"
+    next_day_start = f"{(day + timedelta(days=1)).isoformat()} 00:00"
+
     # Overlay bookings
     booking_rows = conn.execute(
         """
         SELECT bs.slot_start, b.code, b.status
         FROM booking_slot bs
         JOIN booking b ON b.id = bs.booking_id
-        WHERE bs.venue_id = ? AND date(bs.slot_start) = ?
-        """, (venue["id"], day.isoformat())).fetchall()
+        WHERE bs.venue_id = ? AND bs.slot_start >= ? AND bs.slot_start < ?
+        """, (venue["id"], day_start, next_day_start)).fetchall()
     for r in booking_rows:
         key = r["slot_start"]
         if key in slots_map:
@@ -532,8 +547,8 @@ def venue_schedule_slots(conn, venue, day, now):
 
     # Overlay blocked slots
     blocked_rows = conn.execute(
-        "SELECT slot_start, reason FROM blocked_slot WHERE venue_id = ? AND date(slot_start) = ?",
-        (venue["id"], day.isoformat())).fetchall()
+        "SELECT slot_start, reason FROM blocked_slot WHERE venue_id = ? AND slot_start >= ? AND slot_start < ?",
+        (venue["id"], day_start, next_day_start)).fetchall()
     for r in blocked_rows:
         key = r["slot_start"]
         if key in slots_map:

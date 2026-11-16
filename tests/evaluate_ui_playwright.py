@@ -11,7 +11,7 @@ Evaluates:
 """
 
 import sys
-import time
+
 from playwright.sync_api import sync_playwright
 
 BASE_URL = "http://127.0.0.1:5000"
@@ -292,7 +292,9 @@ def test_playwright_ui_and_i18n(tmp_path):
     """Pytest entry point: starts an isolated live Flask server and runs all Playwright UI/i18n checks."""
     import socket
     import threading
+
     from werkzeug.serving import make_server
+
     from app import create_app
     from db import connect
     from init_db import seed

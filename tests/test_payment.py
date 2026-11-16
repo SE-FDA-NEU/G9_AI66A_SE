@@ -1,6 +1,6 @@
 """Unit and integration tests for Simulated Online QR Payment & Auto-Refund."""
 import re
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pytest
 
@@ -116,7 +116,7 @@ def test_payment_lifecycle_and_auto_refund(db):
         assert bk["payment_token"] == sess["token"]
 
         rows = booking_svc.list_for_customer(conn, cust["id"], now=NOW)
-        matched = [r for r in rows if r["code"] == code][0]
+        matched = next(r for r in rows if r["code"] == code)
         assert matched["payment_status"] == "paid"
         assert matched["paid_amount"] == 750000
 

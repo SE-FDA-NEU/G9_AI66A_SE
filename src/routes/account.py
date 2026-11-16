@@ -3,8 +3,8 @@ from datetime import datetime
 
 from flask import Blueprint, current_app, g, render_template
 
-from db import get_db
 import booking
+from db import get_db
 from guards import login_required
 
 bp = Blueprint("account", __name__)

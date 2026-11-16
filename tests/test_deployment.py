@@ -9,8 +9,6 @@ from io import BytesIO
 from pathlib import Path
 from unittest.mock import MagicMock
 
-import pytest
-
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 
@@ -70,7 +68,6 @@ def test_ensure_schema_creates_sqlite_file_idempotently(monkeypatch, tmp_path):
     db_path = tmp_path / "fresh.db"
 
     import app
-    import db as db_module
 
     # First call creates the file and schema.
     app._ensure_schema(database=db_path)
@@ -158,8 +155,8 @@ def test_photo_route_redirects_to_cloudinary_when_configured(monkeypatch, tmp_pa
     sys.modules["cloudinary"] = mock_cloudinary
     sys.modules["cloudinary.uploader"] = mock_uploader
 
-    import db
     import app
+    import db
     from init_db import seed
 
     db_path = tmp_path / "test.db"
@@ -182,7 +179,8 @@ def test_photo_route_redirects_to_cloudinary_when_configured(monkeypatch, tmp_pa
 
 def test_compat_row_indexing_and_normalization():
     """CompatRow supports indexing by int (row[0]), slice, key, and normalizes datetimes."""
-    from datetime import datetime, date
+    from datetime import date, datetime
+
     import db_compat
 
     now_dt = datetime(2026, 11, 1, 14, 0, 0)
@@ -249,8 +247,8 @@ def test_vercel_config_regional_colocation_and_edge_routing():
 
 def test_photo_route_includes_cache_headers(monkeypatch, tmp_path):
     """Photo endpoint returns Cache-Control headers for both Cloudinary and disk storage."""
-    import db
     import app
+    import db
     from init_db import seed
 
     db_path = tmp_path / "test_photos.db"
@@ -289,7 +287,6 @@ def test_ensure_schema_postgres_skips_ddl_when_tables_exist(monkeypatch):
     sys.modules["psycopg2.extras"] = mock_extras
 
     import app
-    import db
 
     mock_compat_conn = MagicMock()
     mock_compat_conn.__enter__.return_value = mock_compat_conn
@@ -304,5 +301,96 @@ def test_ensure_schema_postgres_skips_ddl_when_tables_exist(monkeypatch):
 
     del sys.modules["psycopg2"]
     del sys.modules["psycopg2.extras"]
+
+
+def test_reusable_postgres_conn_skips_select1_within_15s(monkeypatch):
+    """_get_reusable_postgres_conn skips SELECT 1 ping when pg_last_ok is within 15 seconds."""
+    import db
+
+    monkeypatch.setenv("DATABASE_URL", "postgres://u:p@localhost/db")
+    mock_conn = MagicMock()
+    mock_conn._conn.closed = False
+    ping_calls = []
+
+    monkeypatch.setattr(db, "_postgres_connect", lambda url: mock_conn)
+    monkeypatch.setattr(db, "_is_connection_alive", lambda c: ping_calls.append(1) or True)
+
+    db._THREAD_LOCAL.pg_conn = None
+    db._THREAD_LOCAL.pg_last_ok = 0.0
+
+    now = [100.0]
+    monkeypatch.setattr(db.time, "monotonic", lambda: now[0])
+
+    # First call creates connection, no ping needed
+    c1 = db._get_reusable_postgres_conn()
+    assert c1 is mock_conn
+    assert len(ping_calls) == 0
+
+    # Within 15s: reuses without SELECT 1
+    now[0] = 110.0
+    c2 = db._get_reusable_postgres_conn()
+    assert c2 is mock_conn
+    assert len(ping_calls) == 0
+
+    # After 15s from last ok (110.0 -> 126.0): runs _is_connection_alive
+    now[0] = 126.0
+    c3 = db._get_reusable_postgres_conn()
+    assert c3 is mock_conn
+    assert len(ping_calls) == 1
+
+    db._THREAD_LOCAL.pg_conn = None
+    db._THREAD_LOCAL.pg_last_ok = 0.0
+
+
+def test_migrate_postgres_columns_creates_indexes_idempotently():
+    """_migrate_postgres_columns creates indexes when missing and skips when present."""
+    import app
+
+    mock_conn = MagicMock()
+    # already_migrated = (1,), has_indexes = None -> should create indexes only
+    mock_conn.execute.return_value.fetchone.side_effect = [(1,), None]
+    app._migrate_postgres_columns(mock_conn)
+
+    executed_sqls = [call.args[0] for call in mock_conn.execute.call_args_list]
+    assert any("idx_booking_slot_venue_slot" in sql for sql in executed_sqls)
+    assert any("idx_venue_active_sport_area" in sql for sql in executed_sqls)
+    assert not any("ALTER TABLE" in sql for sql in executed_sqls)
+    mock_conn.commit.assert_called_once()
+
+
+def test_search_and_day_slots_query_counts(tmp_path):
+    """search() runs 2 SQL queries and day_slots() runs 1 SQL query (no N+1)."""
+    import db
+    import venues
+    from init_db import seed
+
+    db_path = tmp_path / "perf.db"
+    with db.connect(db_path) as conn:
+        seed(conn)
+
+    class CountingConn:
+        def __init__(self, inner):
+            self._inner = inner
+            self.queries = []
+
+        def execute(self, sql, params=None):
+            self.queries.append(sql)
+            return self._inner.execute(sql, params if params is not None else ())
+
+        def __getattr__(self, name):
+            return getattr(self._inner, name)
+
+    with db.connect(db_path) as raw_conn:
+        counting = CountingConn(raw_conn)
+        results = venues.search(counting)
+        assert len(results) > 0
+        assert len(counting.queries) == 2
+
+        counting.queries.clear()
+        venue = venues.get_venue(raw_conn, results[0]["id"])
+        from datetime import date
+        slots = venues.day_slots(counting, venue, date.today())
+        assert len(slots) > 0
+        assert len(counting.queries) == 1
 
 

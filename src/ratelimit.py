@@ -1,7 +1,7 @@
 """Thread-safe in-memory sliding-window HTTP rate limiter for auth endpoints."""
-from collections import defaultdict, deque
 import threading
 import time
+from collections import defaultdict, deque
 
 from flask import current_app, jsonify, render_template, request
 

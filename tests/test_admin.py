@@ -8,8 +8,6 @@ import auth
 from db import connect
 from db_compat import CompatCursor
 from errors import BusinessRuleError
-import reviews
-
 
 # ---------------------------------------------------------------------------
 # Helpers

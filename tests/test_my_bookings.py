@@ -1,13 +1,12 @@
 """Tests for US07 (US19: Customer cancels a booking) and US08 (US20: Customer views booking history).
 Business Rules: BR14, BR15.
 """
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pytest
 
-from db import connect
 import booking as svc
-
+from db import connect
 
 NOW = datetime(2026, 10, 11, 9, 0)
 

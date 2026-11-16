@@ -64,7 +64,7 @@ def test_api_register_duplicate_phone_returns_409(client):
 
 def test_short_password_keeps_the_other_fields(client):
     # US01 criterion 3, BR2
-    page = register(client, **{"password": TOO_SHORT}).get_data(as_text=True)
+    page = register(client, password=TOO_SHORT).get_data(as_text=True)
     assert "Password must be at least 8 characters" in page
     assert 'value="Nguyen Thi Hoa"' in page
     assert 'value="hoa.nguyen@gmail.com"' in page

@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 import pytest
 from werkzeug.security import check_password_hash
 
-import auth                                   # src/auth.py (rules, tokens, LANDING_PAGE)
+import auth  # src/auth.py (rules, tokens, LANDING_PAGE)
 from db import connect
 from errors import BusinessRuleError
 

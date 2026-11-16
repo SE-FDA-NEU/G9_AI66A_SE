@@ -9,8 +9,19 @@ The signed-in user is read from session["user_id"], which the login route (#64) 
 from datetime import date, datetime
 from urllib.parse import quote as url_quote
 
-from flask import (Blueprint, Response, current_app, flash, g, jsonify, redirect, render_template,
-                   request, session, url_for)
+from flask import (
+    Blueprint,
+    Response,
+    current_app,
+    flash,
+    g,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
 
 import booking as svc
 import payment
@@ -156,7 +167,7 @@ def my_bookings():
                 start_dt = datetime.strptime(str(b["start_at"])[:16], "%Y-%m-%d %H:%M")
                 end_dt = datetime.strptime(str(b["end_at"])[:16], "%Y-%m-%d %H:%M")
                 diff_hours = (start_dt - now).total_seconds() / 3600.0
-            except Exception:
+            except (ValueError, TypeError):
                 start_dt = now
                 end_dt = now
                 diff_hours = 0

@@ -227,35 +227,6 @@
   </div>
 </div>
 
-{% set gmap_q = (venue.latitude ~ ',' ~ venue.longitude) if (venue.latitude is not none and venue.longitude is not none) else (venue.address ~ ', ' ~ venue.area ~ ', Hanoi, Vietnam') %}
-<div class="card venue-map-card" id="venue-map">
-  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
-    <div>
-      <h2 id="venue-map-title" style="margin:0 0 4px;">Location &amp; Google Maps</h2>
-      <p class="muted" style="margin:0;">
-        {{ venue.address }}, {{ venue.area }}, Hanoi
-        {% if venue.latitude is not none and venue.longitude is not none %}
-        <span style="display:inline-block; margin-left:6px; padding:2px 8px; border-radius:999px; background:#f1f5f9; font-size:12px; color:#475569;">{{ "%.4f"|format(venue.latitude) }}, {{ "%.4f"|format(venue.longitude) }}</span>
-        {% endif %}
-      </p>
-    </div>
-    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-      <a class="button secondary" href="https://www.google.com/maps/search/?api=1&query={{ gmap_q | urlencode }}" target="_blank" rel="noopener noreferrer" style="padding:8px 14px; font-size:13px;">Open in Google Maps &#8599;</a>
-      <a class="button" href="https://www.google.com/maps/dir/?api=1&destination={{ gmap_q | urlencode }}" target="_blank" rel="noopener noreferrer" style="padding:8px 14px; font-size:13px;">Get Directions &#8599;</a>
-    </div>
-  </div>
-  <iframe
-    title="Google Map for {{ venue.name }}"
-    src="https://maps.google.com/maps?q={{ gmap_q | urlencode }}&amp;t=&amp;z=16&amp;ie=UTF8&amp;iwloc=&amp;output=embed"
-    width="100%"
-    height="320"
-    style="border:0; border-radius:12px; display:block;"
-    loading="lazy"
-    referrerpolicy="no-referrer-when-downgrade"
-    allowfullscreen>
-  </iframe>
-</div>
-
 <div class="card">
   <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--border-color);">
     <div style="display: flex; align-items: center; gap: 18px; flex-wrap: wrap;">

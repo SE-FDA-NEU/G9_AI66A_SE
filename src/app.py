@@ -25,29 +25,48 @@ from time_utils import vn_now
 load_dotenv()
 
 
+_MIGRATION_INDEX_STATEMENTS = (
+    "CREATE INDEX IF NOT EXISTS idx_venue_active_sport_area ON venue (active, sport, area)",
+    "CREATE INDEX IF NOT EXISTS idx_booking_customer ON booking (customer_id)",
+    "CREATE INDEX IF NOT EXISTS idx_booking_venue_status ON booking (venue_id, status)",
+    "CREATE INDEX IF NOT EXISTS idx_booking_slot_venue_slot ON booking_slot (venue_id, slot_start)",
+    "CREATE INDEX IF NOT EXISTS idx_blocked_slot_venue_slot ON blocked_slot (venue_id, slot_start)",
+    "CREATE INDEX IF NOT EXISTS idx_pricing_rule_venue_day ON pricing_rule (venue_id, weekday)",
+)
+
+
 def _migrate_postgres_columns(conn):
-    """Idempotently add columns required by newer features to existing Postgres tables."""
+    """Idempotently add columns and indexes required by newer features to existing Postgres tables."""
     already_migrated = conn.execute(
         "SELECT 1 FROM information_schema.columns"
         " WHERE table_schema = current_schema() AND table_name = 'venue' AND column_name = 'latitude'"
         " LIMIT 1"
     ).fetchone()
-    if already_migrated is not None:
+    has_indexes = conn.execute(
+        "SELECT 1 FROM pg_indexes"
+        " WHERE schemaname = current_schema() AND indexname = 'idx_venue_active_sport_area'"
+        " LIMIT 1"
+    ).fetchone()
+    if already_migrated is not None and has_indexes is not None:
         return
-    statements = (
-        'ALTER TABLE "user" ADD COLUMN IF NOT EXISTS suspended INTEGER NOT NULL DEFAULT 0 CHECK (suspended IN (0, 1))',
-        'ALTER TABLE "user" ADD COLUMN IF NOT EXISTS suspended_at TIMESTAMP',
-        'ALTER TABLE "user" ADD COLUMN IF NOT EXISTS suspended_reason TEXT',
-        'ALTER TABLE review ADD COLUMN IF NOT EXISTS report_count INTEGER NOT NULL DEFAULT 0 CHECK (report_count >= 0)',
-        'ALTER TABLE review ADD COLUMN IF NOT EXISTS hidden INTEGER NOT NULL DEFAULT 0 CHECK (hidden IN (0, 1))',
-        "ALTER TABLE review ADD COLUMN IF NOT EXISTS moderation_status TEXT NOT NULL DEFAULT 'active' CHECK (moderation_status IN ('active', 'pending', 'approved', 'rejected'))",
-        'ALTER TABLE review ADD COLUMN IF NOT EXISTS moderated_at TIMESTAMP',
-        'ALTER TABLE review ADD COLUMN IF NOT EXISTS moderated_by INTEGER REFERENCES "user"(id)',
-        'ALTER TABLE venue ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION',
-        'ALTER TABLE venue ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION',
-    )
-    for stmt in statements:
-        conn.execute(stmt)
+    if already_migrated is None:
+        statements = (
+            'ALTER TABLE "user" ADD COLUMN IF NOT EXISTS suspended INTEGER NOT NULL DEFAULT 0 CHECK (suspended IN (0, 1))',
+            'ALTER TABLE "user" ADD COLUMN IF NOT EXISTS suspended_at TIMESTAMP',
+            'ALTER TABLE "user" ADD COLUMN IF NOT EXISTS suspended_reason TEXT',
+            'ALTER TABLE review ADD COLUMN IF NOT EXISTS report_count INTEGER NOT NULL DEFAULT 0 CHECK (report_count >= 0)',
+            'ALTER TABLE review ADD COLUMN IF NOT EXISTS hidden INTEGER NOT NULL DEFAULT 0 CHECK (hidden IN (0, 1))',
+            "ALTER TABLE review ADD COLUMN IF NOT EXISTS moderation_status TEXT NOT NULL DEFAULT 'active' CHECK (moderation_status IN ('active', 'pending', 'approved', 'rejected'))",
+            'ALTER TABLE review ADD COLUMN IF NOT EXISTS moderated_at TIMESTAMP',
+            'ALTER TABLE review ADD COLUMN IF NOT EXISTS moderated_by INTEGER REFERENCES "user"(id)',
+            'ALTER TABLE venue ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION',
+            'ALTER TABLE venue ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION',
+        )
+        for stmt in statements:
+            conn.execute(stmt)
+    if has_indexes is None:
+        for stmt in _MIGRATION_INDEX_STATEMENTS:
+            conn.execute(stmt)
     conn.commit()
 
 
@@ -85,6 +104,10 @@ def _migrate_sqlite_columns(conn):
         if "longitude" not in venue_cols:
             conn.execute('ALTER TABLE venue ADD COLUMN longitude REAL')
 
+    if venue_cols:
+        for stmt in _MIGRATION_INDEX_STATEMENTS:
+            conn.execute(stmt)
+
     conn.commit()
 
 
@@ -104,16 +127,16 @@ def _ensure_schema(database=None):
                         from pg_seed import sync_missing_venues_postgres
                         sync_missing_venues_postgres(conn)
                         sync_popular_venues(conn)
-                except Exception as sync_exc:
+                except Exception as sync_exc:  # noqa: BLE001
                     import logging
-                    logging.warning("Popular venue sync skipped: %s", sync_exc)
+                    logging.getLogger(__name__).warning("Popular venue sync skipped: %s", sync_exc)
                 return
             except Exception as exc:
                 if getattr(exc, "pgcode", None) != "42P01" and "does not exist" not in str(exc).lower():
                     raise
                 try:
                     conn.rollback()
-                except Exception:
+                except Exception:  # noqa: BLE001, S110
                     pass
             from db import POSTGRES_SCHEMA
             with conn._conn.cursor() as cur:

@@ -232,7 +232,7 @@ class CompatConnection:
             try:
                 import psycopg2.extensions
                 return self._conn.status == psycopg2.extensions.STATUS_IN_TRANSACTION
-            except Exception:
+            except Exception:  # noqa: BLE001
                 return False
         return getattr(self._conn, "in_transaction", False)
 

@@ -7,7 +7,6 @@ from werkzeug.security import generate_password_hash
 from db import ROOT
 from hanoi_popular_venues import get_venue_coords, sync_popular_venues
 
-
 USERS = [
     ("lan.owner@example.com", "Nguyen Thi Lan", "0912345678", "owner", True),
     ("hung.owner@example.com", "Tran Van Hung", "0987654321", "owner", True),
