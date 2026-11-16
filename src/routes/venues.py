@@ -1,9 +1,10 @@
 """Venue detail and availability (US04): /venues/<id> and GET /api/venues/<id>."""
 from collections import Counter
-from datetime import datetime
+from datetime import date, datetime
 
 from flask import Blueprint, current_app, flash, jsonify, redirect, render_template, request, send_from_directory
 
+import pricing
 import venues
 import reviews
 import storage
@@ -19,17 +20,28 @@ def venue_page(venue_id):
     now = current_app.config.get("NOW", datetime.now)()
     venue = venues.get_venue(conn, venue_id)
     day = request.args.get("date") or now.date().isoformat()
+    try:
+        parsed_day = date.fromisoformat(day)
+    except ValueError:
+        parsed_day = now.date()
+    slot_prices = pricing.hour_prices(conn, venue_id, parsed_day)
     reviews_list = reviews.venue_reviews(conn, venue_id)
     rating_summary = reviews.venue_rating_summary(conn, venue_id)
     return render_template("venue.html", venue=venue, photos=venues.photos(conn, venue_id), day=day,
-                           today=now.date().isoformat(), reviews=reviews_list,
-                           rating_summary=rating_summary)
+                           today=now.date().isoformat(), slot_prices=slot_prices,
+                           reviews=reviews_list, rating_summary=rating_summary)
 
 
 @bp.post("/venues/<int:venue_id>/reviews/<int:review_id>/report")
 def report_review_route(venue_id, review_id):
     conn = get_db()
     try:
+        belongs = conn.execute(
+            "SELECT 1 FROM review r JOIN booking b ON b.id = r.booking_id WHERE r.id = ? AND b.venue_id = ?",
+            (review_id, venue_id),
+        ).fetchone()
+        if belongs is None:
+            raise BusinessRuleError(404, "Review not found")
         reviews.report_review(conn, review_id)
         flash("Review report submitted successfully.", "success")
     except BusinessRuleError as e:
@@ -62,4 +74,5 @@ def api_venue(venue_id):
     slots = venues.day_slots(conn, venue, day, now)
     counts = Counter(s["status"] for s in slots)
     return jsonify(venue=dict(venue), date=day.isoformat(), slots=slots,
+                   slot_prices=pricing.hour_prices(conn, venue_id, day),
                    free=counts["free"], booked=counts["booked"], blocked=counts["blocked"])

@@ -4,6 +4,7 @@ adding a venue (US06).
 Sport and area come from the fixed lists below, never from typed text (BR9), so
 "Cau Giay", "cau giay" and "Q. Cau Giay" can never become three different areas.
 """
+import re
 import uuid
 import unicodedata
 from datetime import date, datetime, timedelta
@@ -25,13 +26,20 @@ NO_MATCH = "No venues found"                                         # BR9
 # venue name, sport, area, and address, including Vietnamese text without diacritics.
 SEARCH_SQL = """
 SELECT v.id, v.name, v.sport, v.area, v.address, v.hourly_price, v.open_hour, v.close_hour,
-       (SELECT p.id FROM venue_photo p WHERE p.venue_id = v.id ORDER BY p.id LIMIT 1) AS cover_photo_id
+       (SELECT p.id FROM venue_photo p WHERE p.venue_id = v.id ORDER BY p.id LIMIT 1) AS cover_photo_id,
+       ROUND(AVG(CASE WHEN r.hidden = 0 THEN r.rating END), 1) AS avg_rating,
+       COUNT(CASE WHEN r.hidden = 0 THEN r.id END) AS review_count
 FROM venue v
+LEFT JOIN booking b ON b.venue_id = v.id
+LEFT JOIN review r ON r.booking_id = b.id
 WHERE v.active = 1
   AND (:sport = '' OR v.sport = :sport)
   AND (:area  = '' OR v.area  = :area)
+GROUP BY v.id, v.name, v.sport, v.area, v.address, v.hourly_price, v.open_hour, v.close_hour
 ORDER BY v.area, v.sport, v.name
 """
+
+SORT_OPTIONS = {"", "default", "price_asc", "price_desc", "rating_desc", "name_asc"}
 
 
 def _fold_search_text(value):
@@ -39,18 +47,114 @@ def _fold_search_text(value):
     return "".join(char for char in decomposed if unicodedata.category(char) != "Mn")
 
 
-def search(conn, sport="", area="", q=""):
+def _parse_price_filter(value, field):
+    if value is None or str(value).strip() == "":
+        return None
+    parsed = parse_price(str(value).strip())
+    if parsed is None or parsed < 0:
+        raise BusinessRuleError(400, "Price filter must be a valid non-negative number", None, field)
+    return parsed
+
+
+def _parse_hour_filter(value):
+    if value is None or str(value).strip() == "":
+        return None
+    try:
+        hour_int = int(str(value).strip())
+    except (TypeError, ValueError):
+        raise BusinessRuleError(400, "Hour must be between 0 and 23", None, "hour") from None
+    if not 0 <= hour_int <= 23:
+        raise BusinessRuleError(400, "Hour must be between 0 and 23", None, "hour")
+    return hour_int
+
+
+def _sort_key(sort):
+    if sort == "price_asc":
+        return lambda v: (v["hourly_price"], v["area"], v["name"])
+    if sort == "price_desc":
+        return lambda v: (-v["hourly_price"], v["area"], v["name"])
+    if sort == "rating_desc":
+        return lambda v: (-(v["avg_rating"] or 0), -v["review_count"], v["hourly_price"], v["name"])
+    if sort == "name_asc":
+        return lambda v: (v["name"].lower(), v["area"])
+    return lambda v: (v["area"], v["sport"], v["name"])
+
+
+def search(conn, sport="", area="", q="", sort="", min_price="", max_price="", date="", hour="", now=None):
     """Return the matching venues. An unknown sport or area is refused, not ignored (BR9)."""
     if sport and sport not in SPORTS:
         raise BusinessRuleError(400, "Please choose a sport from the list", "BR9", "sport")
     if area and area not in AREAS:
         raise BusinessRuleError(400, "Please choose an area from the list", "BR9", "area")
+    if sort not in SORT_OPTIONS:
+        raise BusinessRuleError(400, "Please choose a valid sort option", None, "sort")
+
+    min_p = _parse_price_filter(min_price, "min_price")
+    max_p = _parse_price_filter(max_price, "max_price")
+    if min_p is not None and max_p is not None and min_p > max_p:
+        raise BusinessRuleError(400, "Minimum price cannot exceed maximum price", None, "min_price")
+
+    now_dt = now or vn_now()
+    date_str = str(date).strip() if date is not None else ""
+    target_day = parse_day(date_str, now_dt) if date_str else now_dt.date()
+    hour_int = _parse_hour_filter(hour)
+
     rows = conn.execute(SEARCH_SQL, {"sport": sport, "area": area}).fetchall()
+    day_iso = target_day.isoformat()
+    booked_set = {
+        (r[0], r[1])
+        for r in conn.execute(
+            "SELECT venue_id, slot_start FROM booking_slot WHERE date(slot_start) = ?",
+            (day_iso,),
+        )
+    }
+    blocked_set = {
+        (r[0], r[1])
+        for r in conn.execute(
+            "SELECT venue_id, slot_start FROM blocked_slot WHERE date(slot_start) = ?",
+            (day_iso,),
+        )
+    }
+
     query = _fold_search_text(q.strip())
-    if not query:
-        return rows
-    return [row for row in rows if query in _fold_search_text(
-        f"{row['name']} {row['sport']} {row['area']} {row['address']}")]
+    results = []
+    for row in rows:
+        v = dict(row)
+        if query and query not in _fold_search_text(
+            f"{v['name']} {v['sport']} {v['area']} {v['address']}"
+        ):
+            continue
+        if min_p is not None and v["hourly_price"] < min_p:
+            continue
+        if max_p is not None and v["hourly_price"] > max_p:
+            continue
+
+        free_count = 0
+        for h in range(v["open_hour"], v["close_hour"]):
+            key = f"{day_iso} {h:02d}:00"
+            if (
+                (v["id"], key) not in booked_set
+                and (v["id"], key) not in blocked_set
+                and datetime(target_day.year, target_day.month, target_day.day, h) > now_dt
+            ):
+                free_count += 1
+        v["free_slots_count"] = free_count
+
+        if hour_int is not None:
+            if not (v["open_hour"] <= hour_int < v["close_hour"]):
+                continue
+            hour_key = f"{day_iso} {hour_int:02d}:00"
+            if (
+                (v["id"], hour_key) in booked_set
+                or (v["id"], hour_key) in blocked_set
+                or datetime(target_day.year, target_day.month, target_day.day, hour_int) <= now_dt
+            ):
+                continue
+
+        results.append(v)
+
+    results.sort(key=_sort_key(sort))
+    return results
 
 
 def get_venue(conn, venue_id):
@@ -111,11 +215,10 @@ PHOTO_TYPES = {".jpg", ".jpeg", ".png"}
 
 def parse_price(text):
     """'250,000' or '250000' -> 250000. None when it is not a whole number."""
-    cleaned = text.replace(",", "").replace(".", "").replace(" ", "")
-    try:
-        return int(cleaned)
-    except ValueError:
+    s = (text or "").strip()
+    if not re.fullmatch(r"-?(?:\d+|\d{1,3}(?:,\d{3})+|\d{1,3}(?:\.\d{3})+|\d{1,3}(?: \d{3})+)", s):
         return None
+    return int(s.replace(",", "").replace(".", "").replace(" ", ""))
 
 
 def read_hour(text, default):
@@ -283,30 +386,43 @@ def venue_schedule_slots(conn, venue, day, now):
 def block_single_slot(conn, owner, venue_id, slot_day, hour, reason="Under maintenance", now=None):
     """Block one slot for maintenance (US22, BR13, BR14, BR15)."""
     now = now or vn_now()
-    venue = check_venue_owner(conn, venue_id, owner["id"])
-    slot_start = f"{slot_day.isoformat()} {hour:02d}:00"
+    if conn.in_transaction:
+        conn.commit()
+    conn.execute("BEGIN IMMEDIATE")
+    try:
+        venue = check_venue_owner(conn, venue_id, owner["id"])
+        if not (venue["open_hour"] <= hour < venue["close_hour"]):
+            raise BusinessRuleError(
+                400,
+                f"Hour must be within opening hours ({venue['open_hour']:02d}:00 - {venue['close_hour']:02d}:00)",
+                "BR13",
+            )
+        slot_start = f"{slot_day.isoformat()} {hour:02d}:00"
 
-    # BR15: Only allow blocking slots starting after current time
-    slot_dt = datetime(slot_day.year, slot_day.month, slot_day.day, hour)
-    if slot_dt <= now:
-        raise BusinessRuleError(400, "Can only block slots starting after current time", "BR15")
+        # BR15: Only allow blocking slots starting after current time
+        slot_dt = datetime(slot_day.year, slot_day.month, slot_day.day, hour)
+        if slot_dt <= now:
+            raise BusinessRuleError(400, "Can only block slots starting after current time", "BR15")
 
-    # BR14: Cannot block slot with active uncancelled booking
-    booked = conn.execute(
-        """
-        SELECT b.code FROM booking_slot bs
-        JOIN booking b ON b.id = bs.booking_id
-        WHERE bs.venue_id = ? AND bs.slot_start = ?
-        """, (venue_id, slot_start)).fetchone()
-    if booked:
-        raise BusinessRuleError(
-            409,
-            f"Cannot block: this slot is already booked ({booked['code']}). Cancel booking first.",
-            "BR14")
+        # BR14: Cannot block slot with active uncancelled booking
+        booked = conn.execute(
+            """
+            SELECT b.code FROM booking_slot bs
+            JOIN booking b ON b.id = bs.booking_id
+            WHERE bs.venue_id = ? AND bs.slot_start = ?
+            """, (venue_id, slot_start)).fetchone()
+        if booked:
+            raise BusinessRuleError(
+                409,
+                f"Cannot block: this slot is already booked ({booked['code']}). Cancel booking first.",
+                "BR14")
 
-    conn.execute(
-        "INSERT OR REPLACE INTO blocked_slot (venue_id, slot_start, reason) VALUES (?, ?, ?)",
-        (venue_id, slot_start, reason or "Under maintenance"))
+        conn.execute(
+            "INSERT OR REPLACE INTO blocked_slot (venue_id, slot_start, reason) VALUES (?, ?, ?)",
+            (venue_id, slot_start, reason or "Under maintenance"))
+    except BaseException:
+        conn.rollback()
+        raise
     conn.commit()
 
 
@@ -323,33 +439,54 @@ def unblock_single_slot(conn, owner, venue_id, slot_day, hour):
 def batch_block_slots(conn, owner, venue_id, start_day, end_day, start_hour, end_hour, reason="Under maintenance", now=None):
     """Batch block date range & hours (US22 AC 5). Returns (blocked_count, skipped_messages)."""
     now = now or vn_now()
-    check_venue_owner(conn, venue_id, owner["id"])
-    blocked_count = 0
-    skipped = []
+    if conn.in_transaction:
+        conn.commit()
+    conn.execute("BEGIN IMMEDIATE")
+    try:
+        venue = check_venue_owner(conn, venue_id, owner["id"])
+        if start_day > end_day:
+            raise BusinessRuleError(400, "Start date must be on or before end date", "BR13")
+        if not (venue["open_hour"] <= start_hour < end_hour <= venue["close_hour"]):
+            raise BusinessRuleError(
+                400,
+                f"Time range must be within opening hours ({venue['open_hour']:02d}:00 - {venue['close_hour']:02d}:00)",
+                "BR13",
+            )
 
-    cur_day = start_day
-    while cur_day <= end_day:
-        for hour in range(start_hour, end_hour):
-            slot_start = f"{cur_day.isoformat()} {hour:02d}:00"
-            slot_dt = datetime(cur_day.year, cur_day.month, cur_day.day, hour)
-            if slot_dt <= now:
-                continue
+        blocked_count = 0
+        skipped = []
+        cur_day = start_day
+        while cur_day <= end_day:
+            future_slots = []
+            has_booking = False
+            for hour in range(start_hour, end_hour):
+                slot_dt = datetime(cur_day.year, cur_day.month, cur_day.day, hour)
+                if slot_dt <= now:
+                    continue
+                slot_start = f"{cur_day.isoformat()} {hour:02d}:00"
+                booked = conn.execute(
+                    """
+                    SELECT b.code FROM booking_slot bs
+                    JOIN booking b ON b.id = bs.booking_id
+                    WHERE bs.venue_id = ? AND bs.slot_start = ?
+                    """, (venue_id, slot_start)).fetchone()
+                if booked:
+                    has_booking = True
+                    break
+                future_slots.append(slot_start)
 
-            booked = conn.execute(
-                """
-                SELECT b.code FROM booking_slot bs
-                JOIN booking b ON b.id = bs.booking_id
-                WHERE bs.venue_id = ? AND bs.slot_start = ?
-                """, (venue_id, slot_start)).fetchone()
-            if booked:
+            if has_booking:
                 skipped.append(f"{cur_day.strftime('%d/%m/%Y')} {start_hour:02d}:00-{end_hour:02d}:00")
-                break
             else:
-                conn.execute(
-                    "INSERT OR REPLACE INTO blocked_slot (venue_id, slot_start, reason) VALUES (?, ?, ?)",
-                    (venue_id, slot_start, reason or "Under maintenance"))
-                blocked_count += 1
-        cur_day += timedelta(days=1)
+                for slot_start in future_slots:
+                    conn.execute(
+                        "INSERT OR REPLACE INTO blocked_slot (venue_id, slot_start, reason) VALUES (?, ?, ?)",
+                        (venue_id, slot_start, reason or "Under maintenance"))
+                    blocked_count += 1
+            cur_day += timedelta(days=1)
+    except BaseException:
+        conn.rollback()
+        raise
     conn.commit()
     return blocked_count, skipped
 

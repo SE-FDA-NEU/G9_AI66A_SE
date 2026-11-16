@@ -2,8 +2,9 @@
 Only owners get in (BR7, BR14, BR18); a customer gets 403."""
 from datetime import date, datetime
 
-from flask import Blueprint, current_app, flash, g, jsonify, redirect, render_template, request
+from flask import Blueprint, Response, current_app, flash, g, jsonify, redirect, render_template, request
 
+import owner_analytics
 import venues
 import pricing
 from db import get_db
@@ -56,7 +57,9 @@ def api_venue_list():
 @login_required("owner")
 def api_create_venue():
     data = request.get_json(silent=True) or {}
-    values, problems = venues.check_new_venue({k: str(v) for k, v in data.items()})
+    values, problems = venues.check_new_venue(
+        {k: str(v) if v is not None else "" for k, v in data.items()}
+    )
     if problems:
         raise problems[0]
     return jsonify(venue_id=venues.create_venue(get_db(), g.user, values)), 201
@@ -68,6 +71,11 @@ def owner_bookings_page():
     """Venue owner views bookings across their venues (US23, BR16, BR17, BR18)."""
     now = current_app.config.get("NOW", datetime.now)()
     date_str = request.args.get("date") or now.date().isoformat()
+    try:
+        date.fromisoformat(date_str)
+    except ValueError:
+        flash("Please choose a valid date in YYYY-MM-DD format.", "error")
+        date_str = now.date().isoformat()
     venue_id = request.args.get("venue_id", type=int)
 
     conn = get_db()
@@ -137,12 +145,15 @@ def block_slot_route(venue_id):
     now = current_app.config.get("NOW", datetime.now)()
     conn = get_db()
     day_str = request.form.get("date")
-    hour = int(request.form.get("hour"))
     reason = request.form.get("reason", "Under maintenance")
     try:
-        day = date.fromisoformat(day_str)
+        day = date.fromisoformat(day_str or "")
+        hour = int(request.form.get("hour"))
         venues.block_single_slot(conn, g.user, venue_id, day, hour, reason, now)
         flash(f"Slot {hour:02d}:00-{hour + 1:02d}:00 blocked successfully.", "success")
+    except (TypeError, ValueError):
+        flash("Invalid date or hour.", "error")
+        return redirect(f"/owner/venues/{venue_id}/schedule")
     except BusinessRuleError as e:
         flash(e.message, "error")
 
@@ -155,11 +166,14 @@ def unblock_slot_route(venue_id):
     """Unblock a slot (US22, BR13)."""
     conn = get_db()
     day_str = request.form.get("date")
-    hour = int(request.form.get("hour"))
     try:
-        day = date.fromisoformat(day_str)
+        day = date.fromisoformat(day_str or "")
+        hour = int(request.form.get("hour"))
         venues.unblock_single_slot(conn, g.user, venue_id, day, hour)
         flash(f"Slot {hour:02d}:00-{hour + 1:02d}:00 unblocked successfully.", "success")
+    except (TypeError, ValueError):
+        flash("Invalid date or hour.", "error")
+        return redirect(f"/owner/venues/{venue_id}/schedule")
     except BusinessRuleError as e:
         flash(e.message, "error")
 
@@ -173,8 +187,8 @@ def batch_block_route(venue_id):
     now = current_app.config.get("NOW", datetime.now)()
     conn = get_db()
     try:
-        start_date = date.fromisoformat(request.form.get("start_date"))
-        end_date = date.fromisoformat(request.form.get("end_date"))
+        start_date = date.fromisoformat(request.form.get("start_date") or "")
+        end_date = date.fromisoformat(request.form.get("end_date") or "")
         start_hour = int(request.form.get("start_hour"))
         end_hour = int(request.form.get("end_hour"))
         reason = request.form.get("reason", "Under maintenance")
@@ -190,8 +204,11 @@ def batch_block_route(venue_id):
 
         flash(msg, "success")
         return redirect(f"/owner/venues/{venue_id}/schedule?date={start_date.isoformat()}")
-    except Exception as e:
-        flash(str(e), "error")
+    except BusinessRuleError as e:
+        flash(e.message, "error")
+        return redirect(f"/owner/venues/{venue_id}/schedule")
+    except (TypeError, ValueError):
+        flash("Invalid date or hour range.", "error")
         return redirect(f"/owner/venues/{venue_id}/schedule")
 
 
@@ -201,6 +218,10 @@ def api_owner_bookings():
     """API for owner bookings (US23)."""
     now = current_app.config.get("NOW", datetime.now)()
     date_str = request.args.get("date") or now.date().isoformat()
+    try:
+        date.fromisoformat(date_str)
+    except ValueError:
+        return jsonify(error="Invalid date format, expected YYYY-MM-DD"), 400
     venue_id = request.args.get("venue_id", type=int)
     booking_list = venues.owner_bookings(get_db(), g.user, date_str, venue_id=venue_id)
     return jsonify(bookings=[dict(b) for b in booking_list])
@@ -212,8 +233,11 @@ def api_block_slot(venue_id):
     """API for blocking a slot (US22)."""
     now = current_app.config.get("NOW", datetime.now)()
     data = request.get_json(silent=True) or request.form
-    day = date.fromisoformat(data.get("date"))
-    hour = int(data.get("hour"))
+    try:
+        day = date.fromisoformat(str(data.get("date") or ""))
+        hour = int(data.get("hour"))
+    except (TypeError, ValueError):
+        return jsonify(error="Invalid date or hour"), 400
     reason = data.get("reason", "Under maintenance")
     try:
         venues.block_single_slot(get_db(), g.user, venue_id, day, hour, reason, now)
@@ -227,8 +251,11 @@ def api_block_slot(venue_id):
 def api_unblock_slot(venue_id):
     """API for unblocking a slot (US22)."""
     data = request.get_json(silent=True) or request.form
-    day = date.fromisoformat(data.get("date"))
-    hour = int(data.get("hour"))
+    try:
+        day = date.fromisoformat(str(data.get("date") or ""))
+        hour = int(data.get("hour"))
+    except (TypeError, ValueError):
+        return jsonify(error="Invalid date or hour"), 400
     try:
         venues.unblock_single_slot(get_db(), g.user, venue_id, day, hour)
         return jsonify(status="unblocked", venue_id=venue_id, date=day.isoformat(), hour=hour), 200
@@ -266,14 +293,16 @@ def add_pricing_rule_route(venue_id):
         weekday = int(request.form.get("weekday"))
         start_hour = int(request.form.get("start_hour"))
         end_hour = int(request.form.get("end_hour"))
-        price_per_hour = int(request.form.get("price_per_hour").replace(",", "").replace(".", ""))
+        price_per_hour = venues.parse_price(request.form.get("price_per_hour") or "")
+        if price_per_hour is None:
+            raise ValueError("invalid price")
 
         pricing.add_pricing_rule(conn, venue_id, weekday, start_hour, end_hour, price_per_hour)
         flash("Peak pricing rule added successfully!", "success")
+    except (TypeError, ValueError):
+        flash("Please enter valid numbers for weekday, hours, and price.", "error")
     except BusinessRuleError as e:
         flash(e.message, "error")
-    except Exception as e:
-        flash(str(e), "error")
 
     return redirect(f"/owner/venues/{venue_id}/pricing")
 
@@ -292,5 +321,24 @@ def delete_pricing_rule_route(venue_id, rule_id):
 
     return redirect(f"/owner/venues/{venue_id}/pricing")
 
+
+@bp.get("/owner/analytics")
+@login_required("owner")
+def owner_analytics_page():
+    """Owner revenue, booking, and per-venue analytics dashboard (BR14)."""
+    summary = owner_analytics.get_owner_summary(get_db(), g.user["id"])
+    return render_template("owner_analytics.html", summary=summary)
+
+
+@bp.get("/owner/bookings/export.csv")
+@login_required("owner")
+def owner_bookings_export_csv():
+    """Download CSV of all bookings across the owner's venues (BR14)."""
+    csv_data = owner_analytics.export_owner_bookings_csv(get_db(), g.user["id"])
+    return Response(
+        csv_data,
+        mimetype="text/csv; charset=utf-8",
+        headers={"Content-Disposition": "attachment; filename=owner-bookings.csv"},
+    )
 
 

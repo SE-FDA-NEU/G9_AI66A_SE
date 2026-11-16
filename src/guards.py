@@ -17,16 +17,32 @@ def load_user():
     idle for more than 30 minutes (BR8)."""
     g.user = None
     g.session_expired = False
+    g.account_suspended = False
     user_id = session.get("user_id")
     if user_id is None:
         return
     now = datetime.now()
     last_seen = session.get("last_seen")
-    if last_seen and now - datetime.fromisoformat(last_seen) > SESSION_TIMEOUT:
+    if last_seen:
+        try:
+            last_seen_dt = datetime.fromisoformat(last_seen)
+        except (ValueError, TypeError):
+            session.clear()
+            return
+        if now - last_seen_dt > SESSION_TIMEOUT:
+            session.clear()
+            g.session_expired = True
+            return
+    user = get_db().execute("SELECT * FROM user WHERE id = ?", (user_id,)).fetchone()
+    if user is None:
         session.clear()
-        g.session_expired = True
         return
-    g.user = get_db().execute("SELECT * FROM user WHERE id = ?", (user_id,)).fetchone()
+    if user["suspended"]:
+        session.clear()
+        g.user = None
+        g.account_suspended = True
+        return
+    g.user = user
     session["last_seen"] = now.isoformat(timespec="seconds")
 
 
@@ -44,13 +60,18 @@ def login_required(*roles):
         @wraps(view)
         def wrapped(*args, **kwargs):
             if g.user is None:
+                if getattr(g, "account_suspended", False):
+                    if request.path.startswith("/api/"):
+                        raise BusinessRuleError(403, "Your account has been suspended", "BR14")
+                    flash("Your account has been suspended", "error")
+                    return redirect(url_for("auth.login_page"))
                 if request.path.startswith("/api/"):
                     raise BusinessRuleError(401, "Please sign in first", "BR8")
                 if g.session_expired:
                     flash("Your session has expired", "error")              # BR8
                 else:
                     flash("Please sign in to continue", "info")
-                return redirect(url_for("auth.login_page", next=request.path))
+                return redirect(url_for("auth.login_page", next=request.full_path.rstrip("?")))
             if roles and g.user["role"] not in roles:
                 raise BusinessRuleError(403, NO_PERMISSION, "BR14")
             return view(*args, **kwargs)
