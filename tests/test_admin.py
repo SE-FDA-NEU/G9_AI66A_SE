@@ -768,3 +768,204 @@ def test_admin_sql_postgres_translation_smoke():
         # Ensure `user` table references are quoted for Postgres
         if " user " in f" {sql.lower()} ":
             assert '"user"' in translated, f"Unquoted user table in: {translated}"
+
+
+# ---------------------------------------------------------------------------
+# 8. Owner Management & Edit User (GET /admin?tab=owners, /api/admin/owners, POST /admin/users/<id>/edit)
+# ---------------------------------------------------------------------------
+
+def test_admin_owners_tab_and_api_owners_metrics_and_filters(client, db, login):
+    login("admin@example.com")
+
+    # HTML Owners tab renders 200 with all seeded owners and revenue/venue metrics
+    tab_resp = client.get("/admin?tab=owners")
+    assert tab_resp.status_code == 200
+    html = tab_resp.get_data(as_text=True)
+    assert "Nguyen Thi Lan" in html
+    assert "lan.owner@example.com" in html
+    assert "Tran Van Hung" in html
+    assert "Le Hoang Son" in html
+    assert "Thong Nhat Football Pitch" in html
+
+    # JSON API returns owners list with full portfolio metrics
+    api_resp = client.get("/api/admin/owners")
+    assert api_resp.status_code == 200
+    payload = api_resp.get_json()
+    owners = payload["owners"]
+    assert len(owners) == 3
+
+    expected_keys = {
+        "total_venues",
+        "active_venues",
+        "total_bookings",
+        "gross_revenue",
+        "total_refunded",
+        "net_revenue",
+        "venue_names",
+    }
+    for o in owners:
+        assert expected_keys.issubset(o.keys())
+        assert o["gross_revenue"] - o["total_refunded"] == o["net_revenue"]
+
+    lan = next(o for o in owners if o["email"] == "lan.owner@example.com")
+    assert lan["total_venues"] >= 2
+    assert lan["active_venues"] >= 2
+    assert lan["total_bookings"] >= 3
+    assert lan["net_revenue"] > 0
+    assert any(
+        (v["name"] if isinstance(v, dict) else v) == "Thong Nhat Football Pitch"
+        for v in lan["venue_names"]
+    )
+
+    # Filter by ?q=
+    q_resp = client.get("/api/admin/owners?q=Tran+Van+Hung")
+    assert q_resp.status_code == 200
+    q_owners = q_resp.get_json()["owners"]
+    assert len(q_owners) == 1
+    assert q_owners[0]["full_name"] == "Tran Van Hung"
+
+    # Filter by ?status=
+    active_resp = client.get("/api/admin/owners?status=active")
+    assert active_resp.status_code == 200
+    assert len(active_resp.get_json()["owners"]) == 3
+
+    lan_id = _get_user_id(db, "lan.owner@example.com")
+    assert client.post(f"/api/admin/users/{lan_id}/suspend", json={"reason": "Audit"}).status_code == 200
+
+    susp_resp = client.get("/api/admin/owners?status=suspended")
+    assert susp_resp.status_code == 200
+    susp_owners = susp_resp.get_json()["owners"]
+    assert len(susp_owners) == 1
+    assert susp_owners[0]["email"] == "lan.owner@example.com"
+
+
+def test_admin_edit_user_html_updates_profile_password_and_redirects(client, db, login):
+    login("admin@example.com")
+    lan_id = _get_user_id(db, "lan.owner@example.com")
+
+    # Edit owner profile + password from owners tab (return_tab=owners)
+    resp = client.post(
+        f"/admin/users/{lan_id}/edit",
+        data={
+            "full_name": "Nguyen Thi Lan Updated",
+            "email": "lan.updated@example.com",
+            "phone": "0919888777",
+            "password": "NewPassword9",
+            "return_tab": "owners",
+        },
+    )
+    assert resp.status_code == 302
+    assert "/admin?tab=owners" in resp.headers["Location"]
+
+    updated = _get_user(db, "lan.updated@example.com")
+    assert updated is not None
+    assert updated["id"] == lan_id
+    assert updated["full_name"] == "Nguyen Thi Lan Updated"
+    assert updated["phone"] == "0919888777"
+
+    # Edit without password keeps existing password and defaults redirect to accounts tab
+    resp2 = client.post(
+        f"/admin/users/{lan_id}/edit",
+        data={
+            "full_name": "Nguyen Thi Lan Final",
+            "email": "lan.updated@example.com",
+            "phone": "0919888777",
+            "password": "",
+        },
+    )
+    assert resp2.status_code == 302
+    assert "/admin?tab=accounts" in resp2.headers["Location"]
+    assert _get_user(db, "lan.updated@example.com")["full_name"] == "Nguyen Thi Lan Final"
+
+    # Updated owner can sign in with new email and new password
+    client.post("/logout")
+    signin = login("lan.updated@example.com", "NewPassword9")
+    assert signin.status_code == 302
+    assert signin.headers["Location"].endswith("/owner/venues")
+
+
+def test_api_admin_edit_user_validation_and_access_control(client, db, login):
+    lan_id = _get_user_id(db, "lan.owner@example.com")
+
+    # Unauthenticated -> 401
+    assert client.get("/api/admin/owners").status_code == 401
+    assert client.post(f"/api/admin/users/{lan_id}/edit", json={"full_name": "X"}).status_code == 401
+
+    # Non-admin (customer & owner) -> 403
+    for email in ("minh@example.com", "lan.owner@example.com"):
+        login(email)
+        assert client.get("/api/admin/owners").status_code == 403
+        assert client.post(f"/api/admin/users/{lan_id}/edit", json={"full_name": "X"}).status_code == 403
+        assert client.post(f"/admin/users/{lan_id}/edit", data={"full_name": "X"}).status_code == 403
+
+    login("admin@example.com")
+
+    # Unknown user -> 404
+    r_404 = client.post(
+        "/api/admin/users/99999/edit",
+        json={
+            "full_name": "Ghost",
+            "email": "ghost@example.com",
+            "phone": "0911222333",
+        },
+    )
+    assert r_404.status_code == 404
+
+    # BR1: duplicate email -> 409
+    r_dup_email = client.post(
+        f"/api/admin/users/{lan_id}/edit",
+        json={
+            "full_name": "Nguyen Thi Lan",
+            "email": "minh@example.com",
+            "phone": "0912000111",
+        },
+    )
+    assert r_dup_email.status_code == 409
+
+    # BR2: weak password -> 400
+    r_weak_pw = client.post(
+        f"/api/admin/users/{lan_id}/edit",
+        json={
+            "full_name": "Nguyen Thi Lan",
+            "email": "lan.owner@example.com",
+            "phone": "0912000111",
+            "password": "short",
+        },
+    )
+    assert r_weak_pw.status_code == 400
+
+    # BR3: invalid phone -> 400
+    r_bad_phone = client.post(
+        f"/api/admin/users/{lan_id}/edit",
+        json={
+            "full_name": "Nguyen Thi Lan",
+            "email": "lan.owner@example.com",
+            "phone": "12345",
+        },
+    )
+    assert r_bad_phone.status_code == 400
+
+    # BR3: duplicate phone -> 409
+    r_dup_phone = client.post(
+        f"/api/admin/users/{lan_id}/edit",
+        json={
+            "full_name": "Nguyen Thi Lan",
+            "email": "lan.owner@example.com",
+            "phone": "0901234567",  # Minh's phone
+        },
+    )
+    assert r_dup_phone.status_code == 409
+
+    # Valid API update -> 200
+    r_ok = client.post(
+        f"/api/admin/users/{lan_id}/edit",
+        json={
+            "full_name": "Lan API Edited",
+            "email": "lan.api@example.com",
+            "phone": "0912000999",
+        },
+    )
+    assert r_ok.status_code == 200
+    assert r_ok.get_json()["ok"] is True
+    assert _get_user(db, "lan.api@example.com")["full_name"] == "Lan API Edited"
+

@@ -308,7 +308,7 @@ def test_my_bookings_marks_imminent_booking_as_starting_soon(db):
 
     # Imminent booking should display disabled Non-cancellable (<2h) button
     assert "Non-cancellable (&lt;2h)" in html or "Non-cancellable (<2h)" in html
-    assert "Cannot cancel less than 2 hours before match start time (BR15)" in html
+    assert "Cannot cancel less than 2 hours before match start time" in html
 
 
 def test_my_bookings_marks_in_progress_booking(db):

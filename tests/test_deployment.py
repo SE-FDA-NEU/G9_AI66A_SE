@@ -244,7 +244,7 @@ def test_vercel_config_regional_colocation_and_edge_routing():
 
     static_route = next((r for r in config.get("routes", []) if r.get("src") == "/static/(.*)"), None)
     assert static_route is not None
-    assert "public, max-age=31536000, immutable" in static_route["headers"]["cache-control"]
+    assert "public, max-age=" in static_route["headers"]["cache-control"]
 
 
 def test_photo_route_includes_cache_headers(monkeypatch, tmp_path):

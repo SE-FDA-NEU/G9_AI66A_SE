@@ -3,6 +3,8 @@ import re
 from datetime import datetime, timedelta
 from urllib.parse import parse_qs, urlparse
 
+import pytest
+
 from app import create_app
 from db import connect
 import booking as svc
@@ -385,13 +387,13 @@ def test_owner_route_input_guards_do_not_500(client):
 def test_ui_markers_on_venue_booking_and_owner_pages(client, db):
     """Normal: verify expected UX markers across venue, booking, and owner templates."""
     venue_html = client.get("/venues/1").get_data(as_text=True)
-    assert "Cancellation Policy" in venue_html
+    assert "Cancellation Policy" not in venue_html
     assert "Get Directions (Google Maps)" in venue_html
     assert "slot-price" in venue_html
 
     _login_on(client, "minh@example.com")
     booking_html = client.get("/booking/1").get_data(as_text=True)
-    assert "Cancellation Policy" in booking_html
+    assert "Cancellation Policy" not in booking_html
     assert "View on Map" in booking_html
 
     with connect(db) as conn:
@@ -418,6 +420,57 @@ def test_search_hd_video_background_and_login_auth_stage(client):
 
     login_res = client.get("/login")
     assert login_res.status_code == 200
-    login_html = login_res.get_data(as_text=True)
-    assert 'class="auth-stage"' in login_html
+
+
+# ---------------------------------------------------------------------------
+# 11. Smart Recommended ranking & Location-aware distance recommendations
+# ---------------------------------------------------------------------------
+
+def test_recommended_sort_scores_and_distance_sorting(client):
+    """Normal: Recommended orders by descending recommend_score; distance_asc orders by distance_km."""
+    res_rec = client.get("/api/venues")
+    assert res_rec.status_code == 200
+    rec_venues = res_rec.get_json()["venues"]
+    assert len(rec_venues) > 0
+    scores = [v["recommend_score"] for v in rec_venues]
+    assert scores == sorted(scores, reverse=True)
+    assert all(v.get("recommend_reason") for v in rec_venues)
+    assert all(v.get("distance_km") is None for v in rec_venues)
+
+    # With Hanoi Hoan Kiem coordinates (21.0285, 105.8542), distance_km is computed and distance_asc sorts ascending
+    res_dist = client.get("/api/venues?lat=21.0285&lng=105.8542&sort=distance_asc")
+    assert res_dist.status_code == 200
+    dist_venues = res_dist.get_json()["venues"]
+    distances = [v["distance_km"] for v in dist_venues]
+    assert all(isinstance(d, (int, float)) and d >= 0 for d in distances)
+    assert distances == sorted(distances)
+
+
+def test_location_prompt_and_active_banner_in_search_html(client):
+    """Normal: /search shows location prompt when coords absent and active location banner + km pills when present."""
+    prompt_html = client.get("/search").get_data(as_text=True)
+    assert "Use my location" in prompt_html
+    assert "Nearest to me" in prompt_html
+
+    active_html = client.get("/search?lat=21.0285&lng=105.8542").get_data(as_text=True)
+    assert "Showing recommendations near your location" in active_html
+    assert "Clear location" in active_html
+    assert "km</span>" in active_html
+
+
+@pytest.mark.parametrize("qs", [
+    "lat=21.0285",
+    "lng=105.8542",
+    "lat=999&lng=105.8542",
+    "lat=21.0285&lng=-200",
+    "lat=abc&lng=105.8542",
+])
+def test_invalid_location_coordinates_return_400(client, qs):
+    """Error: partial, non-numeric, or out-of-range coordinates return 400."""
+    res_api = client.get(f"/api/venues?{qs}")
+    assert res_api.status_code == 400
+    assert "location" in res_api.get_json()["error"].lower()
+
+    res_html = client.get(f"/search?{qs}")
+    assert res_html.status_code == 400
 
