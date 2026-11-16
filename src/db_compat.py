@@ -18,7 +18,7 @@ class CompatRow:
     def _normalize(val):
         from datetime import date, datetime
         if isinstance(val, datetime):
-            return val.strftime("%Y-%m-%d %H:%M:%S") if val.second else val.strftime("%Y-%m-%d %H:%M")
+            return val.strftime("%Y-%m-%d %H:%M") if val.second == 0 else val.strftime("%Y-%m-%d %H:%M:%S")
         if isinstance(val, date):
             return val.isoformat()
         return val
@@ -106,9 +106,13 @@ class CompatCursor:
             flags=re.IGNORECASE,
         )
 
-        # Convert ? placeholders to %s
+        # Convert ? placeholders to %s outside single-quoted string literals
         if "?" in translated and params is not None and not isinstance(params, dict):
-            translated = translated.replace("?", "%s")
+            translated = re.sub(
+                r"'(?:''|[^'])*'|(\?)",
+                lambda m: "%s" if m.group(1) else m.group(0),
+                translated,
+            )
 
         # Convert :name placeholders to %(name)s (with negative lookbehind so ::typecasts are preserved)
         if isinstance(params, dict):

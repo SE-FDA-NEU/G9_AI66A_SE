@@ -23,7 +23,7 @@ CREATE TABLE user (
     email               TEXT    NOT NULL UNIQUE COLLATE NOCASE,              -- BR1
     password_hash       TEXT    NOT NULL,                                    -- BR2 checked before hashing
     full_name           TEXT    NOT NULL,
-    phone               TEXT    NOT NULL
+    phone               TEXT    NOT NULL UNIQUE
                         CHECK (length(phone) = 10 AND substr(phone, 1, 1) = '0'
                                AND phone NOT GLOB '*[^0-9]*'),               -- BR3
     role                TEXT    NOT NULL DEFAULT 'customer'
@@ -31,6 +31,9 @@ CREATE TABLE user (
     email_verified_at   TEXT,                                                -- BR4: NULL = cannot book
     failed_login_count  INTEGER NOT NULL DEFAULT 0 CHECK (failed_login_count >= 0), -- BR5
     locked_until        TEXT,                                                -- BR5
+    suspended           INTEGER NOT NULL DEFAULT 0 CHECK (suspended IN (0, 1)), -- BR14
+    suspended_at        TEXT,
+    suspended_reason    TEXT,
     created_at          TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -113,9 +116,13 @@ CREATE TABLE review (
     booking_id    INTEGER NOT NULL UNIQUE REFERENCES booking(id),            -- BR18 one per booking
     rating        INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),           -- BR18
     comment       TEXT    CHECK (comment IS NULL OR length(comment) <= 1000),-- BR18
-    report_count  INTEGER NOT NULL DEFAULT 0 CHECK (report_count >= 0),      -- BR19
-    hidden        INTEGER NOT NULL DEFAULT 0 CHECK (hidden IN (0, 1)),       -- BR19
-    created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
+    report_count      INTEGER NOT NULL DEFAULT 0 CHECK (report_count >= 0),      -- BR19
+    hidden            INTEGER NOT NULL DEFAULT 0 CHECK (hidden IN (0, 1)),       -- BR19
+    moderation_status TEXT    NOT NULL DEFAULT 'active'
+                      CHECK (moderation_status IN ('active', 'pending', 'approved', 'rejected')),
+    moderated_at      TEXT,
+    moderated_by      INTEGER REFERENCES user(id),
+    created_at        TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE INDEX idx_venue_sport_area ON venue (sport, area);                    -- BR9 search

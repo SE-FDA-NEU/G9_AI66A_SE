@@ -42,16 +42,17 @@ def _postgres_connect(url):
         "keepalives_count": 3,
     }
     try:
-        conn = psycopg2.connect(
-            url,
-            options=f"-c search_path={POSTGRES_SCHEMA},public",
-            **kwargs,
-        )
+        conn = psycopg2.connect(url, **kwargs)
     except TypeError:
-        # Fallback for unit tests where connect() mock lacks options or keepalive arguments
+        # Fallback for unit tests where connect() mock lacks keepalive arguments
         conn = psycopg2.connect(url, cursor_factory=psycopg2.extras.RealDictCursor)
 
     psycopg2.extras.register_uuid()
+    # Neon's PgBouncer pooler rejects startup `options=-c search_path=...`, so set it
+    # after connecting and commit so subsequent rollbacks do not revert the session setting.
+    with conn.cursor() as cursor:
+        cursor.execute(f'SET search_path TO "{POSTGRES_SCHEMA}", public')
+    conn.commit()
     return CompatConnection(conn, "postgres")
 
 

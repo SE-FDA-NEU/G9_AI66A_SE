@@ -27,18 +27,22 @@ CREATE TABLE IF NOT EXISTS "user" (
     email               TEXT    NOT NULL UNIQUE,
     password_hash       TEXT    NOT NULL,
     full_name           TEXT    NOT NULL,
-    phone               TEXT    NOT NULL
+    phone               TEXT    NOT NULL UNIQUE
                         CHECK (length(phone) = 10 AND substring(phone, 1, 1) = '0'
                                AND phone ~ '^[0-9]+$'),
     role                user_role NOT NULL DEFAULT 'customer',
     email_verified_at   TIMESTAMP,
     failed_login_count  INTEGER NOT NULL DEFAULT 0 CHECK (failed_login_count >= 0),
     locked_until        TIMESTAMP,
+    suspended           INTEGER NOT NULL DEFAULT 0 CHECK (suspended IN (0, 1)),
+    suspended_at        TIMESTAMP,
+    suspended_reason    TEXT,
     created_at          TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- Case-insensitive email uniqueness (matches SQLite NOCASE).
+-- Case-insensitive email uniqueness (matches SQLite NOCASE) and unique phone.
 CREATE UNIQUE INDEX IF NOT EXISTS idx_user_email_lower ON "user" (lower(email));
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_phone ON "user" (phone);
 
 CREATE TABLE IF NOT EXISTS venue (
     id            SERIAL PRIMARY KEY,
@@ -111,9 +115,13 @@ CREATE TABLE IF NOT EXISTS review (
     booking_id    INTEGER NOT NULL UNIQUE REFERENCES booking(id),
     rating        INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
     comment       TEXT    CHECK (comment IS NULL OR length(comment) <= 1000),
-    report_count  INTEGER NOT NULL DEFAULT 0 CHECK (report_count >= 0),
-    hidden        INTEGER NOT NULL DEFAULT 0 CHECK (hidden IN (0, 1)),
-    created_at    TIMESTAMP NOT NULL DEFAULT NOW()
+    report_count      INTEGER NOT NULL DEFAULT 0 CHECK (report_count >= 0),
+    hidden            INTEGER NOT NULL DEFAULT 0 CHECK (hidden IN (0, 1)),
+    moderation_status TEXT    NOT NULL DEFAULT 'active'
+                      CHECK (moderation_status IN ('active', 'pending', 'approved', 'rejected')),
+    moderated_at      TIMESTAMP,
+    moderated_by      INTEGER REFERENCES "user"(id),
+    created_at        TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_venue_sport_area ON venue (sport, area);
