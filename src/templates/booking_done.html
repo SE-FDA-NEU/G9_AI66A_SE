@@ -133,19 +133,6 @@
         <div><p class="ticket-label">Time</p><strong>{{ booking.start_at[11:] }}–{{ booking.end_at[11:] }}</strong></div>
       </div>
 
-      <div class="ticket-map-section no-print" style="margin-top: 16px;">
-        <iframe
-          title="Google Map for {{ booking.venue_name }}"
-          src="https://maps.google.com/maps?q={{ ticket_gmap_q | urlencode }}&amp;t=&amp;z=16&amp;ie=UTF8&amp;iwloc=&amp;output=embed"
-          width="100%"
-          height="220"
-          style="border:0; border-radius:10px; display:block;"
-          loading="lazy"
-          referrerpolicy="no-referrer-when-downgrade"
-          allowfullscreen>
-        </iframe>
-      </div>
-
       <h2 style="margin: 22px 0 4px; font-size: 17px;">Price breakdown</h2>
       <div class="ticket-table-wrap">
         <table>
@@ -159,9 +146,9 @@
         </table>
       </div>
       {% if booking.payment_status in ('paid', 'refunded', 'partially_refunded') %}
-      <div class="ticket-note">Payment confirmed via Online QR. Cancellations trigger automatic instant refunds in accordance with BR15.</div>
+      <div class="ticket-note">Payment confirmed via Online QR. Cancellations trigger automatic instant refunds.</div>
       {% else %}
-      <div class="ticket-note">This demo does not collect online payments. Please confirm payment arrangements with the venue.</div>
+      <div class="ticket-note">Payment pending or settled directly with the venue.</div>
       {% endif %}
       <div class="ticket-actions">
         <a href="/my-bookings">View my bookings</a>

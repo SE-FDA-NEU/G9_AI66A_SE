@@ -91,7 +91,7 @@
     <label>Start time<select name="start_hour" id="booking-start-hour">
       {% for h in free %}<option value="{{ h }}" {% if start == h|string %}selected{% endif %}>{{ '%02d:00' % h }}</option>{% endfor %}
     </select></label>
-    <label>Duration<select name="hours" id="booking-hours">
+    <label>Playing hours<select name="hours" id="booking-hours">
       {% for n in range(1, max_hours + 1) %}<option value="{{ n }}" {% if hours == n|string %}selected{% endif %}>{{ n }} {{ "hour" if n == 1 else "hours" }}</option>{% endfor %}
     </select></label>
     {% endif %}
@@ -146,7 +146,7 @@
       <input type="hidden" name="date" id="confirm-date" value="{{ day.isoformat() }}">
       <input type="hidden" name="start_hour" id="confirm-start-hour" value="{{ start }}">
       <input type="hidden" name="hours" id="confirm-hours" value="{{ hours }}">
-      <div class="payment-requirement-note">Online QR payment is required to confirm your slot. Cancellations trigger automatic instant refunds (BR15).</div>
+      <div class="payment-requirement-note">Online QR payment is required to confirm your court. Cancellations trigger automatic instant refunds.</div>
       <button type="submit">Proceed to Online QR Payment &rarr;</button>
     </form>
   </section>

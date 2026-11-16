@@ -150,7 +150,7 @@ class CompatCursor:
         if re.match(r"\s*INSERT", translated, re.IGNORECASE):
             if self._backend == "postgres":
                 row = self._cursor.fetchone() if self._cursor.description is not None else None
-                self.lastrowid = row["id"] if isinstance(row, dict) else row[0] if row else None
+                self.lastrowid = row.get("id") if isinstance(row, dict) else row[0] if row else None
             else:
                 self.lastrowid = self._cursor.lastrowid
 

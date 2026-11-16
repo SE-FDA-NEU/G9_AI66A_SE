@@ -18,10 +18,12 @@ _QR_SIZE = 25
 
 def ensure_payment_table(conn):
     """Create the payment_session table if it does not already exist."""
+    is_pg = getattr(conn, "_backend", "sqlite") == "postgres"
+    id_col = "id SERIAL,\n            " if is_pg else ""
     conn.execute(
-        """
+        f"""
         CREATE TABLE IF NOT EXISTS payment_session (
-            token TEXT PRIMARY KEY,
+            {id_col}token TEXT PRIMARY KEY,
             user_id INTEGER NOT NULL,
             venue_id INTEGER NOT NULL,
             booking_date TEXT NOT NULL,
@@ -39,6 +41,8 @@ def ensure_payment_table(conn):
         )
         """
     )
+    if is_pg:
+        conn.execute("ALTER TABLE payment_session ADD COLUMN IF NOT EXISTS id SERIAL")
 
 
 def _draw_finder(matrix, reserved, top, left):
