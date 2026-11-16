@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block title %}Owner Bookings{% endblock %}
 {% block content %}
-<div class="dashboard-container" style="max-width: 1100px; margin: 0 auto; padding: 12px 0;">
-  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 16px;">
-    <h1 style="margin: 0; font-size: 32px; font-weight: 800;">Bookings</h1>
+<div class="owner-container">
+  <div class="owner-header-bar">
+    <h1 style="margin: 0;">Bookings</h1>
     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
       <a href="/owner/venues" class="button secondary" style="font-weight: 700;">My Venues</a>
       <a href="/owner/analytics" class="button secondary" style="font-weight: 700;">Analytics</a>
@@ -12,16 +12,16 @@
   </div>
 
   <!-- Filter toolbar -->
-  <div class="card" style="margin-bottom: 20px; padding: 16px 20px; border-radius: 12px;">
-    <form method="get" action="/owner/bookings" style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end;">
-      <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700;">
+  <div class="card" style="padding: 18px 22px; border-radius: 12px;">
+    <form method="get" action="/owner/bookings" style="display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;">
+      <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; min-width: 180px;">
         Date
-        <input type="date" name="date" value="{{ date_str }}" onchange="this.form.submit()" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); font-weight: 600;">
+        <input type="date" name="date" value="{{ date_str }}" onchange="this.form.submit()" style="height: 44px; min-height: 44px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--border-color); font-weight: 600;">
       </label>
 
-      <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700;">
+      <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; min-width: 240px;">
         Venue
-        <select name="venue_id" onchange="this.form.submit()" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); font-weight: 600;">
+        <select name="venue_id" onchange="this.form.submit()" style="height: 44px; min-height: 44px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--border-color); font-weight: 600;">
           <option value="">All Venues</option>
           {% for v in my_venues %}
           <option value="{{ v.id }}" {% if venue_id == v.id %}selected{% endif %}>{{ v.name }}</option>
@@ -29,7 +29,7 @@
         </select>
       </label>
 
-      <button type="submit" class="button" style="font-weight: 700; height: 38px;">View Schedule</button>
+      <button type="submit" class="button" style="font-weight: 700; height: 44px; min-height: 44px;">View Schedule</button>
     </form>
   </div>
 

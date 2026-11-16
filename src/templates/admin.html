@@ -1,18 +1,489 @@
 {% extends "base.html" %}
 {% block title %}Administration{% endblock %}
 {% block content %}
+{% set active_tab = active_tab|default(request.args.get('tab', 'overview')) %}
+{% set s = stats|default({}) %}
+{% set sport_list = sports|default(['Football', 'Badminton', 'Tennis', 'Pickleball']) %}
+{% set area_list = areas|default(['Cau Giay', 'Ba Dinh', 'Dong Da', 'Hai Ba Trung', 'Nam Tu Liem', 'Hoan Kiem', 'Tay Ho', 'Thanh Xuan']) %}
+{% set current_uid = current_user_id|default(g.user.id if g.user else none) %}
+
 <div class="admin-container">
   <div class="admin-header-bar">
     <div>
       <h1>Administration</h1>
-      <p class="subtitle">Community review moderation.</p>
+      <p class="subtitle">Platform analytics, owner onboarding, venue oversight, and review moderation.</p>
     </div>
     <span class="admin-role-pill">Administrator</span>
   </div>
 
-  <section class="card admin-note-card">
-    <h2>Review moderation</h2>
-    <p>Reviews are hidden from public venue pages after receiving three reports. This demo does not provide a manual moderation queue.</p>
+  <nav class="admin-tabs" aria-label="Administration sections">
+    <a href="/admin?tab=overview" class="admin-tab {% if active_tab == 'overview' %}active{% endif %}" {% if active_tab == 'overview' %}aria-current="page"{% endif %}>
+      Overview &amp; Analytics
+    </a>
+    <a href="/admin?tab=venues" class="admin-tab {% if active_tab == 'venues' %}active{% endif %}" {% if active_tab == 'venues' %}aria-current="page"{% endif %}>
+      Venues Performance
+    </a>
+    <a href="/admin?tab=accounts" class="admin-tab {% if active_tab == 'accounts' %}active{% endif %}" {% if active_tab == 'accounts' %}aria-current="page"{% endif %}>
+      Accounts &amp; Owner Onboarding
+    </a>
+    <a href="/admin?tab=moderation" class="admin-tab {% if active_tab == 'moderation' %}active{% endif %}" {% if active_tab == 'moderation' %}aria-current="page"{% endif %}>
+      Review Moderation (BR19)
+      {% if s.get('pending_moderation_count', 0) > 0 %}
+        <span class="tab-badge">{{ s.get('pending_moderation_count', 0) }}</span>
+      {% endif %}
+    </a>
+  </nav>
+
+  {% if active_tab == 'overview' %}
+  <section aria-label="Overview and Analytics">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Users</div>
+        <div class="stat-value">{{ s.get('total_users', 0) }}</div>
+        <div class="stat-meta">{{ s.get('owners_count', 0) }} owners · {{ s.get('customers_count', 0) }} customers · {{ s.get('suspended_users_count', 0) }} suspended</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Active Venues</div>
+        <div class="stat-value">{{ s.get('active_venues_count', 0) }}</div>
+        <div class="stat-meta">{{ s.get('inactive_venues_count', 0) }} inactive · {{ s.get('venues_with_zero_bookings', 0) }} zero-booking</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Bookings</div>
+        <div class="stat-value">{{ s.get('total_bookings', 0) }}</div>
+        <div class="stat-meta">{{ s.get('confirmed_bookings', 0) }} confirmed · {{ s.get('completed_bookings', 0) }} completed · {{ s.get('cancelled_bookings', 0) }} cancelled ({{ s.get('cancellation_rate', 0) }}% cancel rate)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Net Revenue</div>
+        <div class="stat-value">{{ "{:,}".format(s.get('net_revenue', 0)|int) }} VND</div>
+        <div class="stat-meta">Gross {{ "{:,}".format(s.get('gross_revenue', 0)|int) }} · Refunded {{ "{:,}".format(s.get('total_refunded', 0)|int) }} VND</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Average Rating</div>
+        <div class="stat-value">{% if s.get('avg_rating') is not none %}★ {{ "%.1f"|format(s.get('avg_rating')|float) }}{% else %}—{% endif %}</div>
+        <div class="stat-meta">{{ s.get('total_reviews', 0) }} total reviews</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Moderation Queue</div>
+        <div class="stat-value">{{ s.get('pending_moderation_count', 0) }}</div>
+        <div class="stat-meta">{{ s.get('hidden_reviews_count', 0) }} pending hidden · {{ s.get('reported_reviews_count', 0) }} reported</div>
+      </div>
+    </div>
+
+    <div class="admin-grid-2">
+      <div class="card admin-panel">
+        <div class="admin-panel-head">
+          <h2>Revenue &amp; Bookings by Sport</h2>
+        </div>
+        {% if sport_breakdown %}
+        <div class="table-responsive-wrapper">
+          <table class="owner-table admin-compact-table">
+            <thead>
+              <tr>
+                <th>Sport</th>
+                <th class="num">Venues</th>
+                <th class="num">Bookings</th>
+                <th class="num">Net Revenue (VND)</th>
+                <th>Share</th>
+                <th class="num">Rating</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in sport_breakdown %}
+              <tr>
+                <td><span class="sport-badge-pill">{{ row.sport }}</span></td>
+                <td class="num">{{ row.venue_count }}</td>
+                <td class="num">{{ row.booking_count }}</td>
+                <td class="num">{{ "{:,}".format(row.net_revenue|default(0)|int) }}</td>
+                <td>
+                  <div class="share-cell">
+                    <div class="progress-track" aria-hidden="true">
+                      <div class="progress-fill" style="width: {{ [row.revenue_share_pct|default(0)|float, 100]|min }}%;"></div>
+                    </div>
+                    <span class="share-pct">{{ row.revenue_share_pct|default(0) }}%</span>
+                  </div>
+                </td>
+                <td class="num">{% if row.avg_rating is not none %}★ {{ "%.1f"|format(row.avg_rating|float) }}{% else %}—{% endif %}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="muted">No sport breakdown data available yet.</p>
+        {% endif %}
+      </div>
+
+      <div class="card admin-panel">
+        <div class="admin-panel-head">
+          <h2>Coverage by Hanoi Area</h2>
+        </div>
+        {% if area_breakdown %}
+        {% set max_area_bookings = (area_breakdown|map(attribute='booking_count')|max)|default(1) %}
+        <div class="table-responsive-wrapper">
+          <table class="owner-table admin-compact-table">
+            <thead>
+              <tr>
+                <th>Area</th>
+                <th class="num">Venues</th>
+                <th class="num">Bookings</th>
+                <th class="num">Net Revenue (VND)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in area_breakdown %}
+              {% set area_pct = ((row.booking_count / max_area_bookings) * 100)|round(1) if max_area_bookings > 0 else 0 %}
+              <tr>
+                <td>
+                  <span class="area-badge-pill">{{ row.area }}</span>
+                  <div class="progress-track progress-track-sm" aria-hidden="true">
+                    <div class="progress-fill" style="width: {{ [area_pct, 100]|min }}%;"></div>
+                  </div>
+                </td>
+                <td class="num">{{ row.venue_count }}</td>
+                <td class="num">{{ row.booking_count }}</td>
+                <td class="num">{{ "{:,}".format(row.net_revenue|default(0)|int) }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="muted">No area coverage data available yet.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card admin-panel">
+      <div class="admin-panel-head">
+        <h2>System Operational Insights</h2>
+      </div>
+      <ul class="admin-insight-list">
+        <li>
+          <div>
+            <strong>{{ s.get('venues_with_zero_bookings', 0) }}</strong>
+            <span>venues currently have zero bookings</span>
+          </div>
+          <a href="/admin?tab=venues" class="insight-link">View venues &rarr;</a>
+        </li>
+        <li>
+          <div>
+            <strong>{{ s.get('pending_moderation_count', 0) }}</strong>
+            <span>reviews pending BR19 moderation</span>
+          </div>
+          <a href="/admin?tab=moderation&amp;mod_status=pending" class="insight-link">Open moderation queue &rarr;</a>
+        </li>
+        <li>
+          <div>
+            <strong>{{ s.get('unverified_users_count', 0) }}</strong>
+            <span>user accounts have not verified their email</span>
+          </div>
+          <a href="/admin?tab=accounts&amp;status=unverified" class="insight-link">Review accounts &rarr;</a>
+        </li>
+      </ul>
+    </div>
   </section>
+
+  {% elif active_tab == 'venues' %}
+  <section aria-label="Venues Performance">
+    <form method="get" action="/admin" class="card admin-filter-bar">
+      <input type="hidden" name="tab" value="venues" />
+      <div class="filter-field">
+        <label for="venue-filter-sport">Sport</label>
+        <select id="venue-filter-sport" name="sport">
+          <option value="">All sports</option>
+          {% for sp in sport_list %}
+          <option value="{{ sp }}" {% if request.args.get('sport') == sp %}selected{% endif %}>{{ sp }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="venue-filter-area">Area</label>
+        <select id="venue-filter-area" name="area">
+          <option value="">All areas</option>
+          {% for ar in area_list %}
+          <option value="{{ ar }}" {% if request.args.get('area') == ar %}selected{% endif %}>{{ ar }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="filter-field filter-grow">
+        <label for="venue-filter-q">Search</label>
+        <input id="venue-filter-q" type="search" name="q" value="{{ request.args.get('q', '') }}" placeholder="Venue or owner name..." />
+      </div>
+      <div class="filter-actions-inline">
+        <button type="submit" class="button">Apply Filters</button>
+        <a href="/admin?tab=venues" class="button btn-secondary">Reset</a>
+      </div>
+    </form>
+
+    {% if venue_analytics %}
+    <div class="table-responsive-wrapper">
+      <table class="owner-table">
+        <thead>
+          <tr>
+            <th>Venue</th>
+            <th>Owner</th>
+            <th>Sport &amp; Area</th>
+            <th class="num">Bookings</th>
+            <th class="num">Hours Booked</th>
+            <th class="num">Net Revenue (VND)</th>
+            <th class="num">Rating</th>
+            <th>Status</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in venue_analytics %}
+          <tr>
+            <td>
+              {% if v.active %}
+                <a href="/venues/{{ v.id }}" class="venue-title-link">{{ v.name }}</a>
+              {% else %}
+                <span>{{ v.name }}</span>
+              {% endif %}
+            </td>
+            <td>{{ v.owner_name }}</td>
+            <td>
+              <div class="badge-stack">
+                <span class="sport-badge-pill">{{ v.sport }}</span>
+                <span class="area-badge-pill">{{ v.area }}</span>
+              </div>
+            </td>
+            <td class="num">
+              <strong>{{ v.total_bookings }}</strong>
+              <div class="table-submeta">{{ v.confirmed_count }}C / {{ v.completed_count }}D / {{ v.cancelled_count }}X</div>
+            </td>
+            <td class="num">{{ v.total_hours }} h</td>
+            <td class="num">{{ "{:,}".format(v.net_revenue|default(0)|int) }}</td>
+            <td class="num">{% if v.avg_rating is not none %}★ {{ "%.1f"|format(v.avg_rating|float) }}{% else %}—{% endif %} <span class="muted">({{ v.review_count|default(0) }})</span></td>
+            <td>
+              {% if v.active %}
+                <span class="status-pill status-active">Active</span>
+              {% else %}
+                <span class="status-pill status-rejected">Inactive</span>
+              {% endif %}
+            </td>
+            <td style="text-align: right;">
+              <form method="post" action="/admin/venues/{{ v.id }}/toggle" class="inline-action-form inline-right">
+                <button type="submit" class="button btn-sm {% if v.active %}btn-warning-outline{% else %}btn-success-outline{% endif %}">
+                  {{ 'Pause' if v.active else 'Activate' }}
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="card admin-empty-state">
+      <p class="muted">No venues match the current filters.</p>
+    </div>
+    {% endif %}
+  </section>
+
+  {% elif active_tab == 'accounts' %}
+  <section aria-label="Accounts and Owner Onboarding">
+    <div class="card admin-panel">
+      <div class="admin-panel-head">
+        <h2>Create Account</h2>
+        <p class="subtitle">Onboard a new venue owner, customer, or administrator account.</p>
+      </div>
+      <form method="post" action="/admin/users/create" class="admin-form-grid">
+        <div class="form-group">
+          <label for="create-full-name">Full Name</label>
+          <input id="create-full-name" type="text" name="full_name" required placeholder="Nguyen Van A" />
+        </div>
+        <div class="form-group">
+          <label for="create-email">Email Address</label>
+          <input id="create-email" type="email" name="email" required placeholder="owner@example.com" />
+        </div>
+        <div class="form-group">
+          <label for="create-phone">Phone Number</label>
+          <input id="create-phone" type="tel" name="phone" required pattern="0[0-9]{9}" placeholder="0912345678" />
+        </div>
+        <div class="form-group">
+          <label for="create-password">Password</label>
+          <input id="create-password" type="password" name="password" required minlength="8" placeholder="Min 8 chars, letter + digit" />
+        </div>
+        <div class="form-group">
+          <label for="create-role">Role</label>
+          <select id="create-role" name="role">
+            <option value="owner" selected>Owner</option>
+            <option value="customer">Customer</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="form-group form-checkbox-group">
+          <label for="create-auto-verify" class="checkbox-label">
+            <input type="hidden" name="auto_verify" value="0" />
+            <input id="create-auto-verify" type="checkbox" name="auto_verify" value="1" checked />
+            <span>Mark email as verified immediately</span>
+          </label>
+        </div>
+        <div class="form-submit-row">
+          <button type="submit" class="button">Create Account</button>
+        </div>
+      </form>
+    </div>
+
+    <form method="get" action="/admin" class="card admin-filter-bar">
+      <input type="hidden" name="tab" value="accounts" />
+      <div class="filter-field">
+        <label for="acc-filter-role">Role</label>
+        <select id="acc-filter-role" name="role">
+          <option value="">All roles</option>
+          <option value="owner" {% if request.args.get('role') == 'owner' %}selected{% endif %}>Owner</option>
+          <option value="customer" {% if request.args.get('role') == 'customer' %}selected{% endif %}>Customer</option>
+          <option value="admin" {% if request.args.get('role') == 'admin' %}selected{% endif %}>Admin</option>
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="acc-filter-status">Status</label>
+        <select id="acc-filter-status" name="status">
+          <option value="">All statuses</option>
+          <option value="active" {% if request.args.get('status') == 'active' %}selected{% endif %}>Active</option>
+          <option value="suspended" {% if request.args.get('status') == 'suspended' %}selected{% endif %}>Suspended</option>
+          <option value="unverified" {% if request.args.get('status') == 'unverified' %}selected{% endif %}>Unverified</option>
+        </select>
+      </div>
+      <div class="filter-field filter-grow">
+        <label for="acc-filter-q">Search</label>
+        <input id="acc-filter-q" type="search" name="q" value="{{ request.args.get('q', '') }}" placeholder="Name, email, or phone..." />
+      </div>
+      <div class="filter-actions-inline">
+        <button type="submit" class="button">Apply Filters</button>
+        <a href="/admin?tab=accounts" class="button btn-secondary">Reset</a>
+      </div>
+    </form>
+
+    {% if users %}
+    <div class="table-responsive-wrapper">
+      <table class="owner-table">
+        <thead>
+          <tr>
+            <th>Account</th>
+            <th>Phone</th>
+            <th>Role</th>
+            <th>Activity</th>
+            <th>Status</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td>
+              <div class="account-name">{{ u.full_name }}</div>
+              <div class="table-submeta">{{ u.email }}</div>
+            </td>
+            <td class="hour-tag">{{ u.phone }}</td>
+            <td>
+              <span class="role-badge role-{{ u.role }}">{{ u.role|capitalize }}</span>
+            </td>
+            <td>
+              <span>{{ u.venue_count|default(0) }} venues · {{ u.booking_count|default(0) }} bookings</span>
+            </td>
+            <td>
+              {% if u.suspended %}
+                <span class="status-pill status-suspended">Suspended</span>
+                {% if u.suspended_reason %}
+                  <div class="table-submeta">{{ u.suspended_reason }}</div>
+                {% endif %}
+              {% elif not u.email_verified_at %}
+                <span class="status-pill status-pending">Unverified</span>
+              {% else %}
+                <span class="status-pill status-active">Active</span>
+              {% endif %}
+            </td>
+            <td style="text-align: right;">
+              {% if u.id == current_uid %}
+                <span class="muted">Current session</span>
+              {% elif u.suspended %}
+                <form method="post" action="/admin/users/{{ u.id }}/unsuspend" class="inline-action-form inline-right">
+                  <button type="submit" class="button btn-sm btn-success-outline">Unsuspend</button>
+                </form>
+              {% else %}
+                <form method="post" action="/admin/users/{{ u.id }}/suspend" class="inline-action-form inline-right">
+                  <input type="text" name="reason" placeholder="Reason (optional)" aria-label="Suspension reason for {{ u.full_name }}" class="input-sm" />
+                  <button type="submit" class="button btn-sm btn-danger-outline">Suspend</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="card admin-empty-state">
+      <p class="muted">No accounts match the current filters.</p>
+    </div>
+    {% endif %}
+  </section>
+
+  {% elif active_tab == 'moderation' %}
+  {% set mod_filter = (mod_status|default(filters.mod_status if filters is defined else '')|default(request.args.get('mod_status', ''), true)) or 'all' %}
+  <section aria-label="Review Moderation">
+    <nav class="moderation-filter-pills" aria-label="Moderation status filters">
+      <a href="/admin?tab=moderation&amp;mod_status=all" class="mod-pill {% if mod_filter == 'all' %}active{% endif %}">All</a>
+      <a href="/admin?tab=moderation&amp;mod_status=pending" class="mod-pill {% if mod_filter == 'pending' %}active{% endif %}">Pending (Auto-hidden)</a>
+      <a href="/admin?tab=moderation&amp;mod_status=active" class="mod-pill {% if mod_filter == 'active' %}active{% endif %}">Active (Reported)</a>
+      <a href="/admin?tab=moderation&amp;mod_status=approved" class="mod-pill {% if mod_filter == 'approved' %}active{% endif %}">Approved</a>
+      <a href="/admin?tab=moderation&amp;mod_status=rejected" class="mod-pill {% if mod_filter == 'rejected' %}active{% endif %}">Rejected</a>
+    </nav>
+
+    {% if moderation_reviews %}
+    <div class="moderation-queue-list">
+      {% for r in moderation_reviews %}
+      <article class="card moderation-card">
+        <div class="moderation-card-top">
+          <div>
+            <a href="/venues/{{ r.venue_id }}" class="venue-title-link">{{ r.venue_name }}</a>
+            <div class="table-submeta">
+              <span>{{ r.author_name }} ({{ r.author_email }})</span>
+              {% if r.booking_code %} · <span class="hour-tag">{{ r.booking_code }}</span>{% endif %}
+            </div>
+          </div>
+          <div class="moderation-badges">
+            <span class="rating-pill" aria-label="Rating {{ r.rating }} out of 5">★ {{ r.rating }}/5</span>
+            <span class="report-count-pill">{{ r.report_count|default(0) }} reports</span>
+            {% if r.moderation_status == 'approved' %}
+              <span class="status-pill status-approved">Approved</span>
+            {% elif r.moderation_status == 'rejected' %}
+              <span class="status-pill status-rejected">Rejected</span>
+            {% elif r.hidden %}
+              <span class="status-pill status-pending">Auto-hidden (BR19)</span>
+            {% else %}
+              <span class="status-pill status-reported">Reported</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <p class="moderation-comment">{{ r.comment or 'No written comment.' }}</p>
+
+        <div class="moderation-card-actions">
+          <form method="post" action="/admin/reviews/{{ r.id }}/moderate" class="inline-action-form">
+            <button type="submit" name="action" value="approve" class="button btn-sm btn-success-outline">Approve &amp; Restore</button>
+            <button type="submit" name="action" value="reject" class="button btn-sm btn-danger-outline">Keep Hidden / Reject</button>
+          </form>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="card admin-empty-state">
+      <p class="muted">No reviews in this moderation queue.</p>
+    </div>
+    {% endif %}
+  </section>
+  {% else %}
+  <section aria-label="Unknown Section">
+    <div class="card admin-empty-state">
+      <h2>Unknown administration section</h2>
+      <p class="muted">The requested tab does not exist.</p>
+      <p style="margin-top: 12px;"><a href="/admin?tab=overview" class="button">Return to Overview</a></p>
+    </div>
+  </section>
+  {% endif %}
 </div>
 {% endblock %}

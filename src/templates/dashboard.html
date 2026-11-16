@@ -6,59 +6,45 @@
     <div class="user-welcome">
       <div class="avatar-large">{{ g.user.full_name[0] | upper }}</div>
       <div>
-        <h1>Hello, {{ g.user.full_name }}</h1>
-        <p class="user-subtitle">Manage your venue reservations, profile details, and account preferences.</p>
+        <h1 style="margin: 0 0 4px;">{{ g.user.full_name }}</h1>
+        <div class="header-badges">
+          <span class="role-badge"><span class="badge-dot"></span> {{ g.user.role | capitalize }}</span>
+          {% if g.user.email_verified_at %}
+            <span class="verified-badge">Verified</span>
+          {% else %}
+            <span class="unverified-badge">Unverified</span>
+          {% endif %}
+        </div>
       </div>
     </div>
-    <div class="header-badges">
-      <span class="role-badge"><span class="badge-dot"></span> {{ g.user.role | capitalize }} Account</span>
-      {% if g.user.email_verified_at %}
-        <span class="verified-badge">✓ Verified</span>
-      {% else %}
-        <span class="unverified-badge">⚠️ Action Required</span>
-      {% endif %}
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <a class="button" href="/search">Find a venue</a>
+      <a class="button secondary" href="/my-bookings">My bookings</a>
+      <a class="button secondary" href="/account/password">Change password</a>
     </div>
   </div>
 
   {% if not g.user.email_verified_at %}
   <div class="flash error unverified-callout" role="alert">
-    <div class="callout-icon">✉️</div>
     <div class="callout-body">
-      <strong>Verification pending:</strong> Please verify your email before booking. This demo does not send email; use the verification link shown on the sign-in page.
+      <strong>Verification pending:</strong> Please verify your email before booking. Use the verification link shown on the sign-in page.
       <form method="post" action="/verify/resend" style="margin-top: 10px">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit" class="secondary">Send a new link</button>
       </form>
     </div>
   </div>
   {% endif %}
 
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-label">Service area</div>
-      <div class="stat-value">Hanoi</div>
-      <div class="stat-meta">Browse local venue listings</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Upcoming Matches</div>
-      <div class="stat-value">{{ upcoming_bookings | length if upcoming_bookings else 0 }}</div>
-      <div class="stat-meta">Confirmed reservations</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Your reservations</div>
-      <div class="stat-value">Booking codes</div>
-      <div class="stat-meta">Find the details for each reservation in your booking list.</div>
-    </div>
-  </div>
-
-  {% if upcoming_bookings %}
   <div class="dashboard-section">
     <div class="section-header-row" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
       <div style="display: flex; align-items: center; gap: 10px;">
-        <h2>Your Upcoming Reservations</h2>
-        <span class="badge-count">{{ upcoming_bookings | length }} active</span>
+        <h2>Upcoming reservations</h2>
+        <span class="badge-count">{{ upcoming_bookings | length if upcoming_bookings else 0 }} active</span>
       </div>
-      <a href="/my-bookings" style="font-size: 13px; font-weight: 700; color: #286b45; text-decoration: none;">View all match history &rarr;</a>
+      <a href="/my-bookings" style="font-size: 13px; font-weight: 700; color: #286b45; text-decoration: none;">All bookings &rarr;</a>
     </div>
+    {% if upcoming_bookings %}
     <div class="bookings-grid">
       {% for b in upcoming_bookings %}
       <div class="booking-card-item">
@@ -68,8 +54,7 @@
         </div>
         <div class="booking-card-title">{{ b.venue_name }}</div>
         <div class="booking-card-time">
-          <span>📅 {{ b.start_at[8:10] }}/{{ b.start_at[5:7] }}/{{ b.start_at[:4] }}</span>
-          <span>⏱️ {{ b.start_at[11:] }} - {{ b.end_at[11:] }}</span>
+          <span>{{ b.start_at[8:10] }}/{{ b.start_at[5:7] }}/{{ b.start_at[:4] }} &middot; {{ b.start_at[11:] }}&ndash;{{ b.end_at[11:] }}</span>
         </div>
         <div class="booking-card-footer">
           <div class="booking-price-val">{{ "{:,}".format(b.total_price) }} VND</div>
@@ -78,42 +63,9 @@
       </div>
       {% endfor %}
     </div>
-  </div>
-  {% endif %}
-
-  <div class="dashboard-action-card">
-    <div class="action-card-text">
-      <h2>Ready for your next match?</h2>
-      <p>Browse venues around Hanoi, compare listed hourly prices, and check available times before booking.</p>
-    </div>
-    <div class="action-card-btn" style="display: flex; gap: 10px; flex-wrap: wrap;">
-      <a class="button" href="/search">Find a venue to book</a>
-      <a class="button secondary" href="/my-bookings" style="font-weight: 700;">📅 My Match History</a>
-    </div>
-  </div>
-
-  <div class="dashboard-features">
-    <div class="feature-item">
-      <div class="feature-icon">🛡️</div>
-      <div class="feature-content">
-        <h3>Fair Cancellation Policy</h3>
-        <p>Cancel at least 24 hours before your booking for a full refund. Cancellations 2–24 hours before the start receive a 50% refund.</p>
-      </div>
-    </div>
-    <div class="feature-item">
-      <div class="feature-icon">⏱️</div>
-      <div class="feature-content">
-        <h3>Transparent Peak Pricing</h3>
-        <p>Real-time slot rate breakdown with transparent evening rates computed before final confirmation.</p>
-      </div>
-    </div>
-    <div class="feature-item">
-      <div class="feature-icon">📍</div>
-      <div class="feature-content">
-        <h3>Accurate Court Details</h3>
-        <p>Each listing shows its location, opening hours, and prices provided by the venue owner.</p>
-      </div>
-    </div>
+    {% else %}
+    <p class="muted" style="margin: 0;">No upcoming bookings. <a href="/search">Browse available courts &rarr;</a></p>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

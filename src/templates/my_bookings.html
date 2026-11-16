@@ -21,28 +21,32 @@
     color: #fff;
   }
   .booking-actions-col {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(2, 168px);
     gap: 8px;
-    align-items: flex-end;
+    align-items: center;
+    justify-content: end;
   }
   .booking-action-btn {
-    font-size: 13px;
-    font-weight: 700;
+    font-size: 12px !important;
+    font-weight: 700 !important;
     white-space: nowrap;
-    width: 170px;
+    width: 100%;
+    min-height: 36px !important;
+    height: 36px !important;
+    padding: 0 10px !important;
     text-align: center;
   }
   .cancel-policy-caption {
+    grid-column: 1 / -1;
     font-size: 11px;
     color: var(--text-muted);
-    max-width: 170px;
     text-align: right;
-    line-height: 1.35;
+    line-height: 1.3;
   }
   .review-details {
     position: relative;
-    width: 170px;
+    width: 100%;
   }
   .review-popover {
     position: absolute;
@@ -77,24 +81,24 @@
 </style>
 {% endblock %}
 {% block content %}
-<div class="dashboard-container" style="max-width: 1000px; margin: 0 auto; padding: 12px 0;">
-  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 16px;">
-    <h1 style="margin: 0; font-size: 32px; font-weight: 800;">My bookings</h1>
+<div class="dashboard-container">
+  <div class="owner-header-bar">
+    <h1 style="margin: 0;">My bookings</h1>
     <a href="/search" class="button" style="font-weight: 700;">Book another venue</a>
   </div>
 
   <!-- Filter tabs -->
-  <div class="booking-tabs" style="display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; overflow-x: auto;">
-    <a href="/my-bookings" class="tab-link {% if current_filter == 'all' %}active{% endif %}" style="padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; text-decoration: none; border: 1px solid var(--border-color); color: var(--text-main); background: {% if current_filter == 'all' %}var(--brand); color:#fff; border-color:var(--brand);{% else %}#fff;{% endif %}">
+  <div class="booking-tabs" style="display: flex; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; overflow-x: auto;">
+    <a href="/my-bookings" class="tab-link {% if current_filter == 'all' %}active{% endif %}" style="padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 700; text-decoration: none; border: 1px solid {% if current_filter == 'all' %}var(--brand){% else %}var(--border-color){% endif %}; background: {% if current_filter == 'all' %}var(--brand){% else %}#fff{% endif %}; color: {% if current_filter == 'all' %}#fff{% else %}var(--text-main){% endif %};">
       All{% if counts is defined and counts %}<span class="tab-count-badge">{{ counts.all|default(0) }}</span>{% endif %}
     </a>
-    <a href="/my-bookings?status=confirmed" class="tab-link {% if current_filter == 'confirmed' %}active{% endif %}" style="padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; text-decoration: none; border: 1px solid var(--border-color); color: var(--text-main); background: {% if current_filter == 'confirmed' %}var(--brand); color:#fff; border-color:var(--brand);{% else %}#fff;{% endif %}">
+    <a href="/my-bookings?status=confirmed" class="tab-link {% if current_filter == 'confirmed' %}active{% endif %}" style="padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 700; text-decoration: none; border: 1px solid {% if current_filter == 'confirmed' %}var(--brand){% else %}var(--border-color){% endif %}; background: {% if current_filter == 'confirmed' %}var(--brand){% else %}#fff{% endif %}; color: {% if current_filter == 'confirmed' %}#fff{% else %}var(--text-main){% endif %};">
       Upcoming{% if counts is defined and counts %}<span class="tab-count-badge">{{ counts.confirmed|default(0) }}</span>{% endif %}
     </a>
-    <a href="/my-bookings?status=completed" class="tab-link {% if current_filter == 'completed' %}active{% endif %}" style="padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; text-decoration: none; border: 1px solid var(--border-color); color: var(--text-main); background: {% if current_filter == 'completed' %}var(--brand); color:#fff; border-color:var(--brand);{% else %}#fff;{% endif %}">
+    <a href="/my-bookings?status=completed" class="tab-link {% if current_filter == 'completed' %}active{% endif %}" style="padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 700; text-decoration: none; border: 1px solid {% if current_filter == 'completed' %}var(--brand){% else %}var(--border-color){% endif %}; background: {% if current_filter == 'completed' %}var(--brand){% else %}#fff{% endif %}; color: {% if current_filter == 'completed' %}#fff{% else %}var(--text-main){% endif %};">
       Completed{% if counts is defined and counts %}<span class="tab-count-badge">{{ counts.completed|default(0) }}</span>{% endif %}
     </a>
-    <a href="/my-bookings?status=cancelled" class="tab-link {% if current_filter == 'cancelled' %}active{% endif %}" style="padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; text-decoration: none; border: 1px solid var(--border-color); color: var(--text-main); background: {% if current_filter == 'cancelled' %}var(--brand); color:#fff; border-color:var(--brand);{% else %}#fff;{% endif %}">
+    <a href="/my-bookings?status=cancelled" class="tab-link {% if current_filter == 'cancelled' %}active{% endif %}" style="padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 700; text-decoration: none; border: 1px solid {% if current_filter == 'cancelled' %}var(--brand){% else %}var(--border-color){% endif %}; background: {% if current_filter == 'cancelled' %}var(--brand){% else %}#fff{% endif %}; color: {% if current_filter == 'cancelled' %}#fff{% else %}var(--text-main){% endif %};">
       Cancelled{% if counts is defined and counts %}<span class="tab-count-badge">{{ counts.cancelled|default(0) }}</span>{% endif %}
     </a>
   </div>

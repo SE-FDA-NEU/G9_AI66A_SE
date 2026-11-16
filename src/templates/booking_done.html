@@ -111,7 +111,14 @@
       </div>
 
       <div class="ticket-facts">
-        <div><p class="ticket-label">Venue</p><strong>{{ booking.venue_name }}</strong><span class="muted">{{ booking.address }}</span></div>
+        <div>
+          <p class="ticket-label">Venue</p>
+          <strong>{{ booking.venue_name }}</strong>
+          <span class="muted">{{ booking.address }}{% if booking.area %}, {{ booking.area }}{% endif %}</span>
+          <div>
+            <a class="map-link" href="https://www.google.com/maps/search/?api=1&query={{ (booking.address ~ (', ' ~ booking.area if booking.area else '') ~ ', Hanoi, Vietnam') | urlencode }}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; font-size: 12px; font-weight: 700; color: var(--brand); text-decoration: none;">Get Directions (Google Maps) &#8599;</a>
+          </div>
+        </div>
         <div><p class="ticket-label">Date</p><strong>{{ booking.start_at[8:10] }}/{{ booking.start_at[5:7] }}/{{ booking.start_at[:4] }}</strong></div>
         <div><p class="ticket-label">Time</p><strong>{{ booking.start_at[11:] }}–{{ booking.end_at[11:] }}</strong></div>
       </div>
