@@ -56,6 +56,7 @@ def dashboard():
         venue_analytics=admin.get_venue_analytics(conn, sport=sport or None, area=area or None, q=q or None),
         users=admin.list_users(conn, role=role or None, status=status or None, q=q or None),
         moderation_reviews=admin.list_moderation_reviews(conn, mod_status=mod_status or None),
+        recent_bookings=admin.list_recent_bookings(conn),
         filters=filters,
         sports=venues.SPORTS,
         areas=venues.AREAS,
@@ -162,6 +163,55 @@ def moderate_review(review_id):
     except BusinessRuleError as err:
         flash(err.message, "error")
     return redirect("/admin?tab=moderation")
+
+
+@bp.post("/admin/venues/<int:venue_id>/delete")
+@login_required("admin")
+def delete_venue(venue_id):
+    conn = get_db()
+    try:
+        deleted = admin.delete_venue(conn, venue_id)
+        flash(f"Venue '{deleted['name']}' deleted.", "success")
+    except BusinessRuleError as err:
+        flash(err.message, "error")
+    return redirect("/admin?tab=venues")
+
+
+@bp.post("/admin/users/<int:user_id>/delete")
+@login_required("admin")
+def delete_user(user_id):
+    conn = get_db()
+    target_tab = "owners" if request.form.get("return_tab") == "owners" else "accounts"
+    try:
+        deleted = admin.delete_user(conn, user_id, g.user["id"])
+        flash(f"Account '{deleted['email']}' deleted.", "success")
+    except BusinessRuleError as err:
+        flash(err.message, "error")
+    return redirect(f"/admin?tab={target_tab}")
+
+
+@bp.post("/admin/reviews/<int:review_id>/delete")
+@login_required("admin")
+def delete_review(review_id):
+    conn = get_db()
+    try:
+        admin.delete_review(conn, review_id)
+        flash("Review deleted.", "success")
+    except BusinessRuleError as err:
+        flash(err.message, "error")
+    return redirect("/admin?tab=moderation")
+
+
+@bp.post("/admin/bookings/<int:booking_id>/delete")
+@login_required("admin")
+def delete_booking(booking_id):
+    conn = get_db()
+    try:
+        deleted = admin.delete_booking(conn, booking_id)
+        flash(f"Booking {deleted['code']} deleted.", "success")
+    except BusinessRuleError as err:
+        flash(err.message, "error")
+    return redirect("/admin?tab=overview")
 
 
 # ---------------------------------------------------------------------------
@@ -280,3 +330,31 @@ def api_moderate_review(review_id):
     action = _str_field(data, "action")
     admin.moderate_review(get_db(), review_id, g.user["id"], action)
     return jsonify(ok=True, action=action.strip().lower())
+
+
+@bp.post("/api/admin/venues/<int:venue_id>/delete")
+@login_required("admin")
+def api_delete_venue(venue_id):
+    deleted = admin.delete_venue(get_db(), venue_id)
+    return jsonify(ok=True, id=deleted["id"], name=deleted["name"])
+
+
+@bp.post("/api/admin/users/<int:user_id>/delete")
+@login_required("admin")
+def api_delete_user(user_id):
+    deleted = admin.delete_user(get_db(), user_id, g.user["id"])
+    return jsonify(ok=True, id=deleted["id"], email=deleted["email"])
+
+
+@bp.post("/api/admin/reviews/<int:review_id>/delete")
+@login_required("admin")
+def api_delete_review(review_id):
+    deleted = admin.delete_review(get_db(), review_id)
+    return jsonify(ok=True, id=deleted["id"])
+
+
+@bp.post("/api/admin/bookings/<int:booking_id>/delete")
+@login_required("admin")
+def api_delete_booking(booking_id):
+    deleted = admin.delete_booking(get_db(), booking_id)
+    return jsonify(ok=True, id=deleted["id"], code=deleted["code"])

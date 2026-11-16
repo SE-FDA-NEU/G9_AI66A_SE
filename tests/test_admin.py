@@ -969,3 +969,174 @@ def test_api_admin_edit_user_validation_and_access_control(client, db, login):
     assert r_ok.get_json()["ok"] is True
     assert _get_user(db, "lan.api@example.com")["full_name"] == "Lan API Edited"
 
+
+# ---------------------------------------------------------------------------
+# 8. Delete Features (Admin & Owner, FK-safe)
+# ---------------------------------------------------------------------------
+
+def test_admin_delete_venue_fk_safe(client, db, login):
+    login("admin@example.com")
+
+    # Unknown venue -> 404 on API
+    r_404 = client.post("/api/admin/venues/99999/delete")
+    assert r_404.status_code == 404
+
+    # Seed dependent rows on venue 1 to verify full FK-safe cascade
+    with connect(db) as conn:
+        v1 = conn.execute("SELECT id, name FROM venue WHERE id = 1").fetchone()
+        assert v1 is not None
+        conn.execute(
+            "INSERT OR IGNORE INTO blocked_slot (venue_id, slot_start, reason) VALUES (1, '2026-12-01 08:00', 'Maint')"
+        )
+        conn.execute(
+            "INSERT INTO pricing_rule (venue_id, weekday, start_hour, end_hour, price_per_hour) VALUES (1, 0, 18, 20, 350000)"
+        )
+        conn.commit()
+
+    resp = client.post("/admin/venues/1/delete", follow_redirects=False)
+    assert resp.status_code == 302
+    assert "/admin?tab=venues" in resp.headers["Location"]
+
+    with connect(db) as conn:
+        assert conn.execute("SELECT 1 FROM venue WHERE id = 1").fetchone() is None
+        assert conn.execute("SELECT 1 FROM booking WHERE venue_id = 1").fetchone() is None
+        assert conn.execute("SELECT 1 FROM booking_slot WHERE venue_id = 1").fetchone() is None
+        assert conn.execute("SELECT 1 FROM blocked_slot WHERE venue_id = 1").fetchone() is None
+        assert conn.execute("SELECT 1 FROM pricing_rule WHERE venue_id = 1").fetchone() is None
+        assert conn.execute("SELECT 1 FROM venue_photo WHERE venue_id = 1").fetchone() is None
+
+
+def test_admin_delete_user_guards_and_cascade(client, db, login):
+    admin_id = _get_user_id(db, "admin@example.com")
+    lan_id = _get_user_id(db, "lan.owner@example.com")
+    minh_id = _get_user_id(db, "minh@example.com")
+
+    with connect(db) as conn:
+        admin2_id = admin.create_user_account(
+            conn, "admin2@example.com", "AdminPass1", "Second Admin", "0988777666", "admin", auto_verify=True
+        )
+
+    login("admin@example.com")
+
+    # Cannot delete self
+    r_self = client.post(f"/api/admin/users/{admin_id}/delete")
+    assert r_self.status_code == 400
+    assert "own account" in r_self.get_json()["error"].lower()
+
+    # Cannot delete another admin
+    r_adm = client.post(f"/api/admin/users/{admin2_id}/delete")
+    assert r_adm.status_code == 400
+    assert "administrator" in r_adm.get_json()["error"].lower()
+
+    # Unknown user -> 404
+    assert client.post("/api/admin/users/99999/delete").status_code == 404
+
+    # Delete owner cascades their venues and bookings
+    r_owner = client.post(
+        f"/admin/users/{lan_id}/delete",
+        data={"return_tab": "owners"},
+        follow_redirects=False,
+    )
+    assert r_owner.status_code == 302
+    assert "/admin?tab=owners" in r_owner.headers["Location"]
+    assert _get_user(db, "lan.owner@example.com") is None
+    with connect(db) as conn:
+        assert conn.execute("SELECT 1 FROM venue WHERE owner_id = ?", (lan_id,)).fetchone() is None
+
+    # Delete customer cascades their bookings
+    r_cust = client.post(f"/api/admin/users/{minh_id}/delete")
+    assert r_cust.status_code == 200
+    assert r_cust.get_json()["ok"] is True
+    assert _get_user(db, "minh@example.com") is None
+    with connect(db) as conn:
+        assert conn.execute("SELECT 1 FROM booking WHERE customer_id = ?", (minh_id,)).fetchone() is None
+
+
+def test_admin_delete_review_and_booking(client, db, login):
+    login("admin@example.com")
+
+    with connect(db) as conn:
+        recent = admin.list_recent_bookings(conn, limit=30)
+        assert len(recent) >= 1
+        sample = recent[0]
+        for key in ("id", "code", "venue_name", "customer_name", "customer_email", "start_at", "total_price", "status"):
+            assert key in sample
+
+        rev = conn.execute("SELECT id FROM review ORDER BY id LIMIT 1").fetchone()
+        rev_id = rev["id"] if rev else None
+
+    if rev_id is not None:
+        r_rev = client.post(f"/api/admin/reviews/{rev_id}/delete")
+        assert r_rev.status_code == 200
+        assert r_rev.get_json()["ok"] is True
+        with connect(db) as conn:
+            assert conn.execute("SELECT 1 FROM review WHERE id = ?", (rev_id,)).fetchone() is None
+
+    assert client.post("/api/admin/reviews/99999/delete").status_code == 404
+    assert client.post("/api/admin/bookings/99999/delete").status_code == 404
+
+    booking_id = recent[0]["id"]
+    r_bk = client.post(f"/admin/bookings/{booking_id}/delete", follow_redirects=False)
+    assert r_bk.status_code == 302
+    assert "/admin?tab=overview" in r_bk.headers["Location"]
+    with connect(db) as conn:
+        assert conn.execute("SELECT 1 FROM booking WHERE id = ?", (booking_id,)).fetchone() is None
+        assert conn.execute("SELECT 1 FROM booking_slot WHERE booking_id = ?", (booking_id,)).fetchone() is None
+
+
+def test_owner_delete_venue_and_access_control(client, db, login):
+    import venues as venues_mod
+
+    lan_id = _get_user_id(db, "lan.owner@example.com")
+    with connect(db) as conn:
+        other_owner_id = admin.create_user_account(
+            conn, "other.owner@example.com", "OwnerPass1", "Other Owner", "0977666555", "owner", auto_verify=True
+        )
+        lan_venue = conn.execute("SELECT id FROM venue WHERE owner_id = ? LIMIT 1", (lan_id,)).fetchone()
+        lan_venue_id = lan_venue["id"]
+
+        # Direct service-layer 403 check (BR14)
+        try:
+            venues_mod.delete_venue(conn, lan_venue_id, other_owner_id)
+            assert False, "Expected BusinessRuleError 403"
+        except BusinessRuleError as exc:
+            assert exc.status == 403
+
+    # Customer cannot access owner delete route
+    login("minh@example.com")
+    assert client.post(f"/owner/venues/{lan_venue_id}/delete").status_code == 403
+
+    # Other owner cannot delete Lan's venue via route
+    login("other.owner@example.com", "OwnerPass1")
+    r_other = client.post(f"/owner/venues/{lan_venue_id}/delete", follow_redirects=True)
+    assert r_other.status_code == 200
+    assert b"permission" in r_other.data.lower()
+    assert _get_venue(db, lan_venue_id) is not None
+
+    # Lan deletes her own venue
+    login("lan.owner@example.com")
+    r_own = client.post(f"/owner/venues/{lan_venue_id}/delete", follow_redirects=False)
+    assert r_own.status_code == 302
+    assert r_own.headers["Location"].endswith("/owner/venues")
+    assert _get_venue(db, lan_venue_id) is None
+
+
+def test_delete_buttons_rendered_in_templates(client, login):
+    login("admin@example.com")
+    for tab, expected_action in (
+        ("overview", b"/admin/bookings/"),
+        ("owners", b"/admin/users/"),
+        ("venues", b"/admin/venues/"),
+        ("accounts", b"/admin/users/"),
+    ):
+        resp = client.get(f"/admin?tab={tab}")
+        assert resp.status_code == 200
+        assert expected_action in resp.data
+        assert b"/delete" in resp.data
+
+    login("lan.owner@example.com")
+    owner_resp = client.get("/owner/venues")
+    assert owner_resp.status_code == 200
+    assert b"/owner/venues/" in owner_resp.data
+    assert b"/delete" in owner_resp.data
+

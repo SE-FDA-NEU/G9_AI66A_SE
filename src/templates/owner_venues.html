@@ -1,178 +1,197 @@
 {% extends "base.html" %}
 {% block title %}My venues{% endblock %}
 {% block content %}
-<div class="owner-container">
-  <div class="owner-header-bar">
-    <h1>My venues</h1>
-    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-      <a class="button secondary" href="/owner/bookings/export.csv">Export CSV</a>
-      <a class="button btn-add-venue" href="/owner/venues/new">+ Add a venue</a>
+<div class="container">
+  <header class="page-header">
+    <div class="page-header__title-row">
+      <h1>My venues</h1>
+      <div class="page-header__actions">
+        <a class="btn-secondary" href="/owner/bookings/export.csv">Export CSV</a>
+        <a class="btn-primary" href="/owner/venues/new">Add a venue</a>
+      </div>
     </div>
-  </div>
+  </header>
 
   {% if summary is defined and (summary.recent_reviews or summary.recent_alerts) %}
-  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px; margin-bottom: 18px;">
-    {% if summary.recent_reviews %}
-    <div class="card" style="padding: 14px 18px; border-radius: 12px; border-left: 4px solid #f59e0b; background: #fffbeb;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-        <strong style="font-size: 13px; color: #92400e;">&#128276; Recent Customer Reviews ({{ summary.recent_reviews|length }})</strong>
-        <a href="/owner/analytics" style="font-size: 12px; font-weight: 700; color: #b45309; text-decoration: none;">View all &rarr;</a>
-      </div>
-      {% for r in summary.recent_reviews[:2] %}
-      <div style="font-size: 13px; padding: 6px 0; {% if not loop.last %}border-bottom: 1px solid #fde68a;{% endif %}">
-        <div style="display: flex; justify-content: space-between; gap: 8px;">
-          <span><strong>{{ r.venue_name }}</strong> &middot; <span style="color: #d97706; font-weight: 800;">&#9733; {{ r.rating }}/5</span></span>
-          <span class="muted" style="font-size: 11px;">{{ r.customer_name }} ({{ r.booking_code }})</span>
+  <section class="section">
+    <div class="grid-2">
+      {% if summary.recent_reviews %}
+      <div>
+        <div class="split">
+          <h2>Recent customer reviews ({{ summary.recent_reviews|length }})</h2>
+          <a href="/owner/analytics" class="small">View all</a>
         </div>
-        {% if r.comment %}
-        <div style="color: #475569; font-size: 12px; margin-top: 2px;">"{{ r.comment }}"</div>
-        {% endif %}
+        <ul class="list">
+          {% for r in summary.recent_reviews[:2] %}
+          <li class="list__item">
+            <div class="split">
+              <span><strong>{{ r.venue_name }}</strong> <span class="sep">&middot;</span> ★ {{ r.rating }}/5</span>
+              <span class="meta">{{ r.customer_name }} (<span class="mono">{{ r.booking_code }}</span>)</span>
+            </div>
+            {% if r.comment %}
+            <p class="small muted">{{ r.comment }}</p>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
       </div>
-      {% endfor %}
-    </div>
-    {% endif %}
+      {% endif %}
 
-    {% if summary.recent_alerts %}
-    <div class="card" style="padding: 14px 18px; border-radius: 12px; border-left: 4px solid #10b981; background: #f0fdf4;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-        <strong style="font-size: 13px; color: #065f46;">&#128197; Latest Booking Activity ({{ summary.recent_alerts|length }})</strong>
-        <a href="/owner/bookings" style="font-size: 12px; font-weight: 700; color: #047857; text-decoration: none;">Manage bookings &rarr;</a>
-      </div>
-      {% for a in summary.recent_alerts[:2] %}
-      <div style="font-size: 13px; padding: 6px 0; display: flex; justify-content: space-between; align-items: center; gap: 8px; {% if not loop.last %}border-bottom: 1px solid #bbf7d0;{% endif %}">
-        <div>
-          <span style="font-family: var(--font-mono); font-weight: 700; font-size: 12px;">{{ a.code }}</span> &middot;
-          <strong>{{ a.venue_name }}</strong>
-          <div style="font-size: 12px; color: #475569;">{{ a.start_at[:16] }} &middot; {{ a.customer_name }} (<a href="tel:{{ a.customer_phone }}" style="color: #047857; font-weight: 700; text-decoration: none;">&#128222; {{ a.customer_phone }}</a>)</div>
+      {% if summary.recent_alerts %}
+      <div>
+        <div class="split">
+          <h2>Latest booking activity ({{ summary.recent_alerts|length }})</h2>
+          <a href="/owner/bookings" class="small">Manage bookings</a>
         </div>
-        <span style="font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; {% if a.status == 'cancelled' %}background: #fee2e2; color: #b91c1c;{% else %}background: #dcfce7; color: #15803d;{% endif %}">
-          {{ a.status|capitalize }}
-        </span>
+        <ul class="list">
+          {% for a in summary.recent_alerts[:2] %}
+          <li class="list__item split">
+            <div>
+              <div>
+                <span class="mono small">{{ a.code }}</span>
+                <span class="sep">&middot;</span>
+                <strong>{{ a.venue_name }}</strong>
+              </div>
+              <div class="meta">
+                {{ a.start_at[:16] }} &middot; {{ a.customer_name }} (<a href="tel:{{ a.customer_phone }}" class="mono">{{ a.customer_phone }}</a>)
+              </div>
+            </div>
+            <span class="status {% if a.status == 'cancelled' %}status--danger{% else %}status--success{% endif %}">
+              {{ a.status|capitalize }}
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
       </div>
-      {% endfor %}
+      {% endif %}
     </div>
-    {% endif %}
-  </div>
+  </section>
   {% endif %}
 
   {% if venues %}
-  <div class="table-responsive-wrapper">
-    <table class="owner-table">
-      <thead>
-        <tr>
-          <th>Venue</th>
-          <th>Sport</th>
-          <th>Area</th>
-          <th>Address</th>
-          <th>Opening hours</th>
-          <th class="num">Price / hour (VND)</th>
-          <th class="num">Photos</th>
-          <th style="text-align: right;">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for v in venues %}
-        <tr>
-          <td class="venue-cell">
-            <a href="/venues/{{ v.id }}" class="venue-title-link">{{ v.name }}</a>
-          </td>
-          <td><span class="sport-badge-pill">{{ v.sport }}</span></td>
-          <td><span class="area-badge-pill">{{ v.area }}</span></td>
-          <td class="address-cell">{{ v.address }}</td>
-          <td class="hours-cell">
-            <span class="hour-tag">{{ '%02d:00' % v.open_hour }}&ndash;{{ '%02d:00' % v.close_hour }}</span>
-          </td>
-          <td class="num price-cell">{{ "{:,}".format(v.hourly_price) }}</td>
-          <td class="num photos-cell">
-            <a href="/venues/{{ v.id }}" class="photo-badge" title="View venue photos">{{ v.photo_count }}</a>
-          </td>
-          <td style="text-align: right; white-space: nowrap;">
-            <button type="button" class="button secondary btn-table-action"
-                    data-venue-id="{{ v.id }}"
-                    data-venue-name="{{ v.name }}"
-                    data-venue-sport="{{ v.sport }}"
-                    data-venue-area="{{ v.area }}"
-                    data-venue-address="{{ v.address }}"
-                    data-venue-open="{{ v.open_hour }}"
-                    data-venue-close="{{ v.close_hour }}"
-                    data-venue-price="{{ v.hourly_price }}"
-                    onclick="openEditVenueModal(this)">Edit Settings</button>
-            <a href="/owner/venues/{{ v.id }}/schedule" class="button secondary btn-table-action">Schedule</a>
-            <a href="/owner/venues/{{ v.id }}/pricing" class="button secondary btn-table-action">Pricing</a>
-            <a href="/owner/bookings?venue_id={{ v.id }}" class="button secondary btn-table-action">Bookings</a>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+  <section class="section">
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Venue</th>
+            <th>Sport</th>
+            <th>Area</th>
+            <th>Address</th>
+            <th>Opening hours</th>
+            <th class="num">Price / hour (VND)</th>
+            <th class="num">Photos</th>
+            <th class="num">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in venues %}
+          <tr>
+            <td>
+              <a href="/venues/{{ v.id }}">{{ v.name }}</a>
+            </td>
+            <td>{{ v.sport }}</td>
+            <td>{{ v.area }}</td>
+            <td class="muted">{{ v.address }}</td>
+            <td class="mono">{{ '%02d:00' % v.open_hour }}&ndash;{{ '%02d:00' % v.close_hour }}</td>
+            <td class="num">{{ "{:,}".format(v.hourly_price) }}</td>
+            <td class="num">
+              <a href="/venues/{{ v.id }}" title="View venue photos">{{ v.photo_count }}</a>
+            </td>
+            <td class="num">
+              <div class="row-actions">
+                <button type="button" class="btn-secondary btn-sm"
+                        data-venue-id="{{ v.id }}"
+                        data-venue-name="{{ v.name }}"
+                        data-venue-sport="{{ v.sport }}"
+                        data-venue-area="{{ v.area }}"
+                        data-venue-address="{{ v.address }}"
+                        data-venue-open="{{ v.open_hour }}"
+                        data-venue-close="{{ v.close_hour }}"
+                        data-venue-price="{{ v.hourly_price }}"
+                        onclick="openEditVenueModal(this)">Edit settings</button>
+                <a href="/owner/venues/{{ v.id }}/schedule" class="btn-secondary btn-sm">Schedule</a>
+                <a href="/owner/venues/{{ v.id }}/pricing" class="btn-secondary btn-sm">Pricing</a>
+                <a href="/owner/bookings?venue_id={{ v.id }}" class="btn-secondary btn-sm">Bookings</a>
+                <form method="post" action="/owner/venues/{{ v.id }}/delete" class="inline-form" onsubmit="return confirm('Delete this venue and all its bookings and reviews permanently?');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                  <button type="submit" class="btn-danger-outline btn-sm">Delete</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
 
   <!-- Edit Venue Settings Modal -->
-  <div id="edit-venue-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 1000; align-items: center; justify-content: center; padding: 16px;" onclick="if(event.target===this) closeEditVenueModal()">
-    <div class="card" role="dialog" aria-modal="true" aria-labelledby="edit-venue-modal-title" style="width: 100%; max-width: 540px; padding: 24px; border-radius: 16px; background: #fff; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h2 id="edit-venue-modal-title" style="margin: 0; font-size: 20px; font-weight: 800;">Edit Venue Settings</h2>
-        <button type="button" onclick="closeEditVenueModal()" aria-label="Close modal" style="background: none; border: none; font-size: 22px; cursor: pointer; color: #64748b; padding: 4px 8px;">&times;</button>
+  <div id="edit-venue-modal" class="modal js-modal" hidden onclick="if(event.target===this) closeEditVenueModal()">
+    <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="edit-venue-modal-title">
+      <div class="modal__head">
+        <h2 id="edit-venue-modal-title" class="modal__title">Edit venue settings</h2>
+        <button type="button" class="btn-ghost btn-sm" onclick="closeEditVenueModal()" aria-label="Close modal">&times;</button>
       </div>
-      <form id="edit-venue-form" method="post" action="/owner/venues/1/edit" style="display: flex; flex-direction: column; gap: 14px;">
+      <form id="edit-venue-form" method="post" action="/owner/venues/1/edit" class="stack">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="next" value="/owner/venues">
 
-        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700;">
-          Venue Name
-          <input type="text" id="ev-name" name="name" minlength="3" maxlength="100" required style="height: 42px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--border-color); font-weight: 600;">
-        </label>
+        <div class="field">
+          <label for="ev-name">Venue name</label>
+          <input type="text" id="ev-name" name="name" minlength="3" maxlength="100" required>
+        </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700;">
-            Sport
-            <select id="ev-sport" name="sport" required style="height: 42px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--border-color); font-weight: 600;">
+        <div class="form-grid">
+          <div class="field">
+            <label for="ev-sport">Sport</label>
+            <select id="ev-sport" name="sport" required>
               {% for s in (sports or ['Football', 'Badminton', 'Tennis', 'Pickleball']) %}
               <option value="{{ s }}">{{ s }}</option>
               {% endfor %}
             </select>
-          </label>
-          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700;">
-            Area (District)
-            <select id="ev-area" name="area" required style="height: 42px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--border-color); font-weight: 600;">
+          </div>
+          <div class="field">
+            <label for="ev-area">Area (district)</label>
+            <select id="ev-area" name="area" required>
               {% for a in (areas or ['Ba Dinh', 'Bac Tu Liem', 'Cau Giay', 'Dong Da', 'Ha Dong', 'Hai Ba Trung', 'Hoan Kiem', 'Hoang Mai', 'Long Bien', 'Nam Tu Liem', 'Tay Ho', 'Thanh Xuan']) %}
               <option value="{{ a }}">{{ a }}</option>
               {% endfor %}
             </select>
-          </label>
+          </div>
         </div>
 
-        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700;">
-          Address
-          <input type="text" id="ev-address" name="address" required style="height: 42px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--border-color); font-weight: 600;">
-        </label>
+        <div class="field">
+          <label for="ev-address">Address</label>
+          <input type="text" id="ev-address" name="address" required>
+        </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 12px;">
-          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700;">
-            Opening Hour
-            <select id="ev-open" name="open_hour" required style="height: 42px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--border-color); font-weight: 600;">
+        <div class="form-grid">
+          <div class="field">
+            <label for="ev-open">Opening hour</label>
+            <select id="ev-open" name="open_hour" required>
               {% for h in range(0, 24) %}
               <option value="{{ h }}">{{ "%02d:00" | format(h) }}</option>
               {% endfor %}
             </select>
-          </label>
-          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700;">
-            Closing Hour
-            <select id="ev-close" name="close_hour" required style="height: 42px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--border-color); font-weight: 600;">
+          </div>
+          <div class="field">
+            <label for="ev-close">Closing hour</label>
+            <select id="ev-close" name="close_hour" required>
               {% for h in range(1, 25) %}
               <option value="{{ h }}">{{ "%02d:00" | format(h) }}</option>
               {% endfor %}
             </select>
-          </label>
-          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700;">
-            Base Rate (VND/h)
-            <input type="text" id="ev-price" name="hourly_price" required style="height: 42px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--border-color); font-weight: 700;">
-          </label>
+          </div>
+          <div class="field field--full">
+            <label for="ev-price">Base rate (VND/h)</label>
+            <input type="text" id="ev-price" name="hourly_price" required>
+          </div>
         </div>
 
-        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
-          <button type="button" class="button secondary" onclick="closeEditVenueModal()" style="height: 42px; padding: 0 16px;">Cancel</button>
-          <button type="submit" class="button" style="height: 42px; padding: 0 20px; font-weight: 700;">Save Venue Settings</button>
+        <div class="modal__actions">
+          <button type="button" class="btn-secondary" onclick="closeEditVenueModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Save venue settings</button>
         </div>
       </form>
     </div>
@@ -190,15 +209,23 @@
     document.getElementById("ev-open").value = btn.getAttribute("data-venue-open") || "6";
     document.getElementById("ev-close").value = btn.getAttribute("data-venue-close") || "22";
     document.getElementById("ev-price").value = btn.getAttribute("data-venue-price") || "250000";
-    modal.style.display = "flex";
+    modal.hidden = false;
+    modal.classList.add("is-open");
   }
   function closeEditVenueModal() {
-    document.getElementById("edit-venue-modal").style.display = "none";
+    var modal = document.getElementById("edit-venue-modal");
+    modal.classList.remove("is-open");
+    modal.hidden = true;
   }
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape") closeEditVenueModal();
+  });
   </script>
   {% else %}
   <div class="empty">
-    You have no venues yet. Add your first venue so customers can find and book it.
+    <p>You have no venues yet.</p>
+    <p class="muted">Add your first venue so customers can find and book it.</p>
+    <a class="btn-primary" href="/owner/venues/new">Add a venue</a>
   </div>
   {% endif %}
 </div>

@@ -722,3 +722,119 @@ def moderate_review(conn, review_id, admin_user_id, action):
             (now_str, admin_user_id, review_id),
         )
     conn.commit()
+
+
+def delete_venue(conn, venue_id, commit=True):
+    """Remove a venue and all dependent records in FK-safe order."""
+    row = conn.execute("SELECT id, name FROM venue WHERE id = ?", (venue_id,)).fetchone()
+    if row is None:
+        raise BusinessRuleError(404, "Venue not found.")
+    try:
+        venues._delete_venue_cascade(conn, venue_id)
+        if commit:
+            conn.commit()
+    except BaseException:
+        if commit:
+            conn.rollback()
+        raise
+    return {"id": venue_id, "name": row["name"]}
+
+
+def delete_user(conn, target_user_id, actor_user_id):
+    """Remove a non-admin account and all owned venues/bookings in FK-safe order (BR14)."""
+    if int(target_user_id) == int(actor_user_id):
+        raise BusinessRuleError(400, "You cannot delete your own account.", "BR14")
+
+    user = conn.execute(
+        "SELECT id, email, role FROM user WHERE id = ?",
+        (target_user_id,),
+    ).fetchone()
+    if user is None:
+        raise BusinessRuleError(404, "User account not found.")
+    if user["role"] == "admin":
+        raise BusinessRuleError(400, "Administrator accounts cannot be deleted.", "BR14")
+
+    owned_venues = conn.execute(
+        "SELECT id FROM venue WHERE owner_id = ?",
+        (target_user_id,),
+    ).fetchall()
+
+    try:
+        for v_row in owned_venues:
+            delete_venue(conn, v_row["id"], commit=False)
+        conn.execute(
+            "DELETE FROM review WHERE booking_id IN (SELECT id FROM booking WHERE customer_id = ?)",
+            (target_user_id,),
+        )
+        conn.execute(
+            "DELETE FROM booking_slot WHERE booking_id IN (SELECT id FROM booking WHERE customer_id = ?)",
+            (target_user_id,),
+        )
+        conn.execute("DELETE FROM booking WHERE customer_id = ?", (target_user_id,))
+        conn.execute("UPDATE review SET moderated_by = NULL WHERE moderated_by = ?", (target_user_id,))
+        conn.execute("DELETE FROM user WHERE id = ?", (target_user_id,))
+        conn.commit()
+    except BaseException:
+        conn.rollback()
+        raise
+    return {"id": target_user_id, "email": user["email"]}
+
+
+def delete_review(conn, review_id):
+    """Permanently remove a review by ID."""
+    row = conn.execute("SELECT id FROM review WHERE id = ?", (review_id,)).fetchone()
+    if row is None:
+        raise BusinessRuleError(404, "Review not found.")
+    try:
+        conn.execute("DELETE FROM review WHERE id = ?", (review_id,))
+        conn.commit()
+    except BaseException:
+        conn.rollback()
+        raise
+    return {"id": review_id}
+
+
+def delete_booking(conn, booking_id):
+    """Permanently remove a booking and its dependent review and slots in FK-safe order."""
+    row = conn.execute("SELECT id, code FROM booking WHERE id = ?", (booking_id,)).fetchone()
+    if row is None:
+        raise BusinessRuleError(404, "Booking not found.")
+    try:
+        conn.execute("DELETE FROM review WHERE booking_id = ?", (booking_id,))
+        conn.execute("DELETE FROM booking_slot WHERE booking_id = ?", (booking_id,))
+        conn.execute("DELETE FROM booking WHERE id = ?", (booking_id,))
+        conn.commit()
+    except BaseException:
+        conn.rollback()
+        raise
+    return {"id": booking_id, "code": row["code"]}
+
+
+def list_recent_bookings(conn, limit=30):
+    """Return recent bookings with venue and customer details for admin oversight."""
+    rows = conn.execute(
+        """
+        SELECT b.id, b.code, v.name AS venue_name,
+               u.full_name AS customer_name, u.email AS customer_email,
+               b.start_at, b.total_price, b.status
+        FROM booking b
+        JOIN venue v ON v.id = b.venue_id
+        JOIN user u ON u.id = b.customer_id
+        ORDER BY b.created_at DESC, b.id DESC
+        LIMIT ?
+        """,
+        (int(limit),),
+    ).fetchall()
+    return [
+        {
+            "id": r["id"],
+            "code": r["code"],
+            "venue_name": r["venue_name"],
+            "customer_name": r["customer_name"],
+            "customer_email": r["customer_email"],
+            "start_at": r["start_at"],
+            "total_price": _int(r["total_price"]),
+            "status": r["status"],
+        }
+        for r in rows
+    ]

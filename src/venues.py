@@ -652,3 +652,29 @@ def batch_block_slots(conn, owner, venue_id, start_day, end_day, start_hour, end
     conn.commit()
     return blocked_count, skipped
 
+
+def _delete_venue_cascade(conn, venue_id):
+    """Delete a venue and all dependent rows in FK-safe order."""
+    conn.execute(
+        "DELETE FROM review WHERE booking_id IN (SELECT id FROM booking WHERE venue_id = ?)",
+        (venue_id,),
+    )
+    conn.execute("DELETE FROM booking_slot WHERE venue_id = ?", (venue_id,))
+    conn.execute("DELETE FROM booking WHERE venue_id = ?", (venue_id,))
+    conn.execute("DELETE FROM blocked_slot WHERE venue_id = ?", (venue_id,))
+    conn.execute("DELETE FROM pricing_rule WHERE venue_id = ?", (venue_id,))
+    conn.execute("DELETE FROM venue_photo WHERE venue_id = ?", (venue_id,))
+    conn.execute("DELETE FROM venue WHERE id = ?", (venue_id,))
+
+
+def delete_venue(conn, venue_id, owner_id):
+    """Delete a venue owned by owner_id and all dependent records in FK-safe order (BR14)."""
+    venue = check_venue_owner(conn, venue_id, owner_id)
+    try:
+        _delete_venue_cascade(conn, venue_id)
+        conn.commit()
+    except BaseException:
+        conn.rollback()
+        raise
+    return {"id": venue_id, "name": venue["name"]}
+

@@ -52,6 +52,19 @@ def edit_venue_route(venue_id):
     return redirect(next_url)
 
 
+@bp.post("/owner/venues/<int:venue_id>/delete")
+@login_required("owner")
+def delete_venue_route(venue_id):
+    """Delete a venue owned by the current owner (BR14)."""
+    conn = get_db()
+    try:
+        venues.delete_venue(conn, venue_id, g.user["id"])
+        flash("Venue deleted successfully.", "success")
+    except BusinessRuleError as e:
+        flash(e.message, "error")
+    return redirect("/owner/venues")
+
+
 @bp.post("/api/owner/venues/<int:venue_id>/edit")
 @login_required("owner")
 def api_edit_venue(venue_id):
