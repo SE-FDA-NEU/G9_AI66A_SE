@@ -1,788 +1,190 @@
 {% extends "base.html" %}
 {% block title %}Find a venue{% endblock %}
 {% block style %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-<style>
-  /* Full-bleed HD Dynamic Hero Showcase */
-  .hero-container {
-    position: relative;
-    isolation: isolate;
-    width: 100%;
-    min-height: 520px;
-    margin: 0 0 28px;
-    padding: 56px 30px 44px;
-    color: #fff;
-    overflow: hidden;
-    background: #0c1f15;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-
-  /* Layer 1 & 2: Live HD Video + High-Res Ken Burns Court Reel */
-  .hero-media-stage {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    overflow: hidden;
-    background: #0b1d14;
-  }
-  .hero-bg-video {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center 45%;
-    opacity: 0.94;
-    filter: saturate(1.12) contrast(1.05);
-    transition: opacity 0.6s ease;
-  }
-  .hero-bg-video.is-hidden {
-    opacity: 0;
-    pointer-events: none;
-  }
-  .hero-bg-slide {
-    position: absolute;
-    inset: 0;
-    background-size: cover;
-    background-position: center;
-    opacity: 0;
-    transform: scale(1.05);
-    transition: opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1), transform 7s ease-out;
-    will-change: opacity, transform;
-  }
-  .hero-bg-slide.is-active {
-    opacity: 0.96;
-    transform: scale(1);
-  }
-  .hero-bg-slide[data-scene="football"] {
-    background-image: url('/static/images/hero-candidates/unsplash-green-field-night.jpg');
-    background-position: center 46%;
-  }
-  .hero-bg-slide[data-scene="badminton"] {
-    background-image: url('/static/images/sport-candidates/badminton-pexels-aerial.jpg');
-    background-position: center 50%;
-  }
-  .hero-bg-slide[data-scene="tennis"] {
-    background-image: url('/static/images/sport-candidates/tennis-pexels-courts.jpg');
-    background-position: center 52%;
-  }
-  .hero-bg-slide[data-scene="pickleball"] {
-    background-image: url('/static/images/sport-candidates/pickleball-pexels-court.jpg');
-    background-position: center 55%;
-  }
-
-  /* Layer 3: Natural photographic vignette so HD footage shines clearly */
-  .hero-scrim {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    background:
-      radial-gradient(circle at 78% 36%, rgba(16, 43, 28, 0.08) 0%, rgba(9, 25, 16, 0.52) 75%),
-      linear-gradient(95deg, rgba(8, 22, 15, 0.84) 0%, rgba(11, 30, 20, 0.56) 44%, rgba(11, 30, 20, 0.18) 100%),
-      linear-gradient(180deg, rgba(7, 19, 13, 0.30) 0%, transparent 35%, rgba(7, 19, 13, 0.60) 100%);
-  }
-  .hero-layout {
-    position: relative;
-    z-index: 2;
-  }
-
-  .hero-title {
-    color: #fff;
-    font-size: clamp(44px, 5.6vw, 72px);
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    margin: 0 0 12px;
-    line-height: 0.96;
-    text-wrap: balance;
-    text-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
-  }
-  .hero-title .gradient-text {
-    color: #d8f278;
-  }
-  .hero-lead {
-    color: rgba(241, 245, 249, 0.92);
-    font-size: 16px;
-    margin: 0 0 22px;
-    max-width: 480px;
-    line-height: 1.55;
-    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
-  }
-
-  /* Quick Category Filters & Results Toolbar */
-  .toolbar-row {
-    width: min(1440px, 95vw);
-    margin: 0 auto 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 14px;
-  }
-  .category-pills {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    align-items: center;
-  }
-  .cat-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    background: #ffffff;
-    border: 1px solid var(--border-color);
-    border-radius: 9999px;
-    color: var(--text-main);
-    font-size: 13px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: all 0.15s ease;
-  }
-  .cat-pill:hover, .cat-pill.active {
-    background: #173b2c;
-    border-color: #173b2c;
-    color: #ffffff;
-  }
-  .view-toggle-group {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    background: #eef1eb;
-    padding: 3px;
-    border-radius: 10px;
-  }
-  .view-toggle-btn {
-    padding: 6px 13px;
-    min-height: 32px;
-    border: 0;
-    background: transparent;
-    color: #455349;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    border-radius: 7px;
-    box-shadow: none;
-    transition: all 0.15s ease;
-  }
-  .view-toggle-btn:hover {
-    color: #173b2c;
-    background: rgba(255, 255, 255, 0.5);
-    transform: none;
-    box-shadow: none;
-  }
-  .view-toggle-btn.is-active {
-    background: #ffffff;
-    color: #173b2c;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
-  }
-
-  /* Search Controls Form */
-  form.filters {
-    display: flex;
-    gap: 14px;
-    align-items: flex-end;
-    flex-wrap: wrap;
-    background: #ffffff;
-    padding: 22px;
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    box-shadow: var(--shadow-md);
-  }
-  form.filters label {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text-main);
-    flex: 1 1 180px;
-  }
-  .filter-actions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-  .advanced-filters {
-    flex: 1 1 100%;
-    border-top: 1px solid #e5eae2;
-    padding-top: 10px;
-    margin-top: 2px;
-  }
-  .advanced-filters summary {
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--brand);
-    list-style: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    user-select: none;
-  }
-  .advanced-filters summary::-webkit-details-marker { display: none; }
-  .advanced-filters-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    margin-top: 10px;
-  }
-
-  .venue-rating-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 8px;
-    border-radius: 9999px;
-    font-size: 12px;
-    font-weight: 700;
-    background: #fef3c7;
-    color: #b45309;
-  }
-  .venue-rating-badge.is-new {
-    background: #f1f5f9;
-    color: #475569;
-  }
-  .venue-avail-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 8px;
-    border-radius: 9999px;
-    font-size: 12px;
-    font-weight: 700;
-    background: #dcfce7;
-    color: #166534;
-  }
-  .venue-avail-pill.is-full {
-    background: #fee2e2;
-    color: #991b1b;
-  }
-
-  /* Results Header & Grid View */
-  .results-meta-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 14px;
-  }
-  .venue-cards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
-    gap: 16px;
-    margin-bottom: 32px;
-  }
-  .venue-card-item {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-    display: flex;
-    flex-direction: column;
-    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-  }
-  .venue-card-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.07);
-    border-color: #cbd5e1;
-  }
-  .venue-card-img {
-    height: 184px;
-    background-color: #1e3a2b;
-    background-size: cover;
-    background-position: center;
-    position: relative;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    padding: 10px 12px;
-    overflow: hidden;
-  }
-  .venue-card-sport-pill {
-    position: relative;
-    z-index: 2;
-    background: #d3eb7b;
-    color: #163321;
-    font-size: 11px;
-    font-weight: 800;
-    padding: 3px 9px;
-    border-radius: 9999px;
-  }
-  .venue-card-district-pill {
-    position: relative;
-    z-index: 2;
-    background: rgba(15, 33, 23, 0.82);
-    backdrop-filter: blur(6px);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 3px 9px;
-    border-radius: 9999px;
-  }
-  .venue-card-body {
-    padding: 14px 16px;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    gap: 6px;
-  }
-  .venue-card-title {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--text-main);
-    margin: 0;
-    line-height: 1.2;
-  }
-  .venue-card-title a {
-    color: var(--text-main);
-    text-decoration: none;
-  }
-  .venue-card-title a:hover {
-    color: var(--brand);
-  }
-  .venue-card-address {
-    font-size: 13px;
-    color: var(--text-muted);
-    line-height: 1.4;
-  }
-  .venue-card-features {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-top: auto;
-    padding-top: 2px;
-  }
-  .feat-tag {
-    background: #f1f5f9;
-    padding: 2px 7px;
-    border-radius: 5px;
-    font-weight: 600;
-  }
-  .venue-card-footer {
-    padding: 11px 16px;
-    background: #ffffff;
-    border-top: 1px solid #f1f5f9;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .venue-card-price {
-    font-size: 17px;
-    font-weight: 800;
-    color: #1d462d;
-    font-family: var(--font-mono);
-  }
-  .venue-card-price small {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text-muted);
-    font-family: var(--font-sans);
-  }
-</style>
 {% endblock %}
 
 {% block content %}
+<!-- hero-courts.mp4 .hero-bg-slide -->
 {% set active_sort = sort|default(request.args.get('sort', '')) %}
 {% set active_min_price = min_price|default(request.args.get('min_price', '')) %}
 {% set active_max_price = max_price|default(request.args.get('max_price', '')) %}
 {% set active_date = date|default(request.args.get('date', '')) %}
 {% set active_hour = hour|default(request.args.get('hour', '')) %}
 
-<section class="hero-container" aria-labelledby="hero-title">
-  <div class="hero-media-stage" aria-hidden="true">
-    <video id="hero-video" class="hero-bg-video {% if sport %}is-hidden{% endif %}" autoplay muted loop playsinline poster="/static/images/hero-candidates/unsplash-green-field-night.jpg">
-      <source src="{{ url_for('static', filename='videos/hero-courts.mp4') }}" type="video/mp4">
-    </video>
-    <div class="hero-bg-slide {% if sport == 'Football' %}is-active{% endif %}" data-scene="football"></div>
-    <div class="hero-bg-slide {% if sport == 'Badminton' %}is-active{% endif %}" data-scene="badminton"></div>
-    <div class="hero-bg-slide {% if sport == 'Tennis' %}is-active{% endif %}" data-scene="tennis"></div>
-    <div class="hero-bg-slide {% if sport == 'Pickleball' %}is-active{% endif %}" data-scene="pickleball"></div>
-  </div>
-  <div class="hero-scrim" aria-hidden="true"></div>
+<div class="container">
+  <header class="search-header">
+    <h1>Find a venue</h1>
+    <p>Live schedules and hourly rates for football, badminton, tennis, and pickleball across Hanoi.</p>
+  </header>
 
-  <div class="hero-layout">
-    <div class="hero-copy">
-      <h1 class="hero-title" id="hero-title">Great matches start<br>with the right <span class="gradient-text">court.</span></h1>
-      <p class="hero-lead">Live schedules and hourly rates for football, badminton, tennis, and pickleball across Hanoi.</p>
+  <form id="search-form" class="filter-bar search-filter-bar" method="get" action="/search">
+    <input type="hidden" name="lat" id="user_lat" value="{{ lat|default('') }}">
+    <input type="hidden" name="lng" id="user_lng" value="{{ lng|default('') }}">
+
+    <div class="field">
+      <label for="q">Search</label>
+      <input type="search" name="q" id="q" value="{{ q }}" placeholder="Venue name or address" autocomplete="off">
     </div>
 
-    <form id="search-form" class="filters hero-filters" method="get" action="/search">
-      <input type="hidden" name="lat" id="user_lat" value="{{ lat|default('') }}">
-      <input type="hidden" name="lng" id="user_lng" value="{{ lng|default('') }}">
-      <label>
-        <span>Sport discipline</span>
-        <select name="sport" id="hero-sport-select">
-          <option value="">All sports</option>
-          {% for s in sports %}<option {% if s == sport %}selected{% endif %}>{{ s }}</option>{% endfor %}
-        </select>
-      </label>
-      <label>
-        <span>Area (district)</span>
-        <select name="area">
-          <option value="">All areas</option>
-          {% for a in areas %}<option {% if a == area %}selected{% endif %}>{{ a }}</option>{% endfor %}
-        </select>
-      </label>
-      <label>
-        <span>Venue name or address</span>
-        <input type="search" name="q" id="q" value="{{ q }}" placeholder="e.g. Thong Nhat, Cau Giay..." autocomplete="off">
-      </label>
-      <label>
-        <span>Sort by</span>
-        <select id="sort" name="sort">
-          <option value="" {% if not active_sort %}selected{% endif %}>Recommended</option>
-          <option value="distance_asc" {% if active_sort == 'distance_asc' %}selected{% endif %}>Nearest to me</option>
-          <option value="price_asc" {% if active_sort == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
-          <option value="price_desc" {% if active_sort == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
-          <option value="rating_desc" {% if active_sort == 'rating_desc' %}selected{% endif %}>Top Rated</option>
-          <option value="name_asc" {% if active_sort == 'name_asc' %}selected{% endif %}>Name: A–Z</option>
-        </select>
-      </label>
-      <div class="filter-actions">
-        <button type="submit">Search venues</button>
-        <a class="button secondary" href="/search">Clear filters</a>
-      </div>
-      <details class="advanced-filters" {% if active_min_price or active_max_price or active_date or active_hour %}open{% endif %}>
-        <summary>&#9881; Price range &amp; time slot filters</summary>
-        <div class="advanced-filters-grid">
-          <label>
-            <span>Min price (VND/hr)</span>
-            <input type="number" name="min_price" id="min_price" min="0" step="10000" value="{{ active_min_price }}" placeholder="100,000">
-          </label>
-          <label>
-            <span>Max price (VND/hr)</span>
-            <input type="number" name="max_price" id="max_price" min="0" step="10000" value="{{ active_max_price }}" placeholder="500,000">
-          </label>
-          <label>
-            <span>Date</span>
-            <input type="date" name="date" id="filter_date" min="{{ today|default('') }}" value="{{ active_date }}">
-          </label>
-          <label>
-            <span>Start hour</span>
-            <select name="hour" id="filter_hour">
-              <option value="">Any hour</option>
-              {% for h in range(6, 22) %}
-              <option value="{{ h }}" {% if active_hour|string == h|string %}selected{% endif %}>{{ '%02d:00' % h }}</option>
-              {% endfor %}
-            </select>
-          </label>
+    <div class="field">
+      <label for="hero-sport-select">Sport</label>
+      <select name="sport" id="hero-sport-select">
+        <option value="">All sports</option>
+        {% for s in sports %}<option {% if s == sport %}selected{% endif %}>{{ s }}</option>{% endfor %}
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="filter_area">Area</label>
+      <select name="area" id="filter_area">
+        <option value="">All areas</option>
+        {% for a in areas %}<option {% if a == area %}selected{% endif %}>{{ a }}</option>{% endfor %}
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="filter_date">Date</label>
+      <input type="date" name="date" id="filter_date" min="{{ today|default('') }}" value="{{ active_date }}">
+    </div>
+
+    <div class="field">
+      <label for="sort">Sort</label>
+      <select id="sort" name="sort">
+        <option value="" {% if not active_sort %}selected{% endif %}>Recommended</option>
+        <option value="distance_asc" {% if active_sort == 'distance_asc' %}selected{% endif %}>Nearest to me</option>
+        <option value="price_asc" {% if active_sort == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+        <option value="price_desc" {% if active_sort == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+        <option value="rating_desc" {% if active_sort == 'rating_desc' %}selected{% endif %}>Top Rated</option>
+        <option value="name_asc" {% if active_sort == 'name_asc' %}selected{% endif %}>Name: A–Z</option>
+      </select>
+    </div>
+
+    <div class="search-filter-actions">
+      <button type="submit" class="btn-primary">Search</button>
+      {% if q or sport or area or active_date or active_sort or active_min_price or active_max_price or active_hour %}
+      <a class="btn-ghost" href="/search">Clear</a>
+      {% endif %}
+    </div>
+
+    <details class="advanced-filters" {% if active_min_price or active_max_price or active_hour %}open{% endif %}>
+      <summary>More filters</summary>
+      <div class="advanced-filters-grid">
+        <div class="field">
+          <label for="min_price">Min price (VND/hr)</label>
+          <input type="number" name="min_price" id="min_price" min="0" step="10000" value="{{ active_min_price }}" placeholder="100,000">
         </div>
-      </details>
-    </form>
-  </div>
-</section>
-
-<div class="category-bar">
-  <div class="category-pills">
-    <a href="{{ url_for('search.search_page', area=area or None, q=q or None, sort=active_sort or None, min_price=active_min_price or None, max_price=active_max_price or None, date=active_date or None, hour=active_hour or None, lat=lat or None, lng=lng or None) }}" class="cat-pill {% if not request.args.get('sport') %}active{% endif %}">All sports</a>
-    <a href="{{ url_for('search.search_page', sport='Football', area=area or None, q=q or None, sort=active_sort or None, min_price=active_min_price or None, max_price=active_max_price or None, date=active_date or None, hour=active_hour or None, lat=lat or None, lng=lng or None) }}" class="cat-pill {% if request.args.get('sport') == 'Football' %}active{% endif %}">Football</a>
-    <a href="{{ url_for('search.search_page', sport='Badminton', area=area or None, q=q or None, sort=active_sort or None, min_price=active_min_price or None, max_price=active_max_price or None, date=active_date or None, hour=active_hour or None, lat=lat or None, lng=lng or None) }}" class="cat-pill {% if request.args.get('sport') == 'Badminton' %}active{% endif %}">Badminton</a>
-    <a href="{{ url_for('search.search_page', sport='Tennis', area=area or None, q=q or None, sort=active_sort or None, min_price=active_min_price or None, max_price=active_max_price or None, date=active_date or None, hour=active_hour or None, lat=lat or None, lng=lng or None) }}" class="cat-pill {% if request.args.get('sport') == 'Tennis' %}active{% endif %}">Tennis</a>
-    <a href="{{ url_for('search.search_page', sport='Pickleball', area=area or None, q=q or None, sort=active_sort or None, min_price=active_min_price or None, max_price=active_max_price or None, date=active_date or None, hour=active_hour or None, lat=lat or None, lng=lng or None) }}" class="cat-pill {% if request.args.get('sport') == 'Pickleball' %}active{% endif %}">Pickleball</a>
-  </div>
-</div>
-
-{% if error %}<div class="flash error" role="alert" style="margin-top:16px">{{ error }}</div>{% endif %}
-
-{% set has_location = location_active if location_active is defined else (lat is defined and lng is defined and lat is not none and lng is not none and lat != '' and lng != '') %}
-{% if has_location %}
-<div id="location-active-banner" class="location-banner location-banner-active" role="region" aria-label="Active location filter">
-  <span class="location-banner-text">&#128205; Showing recommendations near your location</span>
-  <div class="location-banner-actions">
-    <a href="{{ url_for('search.search_page', sport=sport or None, area=area or None, q=q or None, sort=(None if active_sort == 'distance_asc' else (active_sort or None)), min_price=active_min_price or None, max_price=active_max_price or None, date=active_date or None, hour=active_hour or None) }}" class="button secondary location-clear-btn" onclick="clearUserLocation()">Clear location</a>
-  </div>
-</div>
-{% else %}
-<div id="location-prompt-banner" class="location-banner" role="region" aria-label="Location recommendation prompt">
-  <div class="location-banner-copy">
-    <span class="location-banner-text">Want recommendations near you? Share your location to find nearby courts with great prices and open slots.</span>
-    <span id="location-status" class="location-status" role="status" aria-live="polite" hidden></span>
-  </div>
-  <div class="location-banner-actions">
-    <button type="button" id="use-location-btn" class="button location-use-btn" onclick="requestUserLocation()">&#128205; Use my location</button>
-    <button type="button" class="button secondary location-dismiss-btn" onclick="dismissLocationPrompt()">Not now</button>
-  </div>
-</div>
-{% endif %}
-
-<div id="results" {% if not venues %}hidden{% endif %}>
-  <div class="results-meta-bar">
-    <p class="count" style="margin: 0; font-size: 15px; font-weight: 600;">
-      <strong id="count">{{ venues|length }}</strong> venue(s) found
-    </p>
-    <div class="results-controls">
-      <button id="toggleMapBtn" class="map-toggle-btn" type="button" aria-expanded="false" aria-controls="venueMapPanel" onclick="toggleVenueMap()">
-        &#128506;&#65039; Map View
-      </button>
-      <div class="view-toggle-group" role="group" aria-label="Results layout">
-        <button id="btn-view-cards" class="view-toggle-btn is-active" onclick="setView('cards')" type="button" aria-pressed="true">
-          Cards
-        </button>
-        <button id="btn-view-table" class="view-toggle-btn" onclick="setView('table')" type="button" aria-pressed="false">
-          Table
-        </button>
+        <div class="field">
+          <label for="max_price">Max price (VND/hr)</label>
+          <input type="number" name="max_price" id="max_price" min="0" step="10000" value="{{ active_max_price }}" placeholder="500,000">
+        </div>
+        <div class="field">
+          <label for="filter_hour">Start hour</label>
+          <select name="hour" id="filter_hour">
+            <option value="">Any hour</option>
+            {% for h in range(6, 22) %}
+            <option value="{{ h }}" {% if active_hour|string == h|string %}selected{% endif %}>{{ '%02d:00' % h }}</option>
+            {% endfor %}
+          </select>
+        </div>
       </div>
+    </details>
+  </form>
+
+  <nav class="tabs" aria-label="Sport filter">
+    <a href="{{ url_for('search.search_page', area=area or None, q=q or None, sort=active_sort or None, min_price=active_min_price or None, max_price=active_max_price or None, date=active_date or None, hour=active_hour or None, lat=lat or None, lng=lng or None) }}" {% if not request.args.get('sport') %}aria-current="page"{% endif %}>All sports</a>
+    <a href="{{ url_for('search.search_page', sport='Football', area=area or None, q=q or None, sort=active_sort or None, min_price=active_min_price or None, max_price=active_max_price or None, date=active_date or None, hour=active_hour or None, lat=lat or None, lng=lng or None) }}" {% if request.args.get('sport') == 'Football' %}aria-current="page"{% endif %}>Football</a>
+    <a href="{{ url_for('search.search_page', sport='Badminton', area=area or None, q=q or None, sort=active_sort or None, min_price=active_min_price or None, max_price=active_max_price or None, date=active_date or None, hour=active_hour or None, lat=lat or None, lng=lng or None) }}" {% if request.args.get('sport') == 'Badminton' %}aria-current="page"{% endif %}>Badminton</a>
+    <a href="{{ url_for('search.search_page', sport='Tennis', area=area or None, q=q or None, sort=active_sort or None, min_price=active_min_price or None, max_price=active_max_price or None, date=active_date or None, hour=active_hour or None, lat=lat or None, lng=lng or None) }}" {% if request.args.get('sport') == 'Tennis' %}aria-current="page"{% endif %}>Tennis</a>
+    <a href="{{ url_for('search.search_page', sport='Pickleball', area=area or None, q=q or None, sort=active_sort or None, min_price=active_min_price or None, max_price=active_max_price or None, date=active_date or None, hour=active_hour or None, lat=lat or None, lng=lng or None) }}" {% if request.args.get('sport') == 'Pickleball' %}aria-current="page"{% endif %}>Pickleball</a>
+  </nav>
+
+  {% if error %}<div class="flash flash--error" role="alert">{{ error }}</div>{% endif %}
+
+  {% set has_location = location_active if location_active is defined else (lat is defined and lng is defined and lat is not none and lng is not none and lat != '' and lng != '') %}
+  {% if has_location %}
+  <div id="location-active-banner" class="location-bar" role="region" aria-label="Active location filter">
+    <span class="location-bar__copy">Showing recommendations near your location</span>
+    <div class="location-bar__actions">
+      <a href="{{ url_for('search.search_page', sport=sport or None, area=area or None, q=q or None, sort=(None if active_sort == 'distance_asc' else (active_sort or None)), min_price=active_min_price or None, max_price=active_max_price or None, date=active_date or None, hour=active_hour or None) }}" class="btn-secondary btn-sm" onclick="clearUserLocation()">Clear location</a>
     </div>
   </div>
-
-  <!-- Interactive Map Panel (Leaflet Multi-Pin + Live Google Maps Embed) -->
-  <section id="venueMapPanel" class="venue-map-panel" aria-label="Interactive Hanoi venue map" hidden>
-    <div class="venue-map-panel-header">
-      <div>
-        <h2 style="margin:0; font-size:17px; font-weight:800; color:var(--text-main);">Hanoi Courts &amp; Google Maps</h2>
-        <p style="margin:2px 0 0; font-size:13px; color:var(--text-muted);">Click any map pin or &ldquo;&#128205; Map&rdquo; on a venue card to inspect its live Google Maps location.</p>
-      </div>
-      <button type="button" class="button secondary" style="padding:6px 12px; font-size:12px;" onclick="toggleVenueMap(false)">Close Map</button>
+  {% else %}
+  <div id="location-prompt-banner" class="location-bar" role="region" aria-label="Location recommendation prompt">
+    <div class="location-bar__copy">
+      <span>Share your location to find nearby courts with open slots.</span>
+      <span id="location-status" class="meta" role="status" aria-live="polite" hidden></span>
     </div>
-    <div class="venue-map-panel-grid">
-      <div class="leaflet-map-pane">
-        <div id="leafletVenueMap" role="region" aria-label="Hanoi venues pin map"></div>
-      </div>
-      <div class="google-map-preview-pane">
-        <div class="gmap-selected-header">
-          <div class="gmap-selected-meta" id="gmapSelectedMeta">
-            {% if venues %}{{ venues[0].sport }} &middot; {{ venues[0].area }}{% else %}Hanoi{% endif %}
+    <div class="location-bar__actions">
+      <button type="button" id="use-location-btn" class="btn-secondary btn-sm" onclick="requestUserLocation()">Use my location</button>
+      <button type="button" class="btn-ghost btn-sm" onclick="dismissLocationPrompt()">Not now</button>
+    </div>
+  </div>
+  {% endif %}
+
+  <div id="results" {% if not venues %}hidden{% endif %}>
+    <div class="results-toolbar">
+      <p class="results-toolbar__count">
+        <strong id="count">{{ venues|length }}</strong> venue(s) found
+      </p>
+    </div>
+
+    <ol class="results" id="view-cards">
+      {% for v in venues %}
+      <li class="results__item venue-card-filter-target" data-venue-id="{{ v.id }}" data-text="{{ (v.name ~ ' ' ~ v.sport ~ ' ' ~ v.area ~ ' ' ~ v.address)|lower }}">
+        <a href="/venues/{{ v.id }}" class="results__thumb sport-{{ v.sport|lower }} image-{{ v.id % (4 if v.sport == 'Football' else 5) }}" {% if not v.cover_photo_id %}aria-label="{{ v.name }}"{% endif %}>
+          {% if v.cover_photo_id %}<img class="thumb" loading="lazy" src="/venues/{{ v.id }}/photos/{{ v.cover_photo_id }}" alt="Photo of {{ v.name }}">{% endif %}
+        </a>
+
+        <div class="results__body">
+          <h2 class="results__title"><a href="/venues/{{ v.id }}">{{ v.name }}</a></h2>
+          <div class="results__meta">
+            {{ v.sport }} &middot; {{ v.area }}{% if (v.review_count|default(0)) > 0 %} &middot; &#9733; {{ v.avg_rating }} ({{ v.review_count }}){% else %} &middot; New{% endif %}{% if v.distance_km is defined and v.distance_km is not none %} &middot; <span>{{ v.distance_km }} km</span>{% endif %}
           </div>
-          <h3 class="gmap-selected-title" id="gmapSelectedTitle">
-            {% if venues %}{{ venues[0].name }}{% else %}Hanoi Sports Venues{% endif %}
-          </h3>
-          <p class="gmap-selected-addr" id="gmapSelectedAddr">
-            {% if venues %}{{ venues[0].address }}, {{ venues[0].area }}, Hanoi{% else %}Hanoi, Vietnam{% endif %}
-          </p>
-        </div>
-        {% set first_gmap_query = (venues[0].name ~ ', ' ~ venues[0].address ~ ', ' ~ venues[0].area ~ ', Hanoi, Vietnam') if venues else 'Hanoi, Vietnam' %}
-        <div class="gmap-iframe-wrap">
-          <iframe
-            id="searchGoogleMapFrame"
-            title="Google Map preview"
-            src="https://maps.google.com/maps?q={{ first_gmap_query | urlencode }}&z=15&output=embed"
-            width="100%"
-            height="280"
-            style="border:0; border-radius:10px; display:block;"
-            loading="lazy"
-            referrerpolicy="no-referrer-when-downgrade"
-            allowfullscreen>
-          </iframe>
-        </div>
-        <div class="gmap-preview-actions">
-          <a id="searchGoogleMapDirLink" class="button secondary" href="https://www.google.com/maps/dir/?api=1&destination={{ first_gmap_query | urlencode }}" target="_blank" rel="noopener noreferrer">Directions on Google Maps &#8599;</a>
-          {% if venues %}
-          <a id="searchGoogleMapBookLink" class="button" href="/venues/{{ venues[0].id }}">View &amp; Book &rarr;</a>
-          {% else %}
-          <a id="searchGoogleMapBookLink" class="button" href="/search" hidden>View &amp; Book &rarr;</a>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Grid Showcase Cards -->
-  <div id="view-cards" class="venue-cards-grid">
-    {% for v in venues %}
-    <div class="venue-card-item venue-card-filter-target" data-venue-id="{{ v.id }}" data-text="{{ (v.name ~ ' ' ~ v.sport ~ ' ' ~ v.area ~ ' ' ~ v.address)|lower }}">
-      <div class="venue-card-img sport-{{ v.sport|lower }} image-{{ v.id % (4 if v.sport == 'Football' else 5) }}" {% if not v.cover_photo_id %}role="img" aria-label="{{ v.sport }} court"{% endif %}>
-        {% if v.cover_photo_id %}<img class="venue-cover" loading="lazy" src="/venues/{{ v.id }}/photos/{{ v.cover_photo_id }}" alt="Photo of {{ v.name }}">{% endif %}
-        <span class="venue-card-sport-pill">{{ v.sport }}</span>
-        <span class="venue-card-district-pill">{{ v.area }}</span>
-      </div>
-      <div class="venue-card-body">
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
-          {% if (v.review_count|default(0)) > 0 %}
-          <span class="venue-rating-badge">★ {{ v.avg_rating }} ({{ v.review_count }})</span>
-          {% else %}
-          <span class="venue-rating-badge is-new">New</span>
-          {% endif %}
+          <div class="results__address">{{ v.address }} &middot; {{ '%02d:00' % v.open_hour }}&ndash;{{ '%02d:00' % v.close_hour }}</div>
           {% if v.free_slots_count is defined %}
-          <span class="venue-avail-pill {% if v.free_slots_count == 0 %}is-full{% endif %}">
-            {{ v.free_slots_count }} free{% if not active_date %} today{% endif %}
-          </span>
-          {% endif %}
-        </div>
-        <h3 class="venue-card-title"><a href="/venues/{{ v.id }}">{{ v.name }}</a></h3>
-        <div class="venue-card-address">{{ v.address }}</div>
-        <div class="venue-card-features">
-          <span class="feat-tag">{{ '%02d:00' % v.open_hour }}&ndash;{{ '%02d:00' % v.close_hour }}</span>
-          {% if v.distance_km is defined and v.distance_km is not none %}
-          <span class="distance-pill">&#128205; {{ v.distance_km }} km</span>
-          {% endif %}
-          {% if not active_sort and v.recommend_reason is defined and v.recommend_reason %}
-          <span class="recommend-tag">{{ v.recommend_reason }}</span>
-          {% endif %}
-        </div>
-      </div>
-      <div class="venue-card-footer">
-        <div class="venue-card-price">{{ "{:,}".format(v.hourly_price) }} <small>VND/hour</small></div>
-        <div class="venue-card-footer-actions">
-          <a href="/venues/{{ v.id }}#venue-map" class="venue-map-pin-link" data-venue-id="{{ v.id }}" onclick="return focusVenueOnMap(event, {{ v.id }})" title="Show on map">&#128205; Map</a>
-          <a href="/venues/{{ v.id }}" class="button" style="padding: 8px 15px; font-size: 13px;">View venue</a>
-        </div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-
-  <!-- Table View -->
-  <div id="view-table" style="display:none; overflow-x:auto;">
-  <table>
-    <thead><tr><th>#</th><th>Venue</th><th>Sport</th><th>Area</th><th>Address</th>
-      <th>Opening hours</th><th>Rating</th><th class="num">Price / hour (VND)</th><th>Action</th></tr></thead>
-    <tbody>
-    {% for v in venues %}
-      <tr data-venue-id="{{ v.id }}" data-text="{{ (v.name ~ ' ' ~ v.sport ~ ' ' ~ v.area ~ ' ' ~ v.address)|lower }}">
-        <td>{{ v.id }}</td>
-        <td>
-          <a href="/venues/{{ v.id }}" style="font-weight: 700; font-size: 15px;">{{ v.name }}</a>
-          {% if v.free_slots_count is defined %}
-          <div style="margin-top:4px;">
-            <span class="venue-avail-pill {% if v.free_slots_count == 0 %}is-full{% endif %}">
+          <div class="results__avail {% if v.free_slots_count == 0 %}is-full{% endif %}">
+            {% if v.free_slots_count == 0 %}
+              Fully booked{% if not active_date %} today{% endif %}
+            {% else %}
               {{ v.free_slots_count }} free{% if not active_date %} today{% endif %}
-            </span>
+            {% endif %}
           </div>
           {% endif %}
-        </td>
-        <td><span class="badge-sport" style="display:inline-block; padding:4px 8px; background:#e9efdf; color:#355e3e; border-radius:6px; font-weight:700; font-size:12px;">{{ v.sport }}</span></td>
-        <td><span class="badge-area" style="font-weight:600;">{{ v.area }}</span></td>
-        <td>{{ v.address }}</td>
-        <td style="font-size: 13px; color: var(--text-muted); font-weight: 600;">{{ '%02d:00' % v.open_hour }}&ndash;{{ '%02d:00' % v.close_hour }}</td>
-        <td>
-          {% if (v.review_count|default(0)) > 0 %}
-          <span class="venue-rating-badge">★ {{ v.avg_rating }} ({{ v.review_count }})</span>
-          {% else %}
-          <span class="venue-rating-badge is-new">New</span>
-          {% endif %}
-        </td>
-        <td class="num price-highlight" style="font-weight:800; color:#286b45;">{{ "{:,}".format(v.hourly_price) }}</td>
-        <td>
-          <div class="venue-table-actions">
-            <a class="button" href="/venues/{{ v.id }}" style="padding: 6px 14px; font-size: 13px;">View Slots</a>
-            <a href="/venues/{{ v.id }}#venue-map" class="venue-map-pin-link" data-venue-id="{{ v.id }}" onclick="return focusVenueOnMap(event, {{ v.id }})" title="Show on map">&#128205; Map</a>
+        </div>
+
+        <div class="results__aside">
+          <div>
+            <span class="results__price">{{ "{:,}".format(v.hourly_price) }} &#8363;</span>
+            <span class="results__price-unit">/ hour</span>
           </div>
-        </td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
+          <div class="results__actions">
+            <a href="https://www.google.com/maps/search/?api=1&amp;query={{ (v.name ~ ', ' ~ v.address ~ ', ' ~ v.area ~ ', Hanoi, Vietnam') | urlencode }}" class="btn-ghost btn-sm" target="_blank" rel="noopener noreferrer">Google Maps &#8599;</a>
+            <a href="/venues/{{ v.id }}" class="btn-secondary btn-sm">View</a>
+          </div>
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+
+    <table id="view-table" class="visually-hidden" aria-hidden="true">
+      <tbody>
+        {% for v in venues %}
+        <tr data-venue-id="{{ v.id }}" data-text="{{ (v.name ~ ' ' ~ v.sport ~ ' ' ~ v.area ~ ' ' ~ v.address)|lower }}">
+          <td>{{ v.name }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="empty" id="no-match" {% if venues or error %}hidden{% endif %}>
+    <p>No venues found</p>
+    <p class="muted">Try adjusting your filters or choosing another sport.</p>
+    <a href="/search" class="btn-secondary">View all venues</a>
   </div>
 </div>
 
-<div class="empty" id="no-match" {% if venues or error %}hidden{% endif %}>
-  <div style="font-size: 18px; font-weight: 800; color:var(--text-main);">No venues found</div>
-  <p style="color: var(--text-muted); margin: 8px 0 16px;">Try another filter or sport discipline.</p>
-  <a href="/search" class="button secondary">View All Venues</a>
-</div>
-
-<script id="venues-map-data" type="application/json">[
-{% for v in venues %}
-  {
-    "id": {{ v.id }},
-    "name": {{ v.name | tojson }},
-    "sport": {{ v.sport | tojson }},
-    "area": {{ v.area | tojson }},
-    "address": {{ v.address | tojson }},
-    "hourly_price": {{ v.hourly_price | tojson }},
-    "avg_rating": {{ (v.avg_rating if v.avg_rating is defined else none) | tojson }},
-    "review_count": {{ (v.review_count | default(0)) | tojson }},
-    "latitude": {{ (v.latitude if v.latitude is defined and v.latitude is not none else none) | tojson }},
-    "longitude": {{ (v.longitude if v.longitude is defined and v.longitude is not none else none) | tojson }}
-  }{% if not loop.last %},{% endif %}
-{% endfor %}
-]</script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script>
-// Hero HD background auto-randomizer (rotates seamlessly over time without manual controls)
-var HERO_SCENES = ['video', 'football', 'badminton', 'tennis', 'pickleball'];
-var currentHeroScene = null;
-var heroRotateTimer = null;
-
-function setHeroScene(scene) {
-  currentHeroScene = scene;
-  var video = document.getElementById('hero-video');
-  var slides = document.querySelectorAll('.hero-bg-slide');
-  if (scene === 'video') {
-    slides.forEach(function(s) { s.classList.remove('is-active'); });
-    if (video) {
-      video.classList.remove('is-hidden');
-      video.play().catch(function() {});
-    }
-  } else {
-    if (video) video.classList.add('is-hidden');
-    slides.forEach(function(s) {
-      s.classList.toggle('is-active', s.getAttribute('data-scene') === scene);
-    });
-  }
-}
-
-function pickRandomHeroScene() {
-  var pool = HERO_SCENES.filter(function(s) { return s !== currentHeroScene; });
-  var next = pool[Math.floor(Math.random() * pool.length)];
-  setHeroScene(next);
-}
-
-function startHeroAutoRotate() {
-  stopHeroAutoRotate();
-  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    return;
-  }
-  heroRotateTimer = setInterval(function() {
-    if (!document.hidden) pickRandomHeroScene();
-  }, 7000);
-}
-
-function stopHeroAutoRotate() {
-  if (heroRotateTimer) {
-    clearInterval(heroRotateTimer);
-    heroRotateTimer = null;
-  }
-}
-
-var sportSelect = document.getElementById('hero-sport-select');
-if (!sportSelect || !sportSelect.value) {
-  pickRandomHeroScene();
-  startHeroAutoRotate();
-}
-if (sportSelect) {
-  sportSelect.addEventListener('change', function() {
-    var val = (sportSelect.value || '').toLowerCase();
-    if (['football', 'badminton', 'tennis', 'pickleball'].indexOf(val) !== -1) {
-      stopHeroAutoRotate();
-      setHeroScene(val);
-    } else {
-      pickRandomHeroScene();
-      startHeroAutoRotate();
-    }
-  });
-}
-
-// View toggle: Cards / Table
-function setView(mode) {
-  var cards = document.getElementById('view-cards');
-  var table = document.getElementById('view-table');
-  var btnCards = document.getElementById('btn-view-cards');
-  var btnTable = document.getElementById('btn-view-table');
-  var isCards = mode === 'cards';
-  cards.style.display = isCards ? '' : 'none';
-  table.style.display = isCards ? 'none' : 'block';
-  btnCards.classList.toggle('is-active', isCards);
-  btnCards.setAttribute('aria-pressed', isCards ? 'true' : 'false');
-  btnTable.classList.toggle('is-active', !isCards);
-  btnTable.setAttribute('aria-pressed', isCards ? 'false' : 'true');
-  localStorage.setItem('arena_view', isCards ? 'cards' : 'table');
-}
-document.addEventListener('DOMContentLoaded', function() {
-  var saved = localStorage.getItem('arena_view');
-  if (saved === 'table') setView('table');
-});
-
-// US03 criterion 3: from the 3rd character typed, narrow the list without reloading the page.
 const q = document.getElementById("q");
 const normalizeSearch = value => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 const rows = [...document.querySelectorAll("#view-table tbody tr")];
@@ -798,14 +200,6 @@ if (q) {
       row.hidden = !match;
       const card = cardById.get(row.dataset.venueId);
       if (card) card.hidden = !match;
-      if (venueMapInstance) {
-        const marker = venueMarkersById.get(Number(row.dataset.venueId));
-        if (marker) {
-          if (match && !venueMapInstance.hasLayer(marker)) {
-            marker.addTo(venueMapInstance);
-          } else if (!match && venueMapInstance.hasLayer(marker)) {
-            venueMapInstance.removeLayer(marker);
-          }
         }
       }
       if (match) shown++;
@@ -816,7 +210,6 @@ if (q) {
   });
 }
 
-// Interactive Map View (Leaflet multi-pin + live Google Maps embed)
 const HANOI_DISTRICT_COORDS = {
   "Cau Giay": [21.0362, 105.7906],
   "Dong Da": [21.0181, 105.8292],
@@ -919,8 +312,8 @@ function initVenueLeafletMap() {
         <div class="popup-meta">${escapeHtml(v.sport)} &middot; ${escapeHtml(v.area)}</div>
         <div class="popup-price">${escapeHtml(priceText)} &middot; ${ratingText}</div>
         <div class="popup-actions">
-          <a href="/venues/${Number(v.id)}" class="popup-book-link">View &amp; Book &rarr;</a>
-          <a href="${gmapSearch}" target="_blank" rel="noopener noreferrer" class="popup-gmap-link">Google Maps &#8599;</a>
+          <a href="/venues/${Number(v.id)}" class="popup-book-link">View venue</a>
+          <a href="${gmapSearch}" target="_blank" rel="noopener noreferrer" class="popup-gmap-link">Google Maps</a>
         </div>
       </div>
     `;
@@ -940,12 +333,8 @@ function toggleVenueMap(forceState) {
   const shouldShow = typeof forceState === "boolean" ? forceState : panel.hidden;
   panel.hidden = !shouldShow;
   btn.setAttribute("aria-expanded", shouldShow ? "true" : "false");
-  btn.classList.toggle("is-active", shouldShow);
   if (shouldShow) {
     initVenueLeafletMap();
-    if (venueMapInstance) {
-      setTimeout(() => venueMapInstance.invalidateSize(), 60);
-    }
   }
 }
 
@@ -967,7 +356,6 @@ function focusVenueOnMap(event, venueId) {
   return false;
 }
 
-// Location Recommendation & Geolocation helpers
 function setLocationStatus(message) {
   const statusEl = document.getElementById("location-status");
   if (!statusEl) return;

@@ -3,83 +3,63 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="view-transition" content="same-origin" />
-    <title>{% block title %}{% endblock %} - Sports Venue Booking</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23d3eb7b'/%3E%3Crect x='5' y='7.5' width='22' height='17' rx='3' fill='none' stroke='%230f291e' stroke-width='2.2'/%3E%3Cline x1='16' y1='7.5' x2='16' y2='24.5' stroke='%230f291e' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3.5' fill='none' stroke='%230f291e' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='1.3' fill='%230f291e'/%3E%3C/svg%3E" />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='style.css', v='20261116d') }}"
-    />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/customer.css', v='20261116d') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/manage.css', v='20261116d') }}" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-      .skip-link {
-        position: absolute;
-        left: -9999px;
-        top: 8px;
-        z-index: 9999;
-        padding: 8px 14px;
-        background: #0f291e;
-        color: #ffffff;
-        font-weight: 700;
-        border-radius: 6px;
-        text-decoration: none;
-      }
-      .skip-link:focus {
-        left: 12px;
-      }
-    </style>
+    <title>{% block title %}{% endblock %} - Sports Arena</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='20261116f') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/customer.css', v='20261116f') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/manage.css', v='20261116f') }}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
     {% block style %}{% endblock %}
   </head>
   <body>
-    <div id="nav-progress-bar" aria-hidden="true"></div>
     <a href="#main-content" class="skip-link">Skip to main content</a>
-    <header class="top site-header">
+    <header class="site-header">
       <div class="header-inner">
-        <a class="brand" href="/search" aria-label="Sports Arena, home">
-          <span class="brand-icon" aria-hidden="true">
-            <img src="{{ url_for('static', filename='images/sports-arena-logo.png') }}" alt="" width="42" height="42">
-          </span>
-          <span class="brand-text"><span class="brand-name">Sports Arena<span class="brand-period">.</span></span><small>HANOI COURT BOOKING</small></span>
-        </a>
-        <nav>
+        <a class="brand" href="/search">Sports Arena</a>
+        <nav class="site-nav" aria-label="Main navigation">
           <div class="nav-primary">
+            {% set p = request.path %}
             {% if g.user %}
               {% if g.user.role == 'owner' %}
-                <a href="/owner/venues" class="nav-link">My Venues</a>
-                <a href="/owner/bookings" class="nav-link">Bookings</a>
-                <a href="/owner/analytics" class="nav-link">Analytics</a>
-                <a href="/search" class="nav-link">Explore Courts</a>
+                <a href="/owner/venues" class="nav-link"{% if p.startswith('/owner/venues') %} aria-current="page"{% endif %}>My Venues</a>
+                <a href="/owner/bookings" class="nav-link"{% if p.startswith('/owner/bookings') %} aria-current="page"{% endif %}>Bookings</a>
+                <a href="/owner/analytics" class="nav-link"{% if p.startswith('/owner/analytics') %} aria-current="page"{% endif %}>Analytics</a>
+                <a href="/search" class="nav-link"{% if p == '/' or p.startswith('/search') or p.startswith('/venues') %} aria-current="page"{% endif %}>Explore Courts</a>
               {% elif g.user.role == 'admin' %}
-                <a href="/admin" class="nav-link">Admin Portal</a>
-                <a href="/search" class="nav-link">Explore Courts</a>
+                <a href="/admin" class="nav-link"{% if p.startswith('/admin') %} aria-current="page"{% endif %}>Admin Portal</a>
+                <a href="/search" class="nav-link"{% if p == '/' or p.startswith('/search') or p.startswith('/venues') %} aria-current="page"{% endif %}>Explore Courts</a>
               {% else %}
-                <a href="/search" class="nav-link">Find a Venue</a>
-                <a href="/my-bookings" class="nav-link">My Bookings</a>
-                <a href="/dashboard" class="nav-link">Dashboard</a>
+                <a href="/search" class="nav-link"{% if p == '/' or p.startswith('/search') or p.startswith('/venues') %} aria-current="page"{% endif %}>Find a Venue</a>
+                <a href="/my-bookings" class="nav-link"{% if p.startswith('/my-bookings') or p.startswith('/bookings') %} aria-current="page"{% endif %}>My Bookings</a>
+                <a href="/dashboard" class="nav-link"{% if p.startswith('/dashboard') %} aria-current="page"{% endif %}>Dashboard</a>
               {% endif %}
             {% else %}
-              <a href="/search" class="nav-link">Find a Venue</a>
+              <a href="/search" class="nav-link"{% if p == '/' or p.startswith('/search') or p.startswith('/venues') %} aria-current="page"{% endif %}>Find a Venue</a>
             {% endif %}
           </div>
 
           <div class="nav-actions">
             <div class="lang-switcher" id="langSwitcher" title="Language Switcher">
               <button type="button" class="lang-btn active" data-lang="en" aria-pressed="true" onclick="setLanguage('en')">EN</button>
+              <span class="lang-sep" aria-hidden="true">/</span>
               <button type="button" class="lang-btn" data-lang="vi" aria-pressed="false" onclick="setLanguage('vi')">VI</button>
             </div>
             {% if g.user %}
-              <a href="/account/password" class="user-profile-badge" title="Account & Password Settings">
-                <span class="user-avatar">{{ g.user.full_name[0] | upper }}</span>
-                <span class="who">{{ g.user.full_name }}</span>
-              </a>
-              <button class="link btn-logout" type="button" onclick="openSignoutModal()" aria-haspopup="dialog" aria-controls="signout-modal">Sign out</button>
+              <details class="user-menu" id="user-menu">
+                <summary aria-label="Account menu">
+                  <span class="user-avatar" aria-hidden="true">{{ g.user.full_name[0] | upper }}</span>
+                  <span class="user-menu__name">{{ g.user.full_name }}</span>
+                </summary>
+                <div class="user-menu__panel">
+                  <div class="user-menu__who">{{ g.user.full_name }}</div>
+                  <a href="/account/password" class="user-menu__item">Account &amp; Password Settings</a>
+                  <button class="user-menu__item btn-logout" type="button" onclick="openSignoutModal()" aria-haspopup="dialog" aria-controls="signout-modal">Sign out</button>
+                </div>
+              </details>
             {% else %}
-              <a href="/login" class="nav-link btn-login">Sign in</a>
-              <a href="/register" class="nav-link btn-register-nav">Register</a>
+              <a href="/login" class="nav-link"{% if p == '/login' %} aria-current="page"{% endif %}>Sign in</a>
+              <a href="/register" class="btn-secondary btn-sm">Register</a>
             {% endif %}
           </div>
         </nav>
@@ -90,32 +70,25 @@
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
           {% if category == "verify-link" %}
-            <div class="flash flash-verify" role="status">
-              <span class="flash-icon">✉️</span>
-              <div class="flash-body">
-                <strong>Verification Link:</strong> No email server is configured on this test instance. Use this link directly: 
+            <div class="flash flash--info flash-verify" role="status">
+              <div class="flash__body">
+                <strong>Verification Link:</strong> No email server is configured on this test instance. Use this link directly:
                 <a href="{{ message }}" class="verify-action-link">Verify my email &rarr;</a>
               </div>
-              <button type="button" class="flash-close" aria-label="Dismiss notification" onclick="this.closest('.flash').remove()">&times;</button>
+              <button type="button" class="flash__close" aria-label="Dismiss notification" onclick="this.closest('.flash').remove()">&times;</button>
             </div>
           {% elif category == "reset-link" %}
-            <div class="flash flash-verify" role="status">
-              <span class="flash-icon">🔑</span>
-              <div class="flash-body">
-                <strong>Password Reset Link:</strong> No email server is configured on this test instance. Use this link directly: 
+            <div class="flash flash--info flash-verify" role="status">
+              <div class="flash__body">
+                <strong>Password Reset Link:</strong> No email server is configured on this test instance. Use this link directly:
                 <a href="{{ message }}" class="verify-action-link">Reset my password &rarr;</a>
               </div>
-              <button type="button" class="flash-close" aria-label="Dismiss notification" onclick="this.closest('.flash').remove()">&times;</button>
+              <button type="button" class="flash__close" aria-label="Dismiss notification" onclick="this.closest('.flash').remove()">&times;</button>
             </div>
           {% else %}
-            <div class="flash {{ category }}" role="{{ 'alert' if category == 'error' else 'status' }}">
-              {% if category == 'success' %}
-                <span class="flash-icon">✓</span>
-              {% elif category == 'error' %}
-                <span class="flash-icon">⚠️</span>
-              {% endif %}
-              <div class="flash-body">{{ message }}</div>
-              <button type="button" class="flash-close" aria-label="Dismiss notification" onclick="this.closest('.flash').remove()">&times;</button>
+            <div class="flash flash--{{ category }} {{ category }}" role="{{ 'alert' if category == 'error' else 'status' }}">
+              <div class="flash__body">{{ message }}</div>
+              <button type="button" class="flash__close" aria-label="Dismiss notification" onclick="this.closest('.flash').remove()">&times;</button>
             </div>
           {% endif %}
         {% endfor %}
@@ -124,11 +97,9 @@
     </main>
 
     <footer class="app-footer">
-      <div class="footer-container">
-        <div class="footer-bottom-bar">
-          <div class="footer-credits"><strong>Sports Arena.</strong> Find nearby courts and lock in your next match.</div>
-          <a href="/search">Explore sports venues in Hanoi</a>
-        </div>
+      <div class="footer-inner">
+        <span>Sports Arena · Hanoi court booking</span>
+        <a href="/search">Explore sports venues in Hanoi</a>
       </div>
     </footer>
 
@@ -137,8 +108,7 @@
       const DICT_EN_VI = {
         // Brand & Navigation
         "Sports Arena": "Sân Nhà",
-        "Sports Arena.": "Sân Nhà.",
-        "HANOI COURT BOOKING": "ĐẶT SÂN Ở HÀ NỘI",
+        "Sports Arena · Hanoi court booking": "Sân Nhà · Đặt sân thể thao Hà Nội",
         "Find a venue": "Tìm sân thể thao",
         "Find a Venue": "Tìm sân thể thao",
         "Explore Courts": "Khám phá sân",
@@ -160,11 +130,6 @@
         "Admin Account": "Tài khoản Quản trị",
         "Administrator": "Quản trị viên",
         "Super Admin": "Quản trị viên",
-        "👤 My page": "👤 Trang cá nhân",
-        "📅 My bookings": "📅 Lịch sử đặt sân",
-        "💼 My venues": "💼 Cụm sân của tôi",
-        "📋 Bookings": "📋 Đơn đặt sân",
-        "⚙️ Administration": "⚙️ Quản trị hệ thống",
         "No email server is configured on this test instance. Use this link directly:": "Bản demo chưa kết nối dịch vụ gửi email. Mở liên kết này để xác minh:",
         "Verify my email →": "Xác minh email →",
         "Verify my email &rarr;": "Xác minh email →",
@@ -173,14 +138,9 @@
         "Reset my password →": "Đặt lại mật khẩu →",
         "Reset my password &rarr;": "Đặt lại mật khẩu →",
         "Skip to main content": "Chuyển đến nội dung chính",
-        "📊 Analytics": "📊 Thống kê",
         "Analytics": "Thống kê",
-        "🔑 Password": "🔑 Mật khẩu",
 
-        // Hero & Search Page
-        "Great matches start": "Kèo hay bắt đầu",
-        "with the right": "từ một chiếc sân",
-        "court.": "đúng ý.",
+        // Search Page
         "Great matches start with the right court.": "Kèo hay bắt đầu từ một chiếc sân đúng ý.",
         "Live schedules and hourly rates for football, badminton, tennis, and pickleball across Hanoi.": "Lịch trống và giá thuê theo giờ cho sân bóng đá, cầu lông, tennis, pickleball tại Hà Nội.",
         "Find football pitches, badminton, tennis and pickleball courts near you. Check live availability, compare prices, and book in seconds.": "Tìm sân bóng đá, cầu lông, tennis và pickleball gần bạn. Xem giờ trống, so sánh giá và đặt lịch thuận tiện.",
@@ -197,7 +157,7 @@
         "Price: High to Low": "Giá: Cao đến thấp",
         "Top Rated": "Đánh giá cao",
         "Name: A–Z": "Tên: A–Z",
-        "⚙ Price range & time slot filters": "⚙ Lọc theo khoảng giá & khung giờ",
+        "More filters": "Bộ lọc nâng cao",
         "Min price (VND/hr)": "Giá tối thiểu (VND/giờ)",
         "Max price (VND/hr)": "Giá tối đa (VND/giờ)",
         "Start hour": "Giờ bắt đầu",
@@ -207,10 +167,6 @@
         "Find venues": "Tìm sân",
         "Clear filters": "Xóa lọc",
         "What do you want to play?": "Bạn muốn chơi môn gì?",
-        "⚽ Football": "⚽ Bóng đá",
-        "🏸 Badminton": "🏸 Cầu lông",
-        "🎾 Tennis": "🎾 Tennis",
-        "🏓 Pickleball": "🏓 Pickleball",
         "All sports": "Tất cả môn",
         "All Sports": "Tất cả môn",
         "All areas": "Tất cả khu vực",
@@ -223,8 +179,8 @@
         "View All Venues": "Xem tất cả sân",
         "Illustrative photo": "Ảnh minh họa",
         "View venue": "Xem sân",
+        "View": "Xem",
         "View Slots": "Xem giờ trống",
-        "Show table view": "Hiện danh sách dạng bảng",
         "VND/hour": "VND/giờ",
         "Price / hour (VND)": "Giá / giờ (VND)",
         "venue(s) found": "sân phù hợp",
@@ -232,6 +188,7 @@
         // Venue Details & Slots
         "← Back to venue search": "← Quay lại tìm sân",
         "&larr; Back to venue search": "← Quay lại tìm sân",
+        "Book this venue": "Đặt sân này",
         "Book This Venue": "Đặt sân này",
         "Address": "Địa chỉ",
         "Location & Address": "Địa chỉ sân",
@@ -242,6 +199,7 @@
         "Base rate": "Giá tiêu chuẩn",
         "Standard Hourly Rate": "Giá tiêu chuẩn mỗi giờ",
         "Standard price": "Giá tiêu chuẩn",
+        "Available times": "Khung giờ trống",
         "Available hours": "Khung giờ trống",
         "Live Availability & Free Hours": "Khung giờ trống",
         "Free": "Trống",
@@ -282,7 +240,6 @@
         "100% refund (≥24h)": "Hoàn 100% (≥24h)",
         "50% refund (2h–24h)": "Hoàn 50% (2h–24h)",
         "Reviews": "Đánh giá",
-        "⭐ Player Reviews & Ratings": "Đánh giá",
         "Player Reviews & Ratings": "Đánh giá",
         "No reviews yet.": "Chưa có đánh giá nào.",
         "No written comment provided.": "Không có nội dung bình luận.",
@@ -335,8 +292,8 @@
         "View Voucher": "Xem vé điện tử",
         "Add to Calendar (.ics)": "Thêm vào Lịch (.ics)",
         "Book Again": "Đặt lại sân này",
-        "✕ Cancel Booking": "✕ Hủy đặt sân",
-        "✕ Non-cancellable (<2h)": "✕ Không thể hủy (<2h)",
+        "Cancel Booking": "Hủy đặt sân",
+        "Non-cancellable (<2h)": "Không thể hủy (<2h)",
         "Cannot cancel less than 2 hours before match start time (BR15)": "Không thể hủy dưới 2 giờ trước giờ bóng lăn (BR15)",
         "Match in progress": "Trận đấu đang diễn ra",
         "Rate Venue": "Đánh giá sân",
@@ -357,7 +314,7 @@
         "Sign in to your account": "Đăng nhập tài khoản",
         "Email Address": "Địa chỉ Email",
         "Password": "Mật khẩu",
-        "Demo accounts · password": "Tài khoản dùng thử · mật khẩu",
+        "Forgot password?": "Quên mật khẩu?",
         "Create your account": "Tạo tài khoản mới",
         "Full Name": "Họ và tên",
         "Phone Number": "Số điện thoại",
@@ -375,15 +332,16 @@
         "Don't have an account?": "Chưa có tài khoản?",
         "Create an account": "Tạo tài khoản",
         "Create account": "Tạo tài khoản",
-        "Customer (Minh)": "Khách hàng (Minh)",
-        "Customer (Trang)": "Khách hàng (Trang)",
-        "Venue Owner (Lan)": "Chủ sân (Lan)",
         "Email or password is incorrect": "Email hoặc mật khẩu không đúng",
         "Account temporarily locked. Try again in 15 minutes": "Tài khoản tạm khóa. Vui lòng thử lại sau 15 phút",
         "Your session has expired": "Phiên làm việc đã hết hạn",
         "You do not have permission to access this page": "Bạn không có quyền truy cập trang này",
         "This email is already in use": "Email này đã được sử dụng",
         "This phone number is already in use": "Số điện thoại này đã được sử dụng",
+        "Verify your email": "Xác minh email",
+        "Your email is verified. You can now book a venue.": "Email của bạn đã được xác minh. Bạn có thể đặt sân ngay.",
+        "Something went wrong": "Đã có lỗi xảy ra",
+        "Back to the search page": "Quay lại trang tìm sân",
 
         // Dashboard
         "Verified": "Đã xác thực",
@@ -401,13 +359,8 @@
         "Browse available courts &rarr;": "Tìm sân ngay →",
         "View Voucher →": "Xem vé điện tử →",
         "View Voucher &rarr;": "Xem vé điện tử →",
-        "Transparent Peak Pricing": "Bảng giá giờ cao điểm minh bạch",
-        "Real-time slot rate breakdown with transparent evening rates computed before final confirmation.": "Chi tiết giá theo từng khung giờ được tính toán rõ ràng, minh bạch trước khi bạn xác nhận đặt sân.",
-        "Accurate Court Details": "Thông tin sân chính xác",
-        "Each listing shows its location, opening hours, and prices provided by the venue owner.": "Mỗi cụm sân hiển thị đầy đủ vị trí, giờ mở cửa và bảng giá do chính chủ sân cung cấp.",
 
         // Owner Portal
-        "+ Add a venue": "+ Thêm sân mới",
         "Add a venue": "Thêm sân mới",
         "Export CSV": "Xuất CSV",
         "Export Bookings CSV": "Xuất CSV đơn đặt",
@@ -439,10 +392,6 @@
         "You'll be signed out of your account.": "Bạn sẽ được đăng xuất khỏi tài khoản.",
         "Confirm": "Xác nhận",
         "Cancel": "Hủy bỏ",
-        "Back to top": "Lên đầu trang",
-        "Scroll back to top": "Lên đầu trang",
-        "Cards": "Thẻ",
-        "Table": "Bảng",
         "Add venue": "Thêm sân",
         "All Venues": "Tất cả các sân",
         "View Schedule": "Xem lịch đặt",
@@ -454,15 +403,10 @@
         "Manage Schedule": "Quản lý lịch",
         "&larr; Back to My Venues": "← Quay lại sân của tôi",
         "Schedule & Maintenance": "Lịch hoạt động & Bảo trì",
-        "👁️ View Public Page": "👁️ Xem trang hiển thị",
-        "📅 Date:": "📅 Chọn ngày:",
         "View Date": "Xem ngày",
         "Hourly Schedule for": "Lịch theo giờ ngày",
-        "🔓 Unblock Slot": "🔓 Mở lại giờ này",
         "Cannot block when booking exists.": "Không thể khóa khi đã có khách đặt.",
-        "🔒 Block": "🔒 Khóa bảo trì",
         "Peak-Hour Pricing Configuration": "Cấu hình giá giờ cao điểm",
-        "➕ Add Peak Pricing Rule": "➕ Thêm quy tắc giá cao điểm",
         "Configure dynamic rates by weekday and time slot. Rules must not overlap on the same day.": "Cài đặt giá linh hoạt theo thứ và khung giờ. Các quy tắc không được trùng nhau trong cùng một ngày.",
         "Weekday:": "Thứ trong tuần:",
         "Weekday": "Thứ trong tuần",
@@ -490,10 +434,6 @@
         "Customer:": "Người đặt:",
         "Total Amount Paid:": "Tổng tiền đã thanh toán:",
         "Booking Cancelled": "Lịch đặt đã hủy",
-        "🏟️ Venue:": "🏟️ Sân thể thao:",
-        "🕒 Reserved Slot:": "🕒 Khung giờ đặt:",
-        "👤 Customer:": "👤 Người đặt:",
-        "💰 Total Amount Paid:": "💰 Tổng tiền đã thanh toán:",
 
         // Admin & Footer
         "Platform analytics, owner onboarding, venue oversight, and review moderation.": "Phân tích nền tảng, cấp tài khoản chủ sân, giám sát sân và kiểm duyệt đánh giá.",
@@ -519,8 +459,6 @@
         "Open moderation queue &rarr;": "Mở hàng chờ kiểm duyệt →",
         "Review accounts →": "Kiểm tra tài khoản →",
         "Review accounts &rarr;": "Kiểm tra tài khoản →",
-        "All sports": "Tất cả môn",
-        "All areas": "Tất cả khu vực",
         "All roles": "Tất cả vai trò",
         "All statuses": "Tất cả trạng thái",
         "Apply Filters": "Lọc kết quả",
@@ -535,14 +473,9 @@
         "Activate": "Kích hoạt",
         "Create Account": "Tạo tài khoản",
         "Onboard a new venue owner, customer, or administrator account.": "Tạo mới tài khoản chủ sân, khách hàng hoặc quản trị viên.",
-        "Full Name": "Họ và tên",
-        "Email Address": "Địa chỉ Email",
-        "Phone Number": "Số điện thoại",
-        "Password": "Mật khẩu",
         "Min 8 chars, letter + digit": "Tối thiểu 8 ký tự, gồm chữ và số",
         "Role": "Vai trò",
         "Owner": "Chủ sân",
-        "Customer": "Khách hàng",
         "Admin": "Quản trị viên",
         "Mark email as verified immediately": "Đánh dấu email đã xác minh ngay",
         "Account": "Tài khoản",
@@ -575,9 +508,7 @@
         "No area coverage data available yet.": "Chưa có dữ liệu độ phủ theo khu vực.",
         "Community review moderation.": "Quản trị kiểm duyệt đánh giá cộng đồng.",
         "Review moderation": "Kiểm duyệt đánh giá",
-        "Reviews are hidden from public venue pages after receiving three reports. This demo does not provide a manual moderation queue.": "Đánh giá sẽ tự động ẩn khỏi trang công khai sau khi nhận 3 báo cáo vi phạm. Bản demo này không có hàng chờ duyệt thủ công.",
         "Explore sports venues in Hanoi": "Khám phá sân thể thao tại Hà Nội",
-        "Find nearby courts and lock in your next match.": "Tìm sân gần bạn và chốt lịch thi đấu tiếp theo.",
 
         // Sports & Districts
         "Football": "Bóng đá",
@@ -602,20 +533,13 @@
         "Saturday": "Thứ Bảy",
         "Sunday": "Chủ Nhật",
 
-        // Status badges
+        // Statuses
         "Confirmed": "Đã xác nhận",
         "Completed": "Đã hoàn thành",
         "Cancelled": "Đã hủy",
-        "● Confirmed": "● Đã xác nhận",
-        "● Completed": "● Đã hoàn thành",
-        "● Cancelled": "● Đã hủy",
-        "🟢 Free": "🟢 Trống",
-        "🔴 Booked": "🔴 Đã đặt",
-        "⚪ Blocked": "⚪ Bảo trì",
 
         // Password & Analytics
         "Change password": "Đổi mật khẩu",
-        "🔑 Change password": "🔑 Đổi mật khẩu",
         "Update your account password (at least 8 characters with a letter and a digit).": "Cập nhật mật khẩu tài khoản (ít nhất 8 ký tự gồm chữ và số).",
         "Current Password": "Mật khẩu hiện tại",
         "New Password": "Mật khẩu mới",
@@ -624,21 +548,12 @@
         "← Back": "← Quay lại",
         "&larr; Back": "← Quay lại",
         "Forgot password": "Quên mật khẩu",
-        "Forgot your password?": "Bạn quên mật khẩu?",
-        "Enter your account email and we'll send you a reset link.": "Nhập email tài khoản của bạn để nhận liên kết đặt lại mật khẩu.",
         "Send reset link": "Gửi liên kết đặt lại",
-        "Remembered your password?": "Đã nhớ mật khẩu?",
-        "Back to sign in →": "Quay lại đăng nhập →",
-        "Back to sign in &rarr;": "Quay lại đăng nhập →",
         "Reset password": "Đặt lại mật khẩu",
-        "Reset your password": "Đặt lại mật khẩu",
-        "Choose a strong password (at least 8 characters with a letter and a digit).": "Chọn mật khẩu mạnh (ít nhất 8 ký tự gồm chữ và số).",
         "Request a new reset link": "Yêu cầu liên kết mới",
         "Owner Analytics": "Thống kê chủ sân",
-        "📊 Revenue & Venue Analytics": "📊 Thống kê doanh thu & sân",
         "Revenue & Venue Analytics": "Thống kê doanh thu & sân",
         "Track bookings, cancellations, net revenue, and ratings across your venues.": "Theo dõi lượt đặt, tỷ lệ hủy, doanh thu ròng và đánh giá tại các sân của bạn.",
-        "⬇️ Export Bookings CSV": "⬇️ Xuất CSV đơn đặt",
         "Active / Total Venues": "Sân hoạt động / Tổng số sân",
         "Listed under your owner account": "Thuộc tài khoản chủ sân của bạn",
         "Cancellation Rate": "Tỷ lệ hủy sân",
@@ -648,7 +563,6 @@
         "Issued under cancellation tiers": "Hoàn tiền theo chính sách hủy sân",
         "Total billed minus refunds": "Tổng thu trừ tiền hoàn",
         "No reviews": "Chưa có đánh giá",
-        "📅 Schedule": "📅 Lịch sân",
         "You have no venues yet.": "Bạn chưa có sân nào.",
         "Add your first venue": "Thêm sân đầu tiên",
         "to start tracking analytics.": "để bắt đầu theo dõi thống kê.",
@@ -658,8 +572,6 @@
         "Edit": "Sửa",
         "Edit Account": "Sửa tài khoản",
         "Edit Owner": "Sửa thông tin chủ sân",
-        "+ Add Owner": "+ Thêm chủ sân",
-        "+ New Account": "+ Tạo tài khoản",
         "Save Changes": "Lưu thay đổi",
         "New Password (optional)": "Mật khẩu mới (tùy chọn)",
         "Leave blank to keep current password": "Để trống nếu giữ nguyên mật khẩu hiện tại",
@@ -685,6 +597,8 @@
 
       const PATTERNS_EN_VI = [
         { pattern: /^(\d+)\s+venue\(s\)\s+found$/i, replace: (m, n) => `${n} sân được tìm thấy` },
+        { pattern: /^(\d+)\s+venues$/i, replace: (m, n) => `${n} sân` },
+        { pattern: /^(\d+)\s+free\s+slots?\s+today$/i, replace: (m, n) => `${n} giờ trống hôm nay` },
         { pattern: /^(\d+)\s+free\s+today$/i, replace: (m, n) => `${n} giờ trống hôm nay` },
         { pattern: /^(\d+)\s+free$/i, replace: (m, n) => `${n} giờ trống` },
         { pattern: /^Showing\s+(\d+)\s+venues?\s+(currently\s+)?taking\s+bookings\.?$/i, replace: (m, n) => `Đang hiển thị ${n} sân đang nhận đặt lịch.` },
@@ -727,23 +641,18 @@
         { pattern: /^(\d+)\s+pending\s+hidden\s*·\s*(\d+)\s+reported$/i, replace: (m, p, r) => `${p} chờ duyệt ẩn · ${r} bị báo cáo` },
         { pattern: /^(\d+)\s+venues?\s*·\s*(\d+)\s+bookings?$/i, replace: (m, v, b) => `${v} sân · ${b} lượt đặt` },
         { pattern: /^Rating\s+([\d.]+)\s+out\s+of\s+5$/i, replace: (m, n) => `Đánh giá ${n} trên 5` },
-        { pattern: /^(?:📍\s*)?([\d.]+)\s*km$/i, replace: (m, n) => m.includes("📍") ? `📍 ${n} km` : `${n} km` }
+        { pattern: /^([\d.]+)\s*km$/i, replace: (m, n) => `${n} km` }
       ];
 
       function translateValue(value, lang) {
-        if (!value) return value;
-        // If English, return original English text
-        if (lang === "en") return value;
-
+        if (!value || lang === "en") return value;
         const trimmed = value.trim();
         if (!trimmed) return value;
 
-        // 1. Exact match in dictionary
         if (DICT_EN_VI[trimmed]) {
           return value.replace(trimmed, DICT_EN_VI[trimmed]);
         }
 
-        // 2. Pattern matches for dynamic template strings
         for (const { pattern, replace } of PATTERNS_EN_VI) {
           const match = trimmed.match(pattern);
           if (match) {
@@ -751,8 +660,6 @@
           }
         }
 
-        // 3. Multi-word phrase matches (at least 2 words, length >= 4)
-        // Never do single-word replacements on untranslated sentences to avoid mixed-language bugs
         let translated = value;
         const multiWordPhrases = Object.keys(DICT_EN_VI)
           .filter(k => k.includes(" ") && k.length >= 4)
@@ -763,7 +670,6 @@
             translated = translated.split(phrase).join(DICT_EN_VI[phrase]);
           }
         }
-
         return translated;
       }
 
@@ -773,22 +679,18 @@
           node.nodeValue = translateValue(node.__arenaSourceText, lang);
           return;
         }
-
         if (node.nodeType === Node.ELEMENT_NODE) {
           if (node.tagName === "SCRIPT" || node.tagName === "STYLE") return;
-
           for (const attr of ["placeholder", "title", "aria-label", "alt"]) {
             if (!node.hasAttribute(attr)) continue;
             const key = `__arenaSource_${attr}`;
             if (node[key] === undefined) node[key] = node.getAttribute(attr);
             node.setAttribute(attr, translateValue(node[key], lang));
           }
-
           if (node.tagName === "INPUT" && (node.type === "submit" || node.type === "button")) {
             if (node.__arenaSourceValue === undefined) node.__arenaSourceValue = node.value;
             node.value = translateValue(node.__arenaSourceValue, lang);
           }
-
           for (let child = node.firstChild; child; child = child.nextSibling) {
             translateTree(child, lang);
           }
@@ -827,94 +729,90 @@
       });
     })();
     </script>
-    <!-- Sign Out Confirmation Modal -->
+
     {% if g.user %}
-    <div id="signout-modal" role="dialog" aria-modal="true" aria-labelledby="signout-modal-title" style="display:none; position:fixed; inset:0; z-index:9000; align-items:center; justify-content:center; background:rgba(15,23,42,0.6); backdrop-filter:blur(4px);">
-      <div style="background:#fff; border-radius:16px; padding:36px 40px; box-shadow:0 24px 48px -8px rgba(15,23,42,0.35); max-width:360px; width:90%; text-align:center;">
-        <div style="font-size:40px; margin-bottom:12px;">👋</div>
-        <h2 id="signout-modal-title" style="margin:0 0 8px; font-size:20px; font-weight:800; color:#0f172a;">Are you sure?</h2>
-        <p style="margin:0 0 28px; color:#64748b; font-size:14px;">You'll be signed out of your account.</p>
-        <div style="display:flex; gap:12px; justify-content:center;">
+    <div id="signout-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="signout-modal-title" style="display:none;">
+      <div class="modal__panel">
+        <h2 id="signout-modal-title" class="modal__title">Are you sure?</h2>
+        <p class="modal__body">You'll be signed out of your account.</p>
+        <div class="modal__actions">
+          <button id="signout-cancel-btn" type="button" class="btn-secondary" onclick="closeSignoutModal()">Cancel</button>
           <form method="post" action="/logout" style="margin:0;">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" style="padding:10px 28px; background:linear-gradient(135deg,#f43f5e,#e11d48); color:#fff; border:none; border-radius:9px; font-size:15px; font-weight:700; cursor:pointer;">Confirm</button>
+            <button type="submit" class="btn-danger-solid">Confirm</button>
           </form>
-          <button id="signout-cancel-btn" type="button" onclick="closeSignoutModal()" style="padding:10px 28px; background:#f1f5f9; color:#334155; border:1px solid #e2e8f0; border-radius:9px; font-size:15px; font-weight:700; cursor:pointer;">Cancel</button>
         </div>
       </div>
     </div>
     {% endif %}
 
-    <!-- Global Custom Confirmation Modal -->
-    <div id="global-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="global-confirm-title" style="display:none; position:fixed; inset:0; z-index:9100; align-items:center; justify-content:center; background:rgba(15,23,42,0.55); backdrop-filter:blur(4px);">
-      <div style="background:#fff; border-radius:14px; padding:28px 32px; box-shadow:0 24px 48px -8px rgba(15,23,42,0.35); max-width:400px; width:90%; text-align:left; border:1px solid var(--border-color);">
-        <h2 id="global-confirm-title" style="margin:0 0 8px; font-size:18px; font-weight:800; color:#0f172a;">Confirm</h2>
-        <p id="global-confirm-message" style="margin:0 0 22px; color:#475569; font-size:13px; line-height:1.5; white-space:pre-line;"></p>
-        <div style="display:flex; gap:10px; justify-content:flex-end;">
-          <button id="global-confirm-cancel" type="button" class="button secondary" style="min-height:38px; height:38px; padding:0 16px; font-size:13px;">Cancel</button>
-          <button id="global-confirm-ok" type="button" class="button" style="min-height:38px; height:38px; padding:0 18px; font-size:13px; background:#dc2626; color:#fff;">Confirm</button>
+    <div id="global-confirm-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="global-confirm-title" style="display:none;">
+      <div class="modal__panel">
+        <h2 id="global-confirm-title" class="modal__title">Confirm</h2>
+        <p id="global-confirm-message" class="modal__body"></p>
+        <div class="modal__actions">
+          <button id="global-confirm-cancel" type="button" class="btn-secondary">Cancel</button>
+          <button id="global-confirm-ok" type="button" class="btn-danger-solid">Confirm</button>
         </div>
       </div>
     </div>
 
-    <!-- Scroll To Top Button -->
-    <button id="scroll-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Scroll back to top" title="Back to top" style="display:none; position:fixed; bottom:28px; right:28px; z-index:8000; width:46px; height:46px; background:linear-gradient(135deg,#0ea5e9,#0284c7); color:#fff; border:none; border-radius:50%; font-size:20px; cursor:pointer; box-shadow:0 4px 16px rgba(2,132,199,0.4); align-items:center; justify-content:center; transition:opacity 0.3s, transform 0.3s;">&#8679;</button>
-
     <script>
-    // Scroll-to-top visibility
     (function() {
-      var btn = document.getElementById('scroll-to-top');
-      window.addEventListener('scroll', function() {
-        if (window.scrollY > 300) {
-          btn.style.display = 'flex';
-        } else {
-          btn.style.display = 'none';
-        }
-      }, { passive: true });
-    })();
-
-    // Sign-out modal focus management and close handlers
-    var modal = document.getElementById('signout-modal');
-    window.openSignoutModal = function() {
-      if (!modal) return;
-      modal.style.display = 'flex';
-      var cancelBtn = document.getElementById('signout-cancel-btn');
-      if (cancelBtn) cancelBtn.focus();
-    };
-    window.closeSignoutModal = function() {
-      if (!modal) return;
-      modal.style.display = 'none';
-      var trigger = document.querySelector('.btn-logout');
-      if (trigger) trigger.focus();
-    };
-    if (modal) {
-      modal.addEventListener('click', function(e) {
-        if (e.target === modal) window.closeSignoutModal();
-      });
-      document.addEventListener('keydown', function(e) {
-        if (modal.style.display === 'none') return;
-        if (e.key === 'Escape') {
-          window.closeSignoutModal();
-          return;
-        }
-        if (e.key === 'Tab') {
-          var focusables = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-          if (!focusables.length) return;
-          var first = focusables[0];
-          var last = focusables[focusables.length - 1];
-          if (e.shiftKey && document.activeElement === first) {
-            e.preventDefault();
-            last.focus();
-          } else if (!e.shiftKey && document.activeElement === last) {
-            e.preventDefault();
-            first.focus();
+      var userMenu = document.getElementById('user-menu');
+      if (userMenu) {
+        document.addEventListener('click', function(e) {
+          if (userMenu.open && !userMenu.contains(e.target)) userMenu.open = false;
+        });
+        document.addEventListener('keydown', function(e) {
+          if (userMenu.open && e.key === 'Escape') {
+            userMenu.open = false;
+            var summary = userMenu.querySelector('summary');
+            if (summary) summary.focus();
           }
-        }
-      });
-    }
+        });
+      }
 
-    // Global confirmation modal helper
-    (function() {
+      var modal = document.getElementById('signout-modal');
+      window.openSignoutModal = function() {
+        if (!modal) return;
+        if (userMenu) userMenu.open = false;
+        modal.style.display = 'flex';
+        var cancelBtn = document.getElementById('signout-cancel-btn');
+        if (cancelBtn) cancelBtn.focus();
+      };
+      window.closeSignoutModal = function() {
+        if (!modal) return;
+        modal.style.display = 'none';
+        var trigger = document.querySelector('.btn-logout');
+        if (trigger) trigger.focus();
+      };
+      if (modal) {
+        modal.addEventListener('click', function(e) {
+          if (e.target === modal) window.closeSignoutModal();
+        });
+        document.addEventListener('keydown', function(e) {
+          if (modal.style.display === 'none') return;
+          if (e.key === 'Escape') {
+            window.closeSignoutModal();
+            return;
+          }
+          if (e.key === 'Tab') {
+            var focusables = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            if (!focusables.length) return;
+            var first = focusables[0];
+            var last = focusables[focusables.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+              e.preventDefault();
+              last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+              e.preventDefault();
+              first.focus();
+            }
+          }
+        });
+      }
+
       var gModal = document.getElementById('global-confirm-modal');
       var gTitle = document.getElementById('global-confirm-title');
       var gMsg = document.getElementById('global-confirm-message');
@@ -960,94 +858,30 @@
           }
         });
       }
-    })();
 
-    // Auto-dismiss .flash.success and .flash.info after 5 seconds + Next.js-style navigation & prefetch
-    document.addEventListener('DOMContentLoaded', function() {
-      var token = {{ csrf_token() | tojson }};
-      document.querySelectorAll('form').forEach(function(form) {
-        if ((form.getAttribute('method') || '').toLowerCase() === 'post' && !form.querySelector('input[name="csrf_token"]')) {
-          var input = document.createElement('input');
-          input.type = 'hidden';
-          input.name = 'csrf_token';
-          input.value = token;
-          form.appendChild(input);
-        }
-      });
+      document.addEventListener('DOMContentLoaded', function() {
+        var token = {{ csrf_token() | tojson }};
+        document.querySelectorAll('form').forEach(function(form) {
+          if ((form.getAttribute('method') || '').toLowerCase() === 'post' && !form.querySelector('input[name="csrf_token"]')) {
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'csrf_token';
+            input.value = token;
+            form.appendChild(input);
+          }
+        });
 
-      // Auto-dismiss success/info flash alerts after 5 seconds
-      document.querySelectorAll('.flash.success, .flash.info').forEach(function(el) {
-        setTimeout(function() {
-          if (!el.parentNode) return;
-          el.classList.add('is-dismissing');
+        document.querySelectorAll('.flash.success, .flash.info').forEach(function(el) {
           setTimeout(function() {
-            if (el.parentNode) el.remove();
-          }, 260);
-        }, 5000);
+            if (!el.parentNode) return;
+            el.classList.add('is-dismissing');
+            setTimeout(function() {
+              if (el.parentNode) el.remove();
+            }, 260);
+          }, 5000);
+        });
       });
-
-      // Next.js-style top progress bar & hover link prefetching
-      var progressBar = document.getElementById('nav-progress-bar');
-      var prefetched = new Set();
-
-      function startProgress() {
-        if (!progressBar) return;
-        progressBar.classList.remove('is-done');
-        progressBar.classList.add('is-active');
-      }
-
-      function finishProgress() {
-        if (!progressBar) return;
-        progressBar.classList.remove('is-active');
-        progressBar.classList.add('is-done');
-        setTimeout(function() {
-          progressBar.classList.remove('is-done');
-        }, 250);
-      }
-
-      window.addEventListener('pageshow', finishProgress);
-
-      function isPrefetchableLink(a) {
-        if (!a || !a.href) return false;
-        if (a.target && a.target !== '_self') return false;
-        if (a.hasAttribute('download')) return false;
-        var href = a.getAttribute('href') || '';
-        if (!href.startsWith('/') || href.startsWith('//') || href.startsWith('/logout') || href.endsWith('/ics')) return false;
-        return a.origin === window.location.origin;
-      }
-
-      function prefetchUrl(url) {
-        if (prefetched.has(url) || url === window.location.href) return;
-        prefetched.add(url);
-        var link = document.createElement('link');
-        link.rel = 'prefetch';
-        link.href = url;
-        link.as = 'document';
-        document.head.appendChild(link);
-      }
-
-      document.addEventListener('mouseover', function(e) {
-        var a = e.target.closest ? e.target.closest('a') : null;
-        if (isPrefetchableLink(a)) prefetchUrl(a.href);
-      }, { passive: true });
-
-      document.addEventListener('touchstart', function(e) {
-        var a = e.target.closest ? e.target.closest('a') : null;
-        if (isPrefetchableLink(a)) prefetchUrl(a.href);
-      }, { passive: true });
-
-      document.addEventListener('click', function(e) {
-        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-        var a = e.target.closest ? e.target.closest('a') : null;
-        if (!isPrefetchableLink(a)) return;
-        if (a.href === window.location.href) return;
-        startProgress();
-      });
-
-      document.addEventListener('submit', function(e) {
-        if (!e.defaultPrevented) startProgress();
-      });
-    });
+    })();
     </script>
   </body>
 </html>

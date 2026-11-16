@@ -1,153 +1,165 @@
 {% extends "base.html" %}
 {% block title %}Owner Analytics{% endblock %}
 {% block content %}
-<div class="owner-container">
-  <div class="owner-header-bar">
-    <h1>Revenue &amp; Venue Analytics</h1>
-    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-      <a class="button secondary" href="/owner/venues">My Venues</a>
-      <a class="button secondary" href="/owner/bookings">Bookings</a>
-      <a class="button" href="/owner/bookings/export.csv">Export Bookings CSV</a>
+<div class="container">
+  <header class="page-header">
+    <a href="/owner/venues" class="page-header__back">&larr; Back to my venues</a>
+    <div class="page-header__title-row">
+      <h1>Revenue &amp; venue analytics</h1>
+      <div class="page-header__actions">
+        <a class="btn-secondary" href="/owner/bookings">Bookings</a>
+        <a class="btn-primary" href="/owner/bookings/export.csv">Export CSV</a>
+      </div>
     </div>
-  </div>
+  </header>
 
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-label">Active / Total Venues</div>
-      <div class="stat-value">{{ summary.active_venues }} / {{ summary.total_venues }}</div>
+  <dl class="stats">
+    <div class="stat">
+      <dt>Active / total venues</dt>
+      <dd>{{ summary.active_venues }} / {{ summary.total_venues }}</dd>
     </div>
-    <div class="stat-card">
-      <div class="stat-label">Total Bookings</div>
-      <div class="stat-value">{{ summary.total_bookings }}</div>
-      <div class="stat-meta">{{ summary.confirmed_bookings }} confirmed &middot; {{ summary.completed_bookings }} completed &middot; {{ summary.cancelled_bookings }} cancelled</div>
+    <div class="stat">
+      <dt>Total bookings</dt>
+      <dd>{{ summary.total_bookings }}</dd>
+      <dd class="stat__sub">{{ summary.confirmed_bookings }} confirmed &middot; {{ summary.completed_bookings }} completed &middot; {{ summary.cancelled_bookings }} cancelled</dd>
     </div>
-    <div class="stat-card">
-      <div class="stat-label">Cancellation Rate</div>
-      <div class="stat-value">{{ summary.cancellation_rate }}%</div>
+    <div class="stat">
+      <dt>Cancellation rate</dt>
+      <dd>{{ summary.cancellation_rate }}%</dd>
     </div>
-    <div class="stat-card">
-      <div class="stat-label">Gross Revenue</div>
-      <div class="stat-value">{{ "{:,}".format(summary.gross_revenue) }} VND</div>
+    <div class="stat">
+      <dt>Gross revenue</dt>
+      <dd>{{ "{:,}".format(summary.gross_revenue) }} VND</dd>
     </div>
-    <div class="stat-card">
-      <div class="stat-label">Total Refunded</div>
-      <div class="stat-value">{{ "{:,}".format(summary.total_refunded) }} VND</div>
+    <div class="stat">
+      <dt>Total refunded</dt>
+      <dd>{{ "{:,}".format(summary.total_refunded) }} VND</dd>
     </div>
-    <div class="stat-card">
-      <div class="stat-label">Net Revenue</div>
-      <div class="stat-value" style="color: #286b45;">{{ "{:,}".format(summary.net_revenue) }} VND</div>
+    <div class="stat">
+      <dt>Net revenue</dt>
+      <dd>{{ "{:,}".format(summary.net_revenue) }} VND</dd>
     </div>
-  </div>
+  </dl>
 
-  {% if summary.per_venue %}
-  <h2 style="margin: 28px 0 14px; font-size: 20px; font-weight: 800; color: var(--text-main);">Performance by Venue</h2>
-  <div class="table-responsive-wrapper">
-    <table class="owner-table">
-      <thead>
-        <tr>
-          <th>Venue</th>
-          <th>Sport</th>
-          <th>Area</th>
-          <th class="num">Total Bookings</th>
-          <th class="num">Net Revenue (VND)</th>
-          <th class="num">Rating</th>
-          <th style="text-align: right;">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for v in summary.per_venue %}
-        <tr>
-          <td class="venue-cell">
-            <a href="/venues/{{ v.id }}" class="venue-title-link">{{ v.name }}</a>
-          </td>
-          <td><span class="sport-badge-pill">{{ v.sport }}</span></td>
-          <td><span class="area-badge-pill">{{ v.area }}</span></td>
-          <td class="num">{{ v.total_bookings }}</td>
-          <td class="num price-cell">{{ "{:,}".format(v.net_revenue) }}</td>
-          <td class="num">
-            {% if v.avg_rating is not none %}
-              ★ {{ v.avg_rating }} ({{ v.review_count }})
+  <section class="section">
+    <div class="section__head">
+      <h2>Performance by venue</h2>
+    </div>
+    {% if summary.per_venue %}
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Venue</th>
+            <th>Sport</th>
+            <th>Area</th>
+            <th class="num">Total bookings</th>
+            <th class="num">Net revenue (VND)</th>
+            <th class="num">Rating</th>
+            <th class="num">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in summary.per_venue %}
+          <tr>
+            <td><a href="/venues/{{ v.id }}">{{ v.name }}</a></td>
+            <td>{{ v.sport }}</td>
+            <td>{{ v.area }}</td>
+            <td class="num">{{ v.total_bookings }}</td>
+            <td class="num">{{ "{:,}".format(v.net_revenue) }}</td>
+            <td class="num">
+              {% if v.avg_rating is not none %}
+                ★ {{ v.avg_rating }} ({{ v.review_count }})
+              {% else %}
+                <span class="muted">No reviews</span>
+              {% endif %}
+            </td>
+            <td class="num">
+              <div class="row-actions">
+                <a href="/owner/venues/{{ v.id }}/schedule" class="btn-secondary btn-sm">Schedule</a>
+                <a href="/owner/bookings?venue_id={{ v.id }}" class="btn-secondary btn-sm">Bookings</a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty">
+      <p>You have no venues yet.</p>
+      <p class="muted">Add your first venue to start tracking analytics.</p>
+      <a href="/owner/venues/new" class="btn-primary">Add a venue</a>
+    </div>
+    {% endif %}
+  </section>
+
+  <section class="section">
+    <div class="section__head">
+      <h2>Customer reviews &amp; recent bookings</h2>
+    </div>
+    <div class="grid-2">
+      <div>
+        <div class="split">
+          <h3>Customer reviews</h3>
+          <span class="meta">{{ summary.recent_reviews | length if summary.recent_reviews is defined else 0 }} recent</span>
+        </div>
+        {% if summary.recent_reviews %}
+        <ul class="list">
+          {% for r in summary.recent_reviews %}
+          <li class="list__item">
+            <div class="split">
+              <strong>★ {{ r.rating }}/5</strong>
+              <a href="/owner/bookings/{{ r.booking_code }}" class="mono small">{{ r.booking_code }}</a>
+            </div>
+            <div class="small">
+              <a href="/venues/{{ r.venue_id }}">{{ r.venue_name }}</a>
+              <span class="muted"> &middot; by {{ r.customer_name }}</span>
+            </div>
+            {% if r.comment %}
+            <p class="small">{{ r.comment }}</p>
             {% else %}
-              <span class="muted">No reviews</span>
+            <p class="meta">No written comment</p>
             {% endif %}
-          </td>
-          <td style="text-align: right; white-space: nowrap;">
-            <a href="/owner/venues/{{ v.id }}/schedule" class="button secondary btn-table-action">Schedule</a>
-            <a href="/owner/bookings?venue_id={{ v.id }}" class="button secondary btn-table-action">Bookings</a>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  {% else %}
-  <div class="empty">
-    You have no venues yet. <a href="/owner/venues/new">Add your first venue</a> to start tracking analytics.
-  </div>
-  {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="muted">No customer reviews submitted for your venues yet.</p>
+        {% endif %}
+      </div>
 
-  <h2 style="margin: 32px 0 14px; font-size: 20px; font-weight: 800; color: var(--text-main);">Owner Alerts: Customer Reviews &amp; Recent Bookings</h2>
-  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 20px; align-items: start;">
-    <section class="card" style="padding: 20px; border-radius: 12px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color);">
-        <h3 style="margin: 0; font-size: 16px; font-weight: 800;">Customer Reviews Alert Feed</h3>
-        <span class="muted" style="font-size: 12px; font-weight: 700;">{{ summary.recent_reviews | length if summary.recent_reviews is defined else 0 }} recent</span>
-      </div>
-      {% if summary.recent_reviews %}
-      <div style="display: flex; flex-direction: column; gap: 12px;">
-        {% for r in summary.recent_reviews %}
-        <div style="padding: 12px 14px; border: 1px solid var(--border-color); border-radius: 10px; background: #fbfcfa;">
-          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <span style="font-weight: 800; color: #b45309; font-size: 14px;">★ {{ r.rating }}/5</span>
-            <a href="/owner/bookings/{{ r.booking_code }}" style="font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--brand); text-decoration: none;">{{ r.booking_code }}</a>
-          </div>
-          <div style="margin-top: 4px; font-size: 13px; font-weight: 700;">
-            <a href="/venues/{{ r.venue_id }}" style="color: var(--text-main); text-decoration: none;">{{ r.venue_name }}</a>
-            <span class="muted" style="font-weight: 500;"> &middot; by {{ r.customer_name }}</span>
-          </div>
-          {% if r.comment %}
-          <p style="margin: 6px 0 0; font-size: 13px; color: #374151; line-height: 1.45;">{{ r.comment }}</p>
-          {% else %}
-          <p class="muted" style="margin: 6px 0 0; font-size: 12px; font-style: italic;">No written comment</p>
-          {% endif %}
+      <div>
+        <div class="split">
+          <h3>Recent booking &amp; cancellation alerts</h3>
+          <a href="/owner/bookings" class="small">View all</a>
         </div>
-        {% endfor %}
+        {% if summary.recent_alerts %}
+        <ul class="list">
+          {% for a in summary.recent_alerts %}
+          <li class="list__item">
+            <div class="split">
+              <a href="/owner/bookings/{{ a.code }}" class="mono small">{{ a.code }}</a>
+              <span class="status {% if a.status == 'confirmed' %}status--success{% elif a.status == 'completed' %}status--neutral{% else %}status--danger{% endif %}">
+                {{ a.status | capitalize }}
+              </span>
+            </div>
+            <div class="small">
+              {{ a.venue_name }}
+              <span class="muted"> &middot; {% if a.start_at %}{{ a.start_at[8:10] }}/{{ a.start_at[5:7] }}/{{ a.start_at[:4] }} {{ a.start_at[11:16] }}-{{ a.end_at[11:16] }}{% endif %}</span>
+            </div>
+            <div class="split meta">
+              <span>{{ a.customer_name }} &middot; <a href="tel:{{ a.customer_phone }}" class="mono">{{ a.customer_phone }}</a></span>
+              <span class="num">{{ "{:,}".format(a.total_price) }} VND</span>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="muted">No recent booking or cancellation activity yet.</p>
+        {% endif %}
       </div>
-      {% else %}
-      <p class="muted" style="margin: 0; font-size: 14px;">No customer reviews submitted for your venues yet.</p>
-      {% endif %}
-    </section>
-
-    <section class="card" style="padding: 20px; border-radius: 12px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color);">
-        <h3 style="margin: 0; font-size: 16px; font-weight: 800;">Recent Booking &amp; Cancellation Alerts</h3>
-        <a href="/owner/bookings" style="font-size: 12px; font-weight: 700; color: var(--brand); text-decoration: none;">View All &rarr;</a>
-      </div>
-      {% if summary.recent_alerts %}
-      <div style="display: flex; flex-direction: column; gap: 12px;">
-        {% for a in summary.recent_alerts %}
-        <div style="padding: 12px 14px; border: 1px solid var(--border-color); border-radius: 10px; background: #fbfcfa;">
-          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <a href="/owner/bookings/{{ a.code }}" style="font-family: var(--font-mono); font-size: 13px; font-weight: 800; color: var(--brand); text-decoration: none;">{{ a.code }}</a>
-            <span style="font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 6px; {% if a.status == 'confirmed' %}background: #ecfdf5; color: #047857;{% elif a.status == 'completed' %}background: #f0fdf4; color: #15803d;{% else %}background: #fef2f2; color: #b91c1c;{% endif %}">
-              {{ a.status | capitalize }}
-            </span>
-          </div>
-          <div style="margin-top: 4px; font-size: 13px; font-weight: 700; color: var(--text-main);">
-            {{ a.venue_name }}
-            <span class="muted" style="font-weight: 600;"> &middot; {% if a.start_at %}{{ a.start_at[8:10] }}/{{ a.start_at[5:7] }}/{{ a.start_at[:4] }} {{ a.start_at[11:16] }}-{{ a.end_at[11:16] }}{% endif %}</span>
-          </div>
-          <div style="margin-top: 6px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12px;">
-            <span style="font-weight: 600;">{{ a.customer_name }} &middot; <a href="tel:{{ a.customer_phone }}" style="font-family: var(--font-mono); font-weight: 700; color: var(--brand); text-decoration: none;">📞 {{ a.customer_phone }}</a></span>
-            <span style="font-weight: 700; color: #286b45;">{{ "{:,}".format(a.total_price) }} VND</span>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-      {% else %}
-      <p class="muted" style="margin: 0; font-size: 14px;">No recent booking or cancellation activity yet.</p>
-      {% endif %}
-    </section>
-  </div>
+    </div>
+  </section>
 </div>
 {% endblock %}
