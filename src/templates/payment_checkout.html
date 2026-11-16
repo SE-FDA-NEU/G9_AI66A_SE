@@ -242,6 +242,7 @@
   <a class="checkout-back" href="/booking/{{ pay.venue_id }}">&larr; Back to slot selection</a>
 
   <section class="checkout-shell" aria-labelledby="checkout-title">
+    {% if error %}<div class="flash error" role="alert" style="margin-bottom: 16px;">{{ error }}</div>{% endif %}
     <div class="checkout-head">
       <div>
         <div class="checkout-kicker">Mandatory Online QR Payment</div>

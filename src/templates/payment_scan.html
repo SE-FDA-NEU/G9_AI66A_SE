@@ -179,6 +179,7 @@
     </div>
 
     <div class="sim-body">
+      {% if error %}<div class="flash error" role="alert" style="margin-bottom: 16px;">{{ error }}</div>{% endif %}
       <div class="sim-details">
         <div class="sim-row">
           <span class="sim-label">Merchant</span>

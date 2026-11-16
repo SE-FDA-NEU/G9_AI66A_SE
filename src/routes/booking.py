@@ -393,7 +393,7 @@ def payment_checkout(token):
     scan_url = url_for("booking.payment_scan", token=token, _external=True)
     return render_template(
         "payment_checkout.html",
-        session=sess,
+        pay=sess,
         qr_svg=payment.generate_qr_svg(scan_url),
         scan_url=scan_url,
         error=None,
@@ -412,7 +412,7 @@ def payment_scan(token):
             already_accepted = sess["status"] in ("accepted", "paid", "refunded", "partially_refunded")
             return render_template(
                 "payment_scan.html",
-                session=sess,
+                pay=sess,
                 accepted=already_accepted,
                 otp_code=sess["otp_code"] if already_accepted else None,
                 error=None,
@@ -422,7 +422,7 @@ def payment_scan(token):
             sess = payment.accept_qr_payment(conn, token, request.form.get("amount", ""))
             return render_template(
                 "payment_scan.html",
-                session=sess,
+                pay=sess,
                 accepted=True,
                 otp_code=sess["otp_code"],
                 error=None,
@@ -433,7 +433,7 @@ def payment_scan(token):
             sess = payment.get_session(conn, token)
             return render_template(
                 "payment_scan.html",
-                session=sess,
+                pay=sess,
                 accepted=False,
                 otp_code=None,
                 error=e.message,
@@ -459,7 +459,7 @@ def payment_confirm(token):
             scan_url = url_for("booking.payment_scan", token=token, _external=True)
             return render_template(
                 "payment_checkout.html",
-                session=sess,
+                pay=sess,
                 qr_svg=payment.generate_qr_svg(scan_url),
                 scan_url=scan_url,
                 error=e.message,

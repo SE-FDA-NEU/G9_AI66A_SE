@@ -134,7 +134,7 @@ def get_session(conn, token, user=None):
     ensure_payment_table(conn)
     row = conn.execute(
         """
-        SELECT ps.*, v.name AS venue_name, v.area AS venue_area, v.address AS venue_address
+        SELECT ps.*, v.name AS venue_name, v.area AS venue_area, v.address AS venue_address, v.sport AS sport
         FROM payment_session ps
         JOIN venue v ON v.id = ps.venue_id
         WHERE ps.token = ?
@@ -145,7 +145,13 @@ def get_session(conn, token, user=None):
         raise BusinessRuleError(404, "Payment session not found")
     if user is not None and row["user_id"] != user["id"]:
         raise BusinessRuleError(403, "You do not have permission to access this payment", "BR14")
-    return dict(row)
+    data = dict(row)
+    data["area"] = row["venue_area"]
+    data["date"] = row["booking_date"]
+    start_h = int(row["start_hour"])
+    end_h = start_h + int(row["hours"])
+    data["time_slot"] = f"{start_h:02d}:00 - {end_h:02d}:00"
+    return data
 
 
 def accept_qr_payment(conn, token, entered_amount_text):
@@ -183,16 +189,34 @@ def confirm_and_book(conn, token, user, entered_otp, now=None):
             400, "Invalid confirmation code. Check the code shown after accepting QR payment."
         )
 
-    result = booking.create_booking(
-        conn,
-        user,
-        session["venue_id"],
-        session["booking_date"],
-        session["start_hour"],
-        session["hours"],
-        now,
-    )
     now_str = now.strftime("%Y-%m-%d %H:%M:%S")
+    try:
+        result = booking.create_booking(
+            conn,
+            user,
+            session["venue_id"],
+            session["booking_date"],
+            session["start_hour"],
+            session["hours"],
+            now,
+        )
+    except BusinessRuleError as exc:
+        if exc.status == 409:
+            conn.execute(
+                """
+                UPDATE payment_session
+                SET status = 'refunded', refunded_amount = ?, refunded_at = ?
+                WHERE token = ?
+                """,
+                (session["amount"], now_str, token),
+            )
+            conn.commit()
+            raise BusinessRuleError(
+                "BR11",
+                f"{exc.message}. Your QR payment of {session['amount']:,} VND has been automatically refunded.",
+                409,
+            ) from exc
+        raise
     conn.execute(
         "UPDATE payment_session SET status = 'paid', booking_code = ?, paid_at = ? WHERE token = ?",
         (result["code"], now_str, token),
