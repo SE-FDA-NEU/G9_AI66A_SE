@@ -16,6 +16,7 @@ NOW = datetime(2026, 10, 11, 9, 0)
 def app_with_now(db):
     from app import create_app
     app = create_app(database=db)
+    app.config["TESTING"] = True
     app.config["NOW"] = lambda: NOW
     return app
 
@@ -32,7 +33,7 @@ def test_my_bookings_empty_state_shows_message_and_link(client, login, db):
         from werkzeug.security import generate_password_hash
         conn.execute(
             "INSERT INTO user (email, password_hash, full_name, phone, role, email_verified_at)"
-            " VALUES ('emptyuser@example.com', ?, 'Empty User', '0911223344', 'customer', datetime('now'))",
+            " VALUES ('emptyuser@example.com', ?, 'Empty User', '0911223399', 'customer', datetime('now'))",
             (generate_password_hash("sanbong1"),))
     login("emptyuser@example.com")
     page = client.get("/my-bookings").get_data(as_text=True)

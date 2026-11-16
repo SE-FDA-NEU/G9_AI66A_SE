@@ -17,6 +17,7 @@ TODAY = "2026-12-15"
 def app_with_now(db):
     from app import create_app
     app = create_app(database=db)
+    app.config["TESTING"] = True
     app.config["NOW"] = lambda: NOW
     return app
 

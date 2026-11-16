@@ -178,7 +178,9 @@ def run_all_tests():
             "/venues/1",
             "/login",
             "/register",
-            "/verify"
+            "/verify",
+            "/forgot-password",
+            "/reset-password",
         ]
         for route in unauth_routes:
             test_page_both_langs(page, "Visitor", route, reporter)
@@ -195,10 +197,16 @@ def run_all_tests():
             "/venues/1",
             "/booking/1",
             "/dashboard",
-            "/my-bookings"
+            "/my-bookings",
+            "/account/password",
         ]
         for route in customer_routes:
             test_page_both_langs(page, "Customer", route, reporter)
+
+        # Mobile viewport overflow check (375x812)
+        page.set_viewport_size({"width": 375, "height": 812})
+        for route in ["/search", "/venues/1", "/my-bookings"]:
+            test_page_both_langs(page, "Customer-Mobile", route, reporter)
         context.close()
 
         # 3. Owner Crawl
@@ -210,9 +218,11 @@ def run_all_tests():
         owner_routes = [
             "/search",
             "/owner/venues",
+            "/owner/venues/new",
             "/owner/venues/1/schedule",
             "/owner/venues/1/pricing",
-            "/owner/bookings"
+            "/owner/bookings",
+            "/owner/analytics",
         ]
         for route in owner_routes:
             test_page_both_langs(page, "Owner", route, reporter)

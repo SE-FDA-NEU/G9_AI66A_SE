@@ -13,15 +13,25 @@ def count(db, table):
 
 def test_seed_row_counts(db):
     assert count(db, "venue") == 24
-    assert count(db, "user") == 6
-    assert count(db, "booking") == 6
+    assert count(db, "user") == 8
+    assert count(db, "booking") == 10
+    assert count(db, "review") == 3
+    assert count(db, "pricing_rule") == 4
+    assert count(db, "blocked_slot") == 2
 
 
 def test_same_email_twice_is_rejected(db):
     # BR1 - case-insensitive
     with connect(db) as conn, pytest.raises(sqlite3.IntegrityError):
         conn.execute("INSERT INTO user (email, password_hash, full_name, phone)"
-                     " VALUES ('MINH@example.com', 'x', 'Minh 2', '0912345678')")
+                     " VALUES ('MINH@example.com', 'x', 'Minh 2', '0912345679')")
+
+
+def test_same_phone_twice_is_rejected(db):
+    # BR3 - unique phone number
+    with connect(db) as conn, pytest.raises(sqlite3.IntegrityError):
+        conn.execute("INSERT INTO user (email, password_hash, full_name, phone)"
+                     " VALUES ('minh2@example.com', 'x', 'Minh 2', '0901234567')")
 
 
 def test_phone_must_be_ten_digits_starting_with_zero(db):

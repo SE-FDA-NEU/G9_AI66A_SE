@@ -8,7 +8,7 @@ from auth import make_verify_token
 from db import connect
 
 HOA = {"email": "hoa.nguyen@gmail.com", "password": "sanbong2026",
-       "full_name": "Nguyen Thi Hoa", "phone": "0912345678"}
+       "full_name": "Nguyen Thi Hoa", "phone": "0912345679"}
 TOO_SHORT = "sanbong"
 
 def register(client, **changes):
@@ -42,6 +42,24 @@ def test_same_email_twice_is_refused(client, db):
     with connect(db) as conn:
         n = conn.execute("SELECT COUNT(*) FROM user WHERE email = 'hoa.nguyen@gmail.com'").fetchone()[0]
     assert n == 1
+
+
+def test_same_phone_twice_is_refused(client, db):
+    # BR3 - phone number must be unique across accounts
+    register(client)
+    response = register(client, email="other.hoa@gmail.com")
+    assert response.status_code == 409
+    assert "This phone number is already in use" in response.get_data(as_text=True)
+    with connect(db) as conn:
+        n = conn.execute("SELECT COUNT(*) FROM user WHERE phone = ?", (HOA["phone"],)).fetchone()[0]
+    assert n == 1
+
+
+def test_api_register_duplicate_phone_returns_409(client):
+    register(client)
+    response = client.post("/api/auth/register", json={**HOA, "email": "api.hoa@gmail.com"})
+    assert response.status_code == 409
+    assert "This phone number is already in use" in response.get_json()["error"]
 
 
 def test_short_password_keeps_the_other_fields(client):

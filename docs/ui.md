@@ -257,6 +257,20 @@ A customer who opens this address directly gets the 403 page instead:
 
 ![A customer opening the add-venue page](images/ui/owner-forbidden.png)
 
+### 2.9 M4+ screens (P1, P2, and security flows)
+
+| Screen | Route | Role | Purpose & Key Actions |
+| ------ | ----- | ---- | --------------------- |
+| My bookings | `/my-bookings` | Customer | Lists upcoming and past bookings; allows tiered cancellation (BR15), `.ics` calendar export, and submitting a 1-5 star review after completion (BR18). |
+| Owner bookings | `/owner/bookings` | Owner | Day-by-day schedule of bookings across the owner's venues, with drill-down to `/owner/bookings/{code}` and CSV export (`/owner/bookings/export.csv`). |
+| Venue schedule | `/owner/venues/{id}/schedule` | Owner | Hour-by-hour grid to block or unblock maintenance slots (BR16) and batch-block date ranges while skipping already-booked days (BR17). |
+| Peak pricing | `/owner/venues/{id}/pricing` | Owner | Configure weekday peak-hour pricing rules (BR12, BR13) and delete existing rules without overlap. |
+| Owner analytics | `/owner/analytics` | Owner | Revenue, booking volume, and per-venue performance summary restricted to the venue owner (BR14). |
+| Administration | `/admin` | Admin | Platform-wide statistics, user creation/suspension, venue activation toggles, and BR19 review moderation. |
+| Forgot password | `/forgot-password` | Guest | Non-enumerating email form that issues a 1-hour single-use password reset link. |
+| Reset password | `/reset-password` | Guest | Validates the reset token and sets a new password meeting BR2 complexity rules. |
+| Change password | `/account/password` | Any user | Allows signed-in users to update their password after verifying their current password (BR2). |
+
 ---
 
 ## 3. Error messages

@@ -186,17 +186,20 @@ def test_compat_row_indexing_and_normalization():
     import db_compat
 
     now_dt = datetime(2026, 11, 1, 14, 0, 0)
+    now_dt_sec = datetime(2026, 11, 1, 14, 0, 5)
     now_date = date(2026, 11, 1)
-    raw = {"count": 42, "created_at": now_dt, "day": now_date, "name": "San Ho"}
+    raw = {"count": 42, "created_at": now_dt, "day": now_date, "name": "San Ho", "updated_at": now_dt_sec}
     row = db_compat.CompatRow(raw)
 
     assert row[0] == 42
     assert row[1] == "2026-11-01 14:00"
     assert row[2] == "2026-11-01"
     assert row[3] == "San Ho"
+    assert row[4] == "2026-11-01 14:00:05"
     assert row[:2] == [42, "2026-11-01 14:00"]
     assert row["count"] == 42
     assert row.get("created_at") == "2026-11-01 14:00"
+    assert row.get("updated_at") == "2026-11-01 14:00:05"
     assert dict(row)["count"] == 42
 
 
@@ -295,7 +298,7 @@ def test_ensure_schema_postgres_skips_ddl_when_tables_exist(monkeypatch):
     monkeypatch.setattr(app, "connect", lambda *args, **kwargs: mock_compat_conn)
 
     app._ensure_schema()
-    mock_compat_conn.execute.assert_called_with("SELECT 1 FROM venue LIMIT 1")
+    mock_compat_conn.execute.assert_any_call("SELECT 1 FROM venue LIMIT 1")
     # executescript should NOT be called because tables exist
     mock_compat_conn.executescript.assert_not_called()
 

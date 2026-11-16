@@ -28,6 +28,7 @@ def _user(conn, email):
 
 def _make_app(db, now_fn=None):
     app = create_app(database=db)
+    app.config["TESTING"] = True
     if now_fn:
         app.config["NOW"] = now_fn
     return app

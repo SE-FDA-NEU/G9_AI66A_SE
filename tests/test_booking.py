@@ -39,6 +39,7 @@ def bookings_at(db, slot):
 @pytest.fixture
 def app(db):
     app = create_app(database=db)
+    app.config["TESTING"] = True
     app.config["NOW"] = lambda: NOW
     return app
 

@@ -21,6 +21,7 @@ def db(tmp_path):
 @pytest.fixture
 def client(db, tmp_path):
     app = create_app(database=db)
+    app.config["TESTING"] = True
     app.config["UPLOAD_DIR"] = tmp_path / "uploads"
     return app.test_client()
 

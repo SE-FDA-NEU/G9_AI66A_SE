@@ -79,7 +79,7 @@ The public endpoint `/health` validates application health and database reachabi
 | Item | Layer | What could happen | Plan |
 |---|---|---|---|
 | **Serverless Cold Starts** | Infrastructure | Free-tier Neon Postgres and serverless lambdas sleep after idle periods, causing the first request to take 3–5 seconds. | Accepted. Course guidelines explicitly permit free-tier sleep delays on first visit. |
-| **Concurrent Booking Race Conditions** | Data | Two users attempting to book the identical court-hour slot simultaneously could experience a collision. | Closed via database UNIQUE constraint on `(venue_id, date, start_hour)` and transactional rollbacks (#18, #68). |
+| **Concurrent Booking Race Conditions** | Data | Two users attempting to book the identical court-hour slot simultaneously could experience a collision. | Closed via database `UNIQUE (venue_id, slot_start)` constraint on `booking_slot` and transactional rollbacks (#18, #68). |
 | **Media Storage Bandwidth Limits** | Infrastructure | Excessive high-resolution photo uploads could exhaust Cloudinary free-tier bandwidth. | Accepted. App enforces 5 MB upload limits and client-side webp compression. |
 | **Date-Dependent Seed Bookings** | Tests | Hardcoded future dates in test suites could drift over time and cause assertion failures. | Closed via dynamic date offsetting in test fixtures (#88, #92). |
 | **Client-Side Translation Flashes** | Frontend | Switching between English and Vietnamese may cause a brief flash of untranslated text before DOM mutation finishes. | Accepted. Language selection is cached in `localStorage` and executed synchronously on `DOMContentLoaded`. |
