@@ -10,7 +10,7 @@ from guards import login_required
 bp = Blueprint("admin", __name__)
 
 
-VALID_TABS = ("overview", "venues", "accounts", "moderation")
+VALID_TABS = ("overview", "owners", "venues", "accounts", "moderation")
 
 
 def _str_field(data, key, default=""):
@@ -52,6 +52,7 @@ def dashboard():
         stats=admin.get_platform_stats(conn),
         sport_breakdown=admin.get_sport_breakdown(conn),
         area_breakdown=admin.get_area_breakdown(conn),
+        owner_analytics=admin.get_owner_analytics(conn, q=q or None, status=status or None),
         venue_analytics=admin.get_venue_analytics(conn, sport=sport or None, area=area or None, q=q or None),
         users=admin.list_users(conn, role=role or None, status=status or None, q=q or None),
         moderation_reviews=admin.list_moderation_reviews(conn, mod_status=mod_status or None),
@@ -72,12 +73,41 @@ def create_user():
     phone = request.form.get("phone", "")
     role = request.form.get("role", "customer")
     auto_verify = any(v in ("1", "true", "on", "yes") for v in request.form.getlist("auto_verify"))
+    target_tab = "owners" if request.form.get("return_tab") == "owners" else "accounts"
     try:
         admin.create_user_account(conn, email, password, full_name, phone, role, auto_verify=auto_verify)
         flash(f"Account created for {email.strip().casefold()} ({role}).", "success")
     except BusinessRuleError as err:
         flash(err.message, "error")
-    return redirect("/admin?tab=accounts")
+    return redirect(f"/admin?tab={target_tab}")
+
+
+@bp.post("/admin/users/<int:user_id>/edit")
+@login_required("admin")
+def edit_user(user_id):
+    conn = get_db()
+    full_name = request.form.get("full_name", "")
+    email = request.form.get("email", "")
+    phone = request.form.get("phone", "")
+    role = request.form.get("role")
+    password = request.form.get("password")
+    auto_verify = any(v in ("1", "true", "on", "yes") for v in request.form.getlist("auto_verify"))
+    target_tab = "owners" if request.form.get("return_tab") == "owners" else "accounts"
+    try:
+        admin.update_user_account(
+            conn,
+            user_id,
+            full_name=full_name,
+            email=email,
+            phone=phone,
+            role=role,
+            password=password,
+            auto_verify=auto_verify,
+        )
+        flash("Account updated successfully.", "success")
+    except BusinessRuleError as err:
+        flash(err.message, "error")
+    return redirect(f"/admin?tab={target_tab}")
 
 
 @bp.post("/admin/users/<int:user_id>/suspend")
@@ -85,24 +115,26 @@ def create_user():
 def suspend_user(user_id):
     conn = get_db()
     reason = request.form.get("reason", "")
+    target_tab = "owners" if request.form.get("return_tab") == "owners" else "accounts"
     try:
         admin.suspend_user(conn, user_id, g.user["id"], reason=reason)
         flash("User account suspended.", "success")
     except BusinessRuleError as err:
         flash(err.message, "error")
-    return redirect("/admin?tab=accounts")
+    return redirect(f"/admin?tab={target_tab}")
 
 
 @bp.post("/admin/users/<int:user_id>/unsuspend")
 @login_required("admin")
 def unsuspend_user(user_id):
     conn = get_db()
+    target_tab = "owners" if request.form.get("return_tab") == "owners" else "accounts"
     try:
         admin.unsuspend_user(conn, user_id)
         flash("User account reactivated.", "success")
     except BusinessRuleError as err:
         flash(err.message, "error")
-    return redirect("/admin?tab=accounts")
+    return redirect(f"/admin?tab={target_tab}")
 
 
 @bp.post("/admin/venues/<int:venue_id>/toggle")
@@ -148,6 +180,15 @@ def api_stats():
     )
 
 
+@bp.get("/api/admin/owners")
+@login_required("admin")
+def api_owners():
+    conn = get_db()
+    q = request.args.get("q", "").strip()
+    status = request.args.get("status", "").strip()
+    return jsonify(owners=admin.get_owner_analytics(conn, q=q or None, status=status or None))
+
+
 def _json_or_form():
     """Return JSON object payload or form data; reject malformed/non-object JSON with 400."""
     if request.is_json:
@@ -179,6 +220,34 @@ def api_create_user():
         auto_verify=auto_verify,
     )
     return jsonify(id=user_id, email=email.strip().casefold(), role=role.strip()), 201
+
+
+@bp.post("/api/admin/users/<int:user_id>/edit")
+@login_required("admin")
+def api_edit_user(user_id):
+    data = _json_or_form()
+    full_name = _str_field(data, "full_name")
+    email = _str_field(data, "email")
+    phone = _str_field(data, "phone")
+    role = _str_field(data, "role") if "role" in data and data.get("role") is not None else None
+    password = _str_field(data, "password") if "password" in data and data.get("password") is not None else None
+    val = data.get("auto_verify")
+    auto_verify = (
+        val if isinstance(val, bool)
+        else str(val).strip().lower() in ("1", "true", "on", "yes")
+        if val is not None else None
+    )
+    admin.update_user_account(
+        get_db(),
+        user_id,
+        full_name=full_name,
+        email=email,
+        phone=phone,
+        role=role,
+        password=password,
+        auto_verify=auto_verify,
+    )
+    return jsonify(ok=True, id=user_id)
 
 
 @bp.post("/api/admin/users/<int:user_id>/suspend")

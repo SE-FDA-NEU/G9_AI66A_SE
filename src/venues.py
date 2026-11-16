@@ -4,6 +4,7 @@ adding a venue (US06).
 Sport and area come from the fixed lists below, never from typed text (BR9), so
 "Cau Giay", "cau giay" and "Q. Cau Giay" can never become three different areas.
 """
+import math
 import re
 import uuid
 import unicodedata
@@ -11,6 +12,7 @@ from datetime import date, datetime, timedelta
 
 import storage
 from errors import BusinessRuleError
+from hanoi_popular_venues import get_venue_coords
 from time_utils import vn_now
 
 SPORTS = ["Football", "Badminton", "Tennis", "Pickleball"]          # same list as the CHECK in schema.py
@@ -26,20 +28,23 @@ NO_MATCH = "No venues found"                                         # BR9
 # venue name, sport, area, and address, including Vietnamese text without diacritics.
 SEARCH_SQL = """
 SELECT v.id, v.name, v.sport, v.area, v.address, v.hourly_price, v.open_hour, v.close_hour,
+       v.latitude, v.longitude,
        (SELECT p.id FROM venue_photo p WHERE p.venue_id = v.id ORDER BY p.id LIMIT 1) AS cover_photo_id,
        ROUND(AVG(CASE WHEN r.hidden = 0 THEN r.rating END), 1) AS avg_rating,
-       COUNT(CASE WHEN r.hidden = 0 THEN r.id END) AS review_count
+       COUNT(CASE WHEN r.hidden = 0 THEN r.id END) AS review_count,
+       COUNT(DISTINCT b.id) AS booking_count
 FROM venue v
 LEFT JOIN booking b ON b.venue_id = v.id
 LEFT JOIN review r ON r.booking_id = b.id
 WHERE v.active = 1
   AND (:sport = '' OR v.sport = :sport)
   AND (:area  = '' OR v.area  = :area)
-GROUP BY v.id, v.name, v.sport, v.area, v.address, v.hourly_price, v.open_hour, v.close_hour
+GROUP BY v.id, v.name, v.sport, v.area, v.address, v.hourly_price, v.open_hour, v.close_hour,
+         v.latitude, v.longitude
 ORDER BY v.area, v.sport, v.name
 """
 
-SORT_OPTIONS = {"", "default", "price_asc", "price_desc", "rating_desc", "name_asc"}
+SORT_OPTIONS = {"", "default", "price_asc", "price_desc", "rating_desc", "name_asc", "distance_asc"}
 
 
 def _fold_search_text(value):
@@ -68,6 +73,84 @@ def _parse_hour_filter(value):
     return hour_int
 
 
+def _haversine_km(lat1, lng1, lat2, lng2):
+    """Great-circle distance in kilometers between two WGS84 coordinates."""
+    earth_radius_km = 6371.0
+    dlat = math.radians(lat2 - lat1)
+    dlng = math.radians(lng2 - lng1)
+    a = (
+        math.sin(dlat / 2) ** 2
+        + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlng / 2) ** 2
+    )
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return earth_radius_km * c
+
+
+def _parse_coords(lat, lng):
+    """Parse optional (lat, lng) strings into floats, or raise 400 on partial/invalid input."""
+    lat_s = "" if lat is None else str(lat).strip()
+    lng_s = "" if lng is None else str(lng).strip()
+    if not lat_s and not lng_s:
+        return None, None
+    if not lat_s or not lng_s:
+        raise BusinessRuleError(400, "Invalid location coordinates", None, "location")
+    try:
+        lat_f = float(lat_s)
+        lng_f = float(lng_s)
+    except (TypeError, ValueError):
+        raise BusinessRuleError(400, "Invalid location coordinates", None, "location") from None
+    if not (math.isfinite(lat_f) and math.isfinite(lng_f)):
+        raise BusinessRuleError(400, "Invalid location coordinates", None, "location")
+    if not (-90.0 <= lat_f <= 90.0) or not (-180.0 <= lng_f <= 180.0):
+        raise BusinessRuleError(400, "Invalid location coordinates", None, "location")
+    return lat_f, lng_f
+
+
+def _apply_recommendations(results):
+    """Compute normalized recommend_score and recommend_reason for each candidate venue."""
+    if not results:
+        return
+    max_bookings = max((v["booking_count"] for v in results), default=0)
+    prices = [v["hourly_price"] for v in results]
+    min_p, max_p = min(prices), max(prices)
+    mid_p = (min_p + max_p) / 2.0
+
+    for v in results:
+        avg_rating = float(v["avg_rating"]) if v["avg_rating"] is not None else None
+        rating_score = ((avg_rating if avg_rating is not None else 3.5) / 5.0) * 22.0
+        booking_popularity = (v["booking_count"] / max_bookings) * 13.0 if max_bookings > 0 else 0.0
+
+        total_slots = max(1, v["close_hour"] - v["open_hour"])
+        avail_score = (v["free_slots_count"] / total_slots) * 25.0
+        if v["free_slots_count"] == 0:
+            avail_score -= 15.0
+
+        if max_p > min_p:
+            price_score = ((max_p - v["hourly_price"]) / (max_p - min_p)) * 25.0
+        else:
+            price_score = 15.0
+
+        distance_km = v["distance_km"]
+        proximity_score = max(0.0, 1.0 - distance_km / 15.0) * 35.0 if distance_km is not None else 0.0
+
+        score = rating_score + booking_popularity + avail_score + price_score + proximity_score
+        v["recommend_score"] = round(score, 2)
+
+        if distance_km is not None and distance_km <= 3.0:
+            reason = "Nearby"
+        elif avg_rating is not None and avg_rating >= 4.5 and v["review_count"] >= 1:
+            reason = "Top rated"
+        elif v["free_slots_count"] >= 6 and v["hourly_price"] <= mid_p:
+            reason = "Great value & open"
+        elif v["booking_count"] >= 2:
+            reason = "Popular choice"
+        elif v["free_slots_count"] > 0:
+            reason = "Available today"
+        else:
+            reason = "Fully booked"
+        v["recommend_reason"] = reason
+
+
 def _sort_key(sort):
     if sort == "price_asc":
         return lambda v: (v["hourly_price"], v["area"], v["name"])
@@ -77,10 +160,22 @@ def _sort_key(sort):
         return lambda v: (-(v["avg_rating"] or 0), -v["review_count"], v["hourly_price"], v["name"])
     if sort == "name_asc":
         return lambda v: (v["name"].lower(), v["area"])
-    return lambda v: (v["area"], v["sport"], v["name"])
+    if sort == "distance_asc":
+        return lambda v: (
+            v["distance_km"] if v["distance_km"] is not None else 9999.0,
+            -v["recommend_score"],
+            v["hourly_price"],
+        )
+    return lambda v: (
+        -v["recommend_score"],
+        v["distance_km"] if v["distance_km"] is not None else 9999.0,
+        v["hourly_price"],
+        v["name"],
+    )
 
 
-def search(conn, sport="", area="", q="", sort="", min_price="", max_price="", date="", hour="", now=None):
+def search(conn, sport="", area="", q="", sort="", min_price="", max_price="",
+           date="", hour="", lat="", lng="", now=None):
     """Return the matching venues. An unknown sport or area is refused, not ignored (BR9)."""
     if sport and sport not in SPORTS:
         raise BusinessRuleError(400, "Please choose a sport from the list", "BR9", "sport")
@@ -94,6 +189,7 @@ def search(conn, sport="", area="", q="", sort="", min_price="", max_price="", d
     if min_p is not None and max_p is not None and min_p > max_p:
         raise BusinessRuleError(400, "Minimum price cannot exceed maximum price", None, "min_price")
 
+    user_lat, user_lng = _parse_coords(lat, lng)
     now_dt = now or vn_now()
     date_str = str(date).strip() if date is not None else ""
     target_day = parse_day(date_str, now_dt) if date_str else now_dt.date()
@@ -120,6 +216,9 @@ def search(conn, sport="", area="", q="", sort="", min_price="", max_price="", d
     results = []
     for row in rows:
         v = dict(row)
+        v_lat, v_lng = get_venue_coords(v["area"], v.get("latitude"), v.get("longitude"))
+        v["latitude"] = v_lat
+        v["longitude"] = v_lng
         if query and query not in _fold_search_text(
             f"{v['name']} {v['sport']} {v['area']} {v['address']}"
         ):
@@ -151,14 +250,28 @@ def search(conn, sport="", area="", q="", sort="", min_price="", max_price="", d
             ):
                 continue
 
+        if user_lat is not None and v_lat is not None and v_lng is not None:
+            v["distance_km"] = round(_haversine_km(user_lat, user_lng, v_lat, v_lng), 1)
+        else:
+            v["distance_km"] = None
+
         results.append(v)
 
+    _apply_recommendations(results)
     results.sort(key=_sort_key(sort))
     return results
 
 
 def get_venue(conn, venue_id):
-    venue = conn.execute("SELECT * FROM venue WHERE id = ? AND active = 1", (venue_id,)).fetchone()
+    venue = conn.execute(
+        """
+        SELECT v.*, u.full_name AS owner_name, u.phone AS owner_phone
+        FROM venue v
+        LEFT JOIN user u ON u.id = v.owner_id
+        WHERE v.id = ? AND v.active = 1
+        """,
+        (venue_id,),
+    ).fetchone()
     if venue is None:
         raise BusinessRuleError(404, "Venue not found. It may have been removed - search again.")
     return venue
@@ -262,11 +375,14 @@ def check_new_venue(form, photo_name=""):
 
 def create_venue(conn, owner, values):
     """Insert a venue owned by `owner` (BR14). `values` must have passed check_new_venue()."""
+    from hanoi_popular_venues import get_venue_coords
+
+    lat, lng = get_venue_coords(values["area"])
     cur = conn.execute(
-        "INSERT INTO venue (owner_id, name, sport, area, address, hourly_price, open_hour, close_hour)"
-        " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO venue (owner_id, name, sport, area, address, hourly_price, open_hour, close_hour, latitude, longitude)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (owner["id"], values["name"], values["sport"], values["area"], values["address"],
-         values["hourly_price"], values["open_hour"], values["close_hour"]))
+         values["hourly_price"], values["open_hour"], values["close_hour"], lat, lng))
     conn.commit()
     return cur.lastrowid
 
@@ -296,6 +412,50 @@ def check_venue_owner(conn, venue_id, owner_id):
     if venue["owner_id"] != owner_id:
         raise BusinessRuleError(403, "You do not have permission to access this venue")
     return venue
+
+
+def update_venue(conn, owner, venue_id, form):
+    """Update venue settings: details, operating hours, and base hourly price (BR9, BR13, BR14, BR18)."""
+    existing = check_venue_owner(conn, venue_id, owner["id"])
+    merged = {
+        k: (str(form[k]) if form.get(k) is not None else "")
+        if k in form
+        else str(existing[k])
+        for k in ("name", "sport", "area", "address", "hourly_price", "open_hour", "close_hour")
+    }
+    values, problems = check_new_venue(merged)
+    if problems:
+        raise problems[0]
+    from hanoi_popular_venues import get_venue_coords
+
+    if values["area"] != existing["area"] or existing["latitude"] is None or existing["longitude"] is None:
+        lat, lng = get_venue_coords(values["area"])
+    else:
+        lat, lng = existing["latitude"], existing["longitude"]
+    conn.execute(
+        """
+        UPDATE venue
+        SET name = ?, sport = ?, area = ?, address = ?,
+            hourly_price = ?, open_hour = ?, close_hour = ?,
+            latitude = ?, longitude = ?
+        WHERE id = ? AND owner_id = ?
+        """,
+        (
+            values["name"],
+            values["sport"],
+            values["area"],
+            values["address"],
+            values["hourly_price"],
+            values["open_hour"],
+            values["close_hour"],
+            lat,
+            lng,
+            venue_id,
+            owner["id"],
+        ),
+    )
+    conn.commit()
+    return conn.execute("SELECT * FROM venue WHERE id = ?", (venue_id,)).fetchone()
 
 
 def owner_bookings(conn, owner, date_str, venue_id=None):
@@ -383,9 +543,10 @@ def venue_schedule_slots(conn, venue, day, now):
     return list(slots_map.values())
 
 
-def block_single_slot(conn, owner, venue_id, slot_day, hour, reason="Under maintenance", now=None):
+def block_single_slot(conn, owner, venue_id, slot_day, hour, reason="Maintenance", now=None):
     """Block one slot for maintenance (US22, BR13, BR14, BR15)."""
     now = now or vn_now()
+    clean_reason = (reason or "").strip() or "Maintenance"
     if conn.in_transaction:
         conn.commit()
     conn.execute("BEGIN IMMEDIATE")
@@ -419,7 +580,7 @@ def block_single_slot(conn, owner, venue_id, slot_day, hour, reason="Under maint
 
         conn.execute(
             "INSERT OR REPLACE INTO blocked_slot (venue_id, slot_start, reason) VALUES (?, ?, ?)",
-            (venue_id, slot_start, reason or "Under maintenance"))
+            (venue_id, slot_start, clean_reason))
     except BaseException:
         conn.rollback()
         raise
@@ -436,9 +597,10 @@ def unblock_single_slot(conn, owner, venue_id, slot_day, hour):
     conn.commit()
 
 
-def batch_block_slots(conn, owner, venue_id, start_day, end_day, start_hour, end_hour, reason="Under maintenance", now=None):
+def batch_block_slots(conn, owner, venue_id, start_day, end_day, start_hour, end_hour, reason="Maintenance", now=None):
     """Batch block date range & hours (US22 AC 5). Returns (blocked_count, skipped_messages)."""
     now = now or vn_now()
+    clean_reason = (reason or "").strip() or "Maintenance"
     if conn.in_transaction:
         conn.commit()
     conn.execute("BEGIN IMMEDIATE")
@@ -481,7 +643,7 @@ def batch_block_slots(conn, owner, venue_id, start_day, end_day, start_hour, end
                 for slot_start in future_slots:
                     conn.execute(
                         "INSERT OR REPLACE INTO blocked_slot (venue_id, slot_start, reason) VALUES (?, ?, ?)",
-                        (venue_id, slot_start, reason or "Under maintenance"))
+                        (venue_id, slot_start, clean_reason))
                     blocked_count += 1
             cur_day += timedelta(days=1)
     except BaseException:

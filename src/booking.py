@@ -170,8 +170,10 @@ def create_booking(conn, user, venue_id, day, start_hour, hours, now=None):
 def find_for_customer(conn, code, user):
     """One booking with its venue and price lines; only its own customer may read it (BR14)."""
     booking = conn.execute(
-        "SELECT b.*, v.name AS venue_name, v.address, v.area, v.sport FROM booking b"
-        " JOIN venue v ON v.id = b.venue_id WHERE b.code = ?", (code,)).fetchone()
+        "SELECT b.*, v.name AS venue_name, v.address, v.area, v.sport,"
+        " owner.full_name AS owner_name, owner.phone AS owner_phone"
+        " FROM booking b JOIN venue v ON v.id = b.venue_id"
+        " JOIN user owner ON owner.id = v.owner_id WHERE b.code = ?", (code,)).fetchone()
     if booking is None:
         raise BusinessRuleError("BR14", "Booking not found", 404)
     if booking["customer_id"] != user["id"]:
@@ -200,9 +202,11 @@ def list_for_customer(conn, user_id, status_filter=None, now=None):
     base_sql = """
     SELECT b.id, b.code, b.customer_id, b.venue_id, b.start_at, b.end_at, b.total_price,
            b.status, b.refund_amount, b.created_at, b.cancelled_at,
-           v.name AS venue_name, v.address, v.sport
+           v.name AS venue_name, v.address, v.sport,
+           owner.full_name AS owner_name, owner.phone AS owner_phone
     FROM booking b
     JOIN venue v ON v.id = b.venue_id
+    JOIN user owner ON owner.id = v.owner_id
     WHERE b.customer_id = ?
     """
     params = [user_id]

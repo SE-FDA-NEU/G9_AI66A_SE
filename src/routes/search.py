@@ -13,7 +13,7 @@ bp = Blueprint("search", __name__)
 def filters():
     return {
         k: request.args.get(k, "").strip()
-        for k in ("sport", "area", "q", "sort", "min_price", "max_price", "date", "hour")
+        for k in ("sport", "area", "q", "sort", "min_price", "max_price", "date", "hour", "lat", "lng")
     }
 
 
@@ -22,6 +22,7 @@ def filters():
 def search_page():
     now = current_app.config.get("NOW", datetime.now)()
     chosen = filters()
+    location_active = bool(chosen["lat"] and chosen["lng"])
     conn = get_db()
     total = conn.execute("SELECT COUNT(*) FROM venue WHERE active = 1").fetchone()[0]
     try:
@@ -29,10 +30,12 @@ def search_page():
     except BusinessRuleError as err:
         return render_template("search.html", venues=[], error=err.message, total=total,
                                sports=venues.SPORTS, areas=venues.AREAS,
-                               today=now.date().isoformat(), **chosen), err.status
+                               today=now.date().isoformat(), location_active=location_active,
+                               **chosen), err.status
     return render_template("search.html", venues=results, error=None, total=total,
                            sports=venues.SPORTS, areas=venues.AREAS,
-                           today=now.date().isoformat(), **chosen)
+                           today=now.date().isoformat(), location_active=location_active,
+                           **chosen)
 
 
 @bp.get("/api/venues")

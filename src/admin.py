@@ -303,6 +303,141 @@ def get_venue_analytics(conn, sport=None, area=None, q=None):
     return analytics
 
 
+def get_owner_analytics(conn, q=None, status=None):
+    """Return per-owner portfolio, booking, hour, revenue, and rating analytics."""
+    sql = """
+        SELECT u.id, u.full_name, u.email, u.phone, u.created_at,
+               u.email_verified_at, u.suspended, u.suspended_reason
+        FROM user u
+        WHERE u.role = 'owner'
+    """
+    params = []
+    if status == "active":
+        sql += " AND u.suspended = 0 AND u.email_verified_at IS NOT NULL"
+    elif status == "suspended":
+        sql += " AND u.suspended = 1"
+    elif status == "unverified":
+        sql += " AND u.suspended = 0 AND u.email_verified_at IS NULL"
+    sql += " ORDER BY u.id ASC"
+
+    owner_rows = conn.execute(sql, tuple(params)).fetchall()
+
+    venue_rows = conn.execute(
+        """
+        SELECT id, owner_id, name, sport, area, active
+        FROM venue
+        ORDER BY id ASC
+        """
+    ).fetchall()
+    venues_by_owner = {}
+    for v in venue_rows:
+        venues_by_owner.setdefault(v["owner_id"], []).append({
+            "id": v["id"],
+            "name": v["name"],
+            "sport": v["sport"],
+            "area": v["area"],
+            "active": bool(v["active"]),
+        })
+
+    booking_by_owner = {
+        r["owner_id"]: r
+        for r in conn.execute(
+            """
+            SELECT v.owner_id,
+                   COUNT(b.id) AS total_bookings,
+                   COALESCE(SUM(CASE WHEN b.status = 'confirmed' THEN 1 ELSE 0 END), 0) AS confirmed_bookings,
+                   COALESCE(SUM(CASE WHEN b.status = 'completed' THEN 1 ELSE 0 END), 0) AS completed_bookings,
+                   COALESCE(SUM(CASE WHEN b.status = 'cancelled' THEN 1 ELSE 0 END), 0) AS cancelled_bookings,
+                   COALESCE(SUM(b.total_price), 0) AS gross_revenue,
+                   COALESCE(SUM(COALESCE(b.refund_amount, 0)), 0) AS total_refunded,
+                   COALESCE(SUM(b.total_price - COALESCE(b.refund_amount, 0)), 0) AS net_revenue
+            FROM booking b
+            JOIN venue v ON v.id = b.venue_id
+            GROUP BY v.owner_id
+            """
+        ).fetchall()
+    }
+
+    hours_by_owner = {
+        r["owner_id"]: _int(r["total_hours"])
+        for r in conn.execute(
+            """
+            SELECT v.owner_id, COUNT(bs.id) AS total_hours
+            FROM booking_slot bs
+            JOIN venue v ON v.id = bs.venue_id
+            GROUP BY v.owner_id
+            """
+        ).fetchall()
+    }
+
+    reviews_by_owner = {
+        r["owner_id"]: r
+        for r in conn.execute(
+            """
+            SELECT v.owner_id,
+                   AVG(r.rating) AS avg_rating,
+                   COUNT(r.id) AS review_count
+            FROM review r
+            JOIN booking b ON b.id = r.booking_id
+            JOIN venue v ON v.id = b.venue_id
+            WHERE r.hidden = 0
+            GROUP BY v.owner_id
+            """
+        ).fetchall()
+    }
+
+    query = venues._fold_search_text(q.strip() if isinstance(q, str) else "")
+    owners = []
+    for u in owner_rows:
+        oid = u["id"]
+        owner_venues = venues_by_owner.get(oid, [])
+        if query:
+            venue_text = " ".join(f"{v['name']} {v['sport']} {v['area']}" for v in owner_venues)
+            haystack = venues._fold_search_text(f"{u['full_name']} {u['email']} {u['phone']} {venue_text}")
+            if query not in haystack:
+                continue
+
+        total_venues = len(owner_venues)
+        active_venues = sum(1 for v in owner_venues if v["active"])
+        b = booking_by_owner.get(oid)
+        rev = reviews_by_owner.get(oid)
+        total_bookings = _int(b["total_bookings"]) if b else 0
+        cancelled_bookings = _int(b["cancelled_bookings"]) if b else 0
+        cancellation_rate = (
+            round((cancelled_bookings / total_bookings) * 100, 1) if total_bookings > 0 else 0.0
+        )
+
+        owners.append({
+            "id": oid,
+            "full_name": u["full_name"],
+            "email": u["email"],
+            "phone": u["phone"],
+            "created_at": u["created_at"],
+            "email_verified_at": u["email_verified_at"],
+            "suspended": bool(u["suspended"]),
+            "suspended_reason": u["suspended_reason"],
+            "total_venues": total_venues,
+            "active_venues": active_venues,
+            "inactive_venues": total_venues - active_venues,
+            "total_bookings": total_bookings,
+            "confirmed_bookings": _int(b["confirmed_bookings"]) if b else 0,
+            "completed_bookings": _int(b["completed_bookings"]) if b else 0,
+            "cancelled_bookings": cancelled_bookings,
+            "cancellation_rate": cancellation_rate,
+            "total_hours": hours_by_owner.get(oid, 0),
+            "gross_revenue": _int(b["gross_revenue"]) if b else 0,
+            "total_refunded": _int(b["total_refunded"]) if b else 0,
+            "net_revenue": _int(b["net_revenue"]) if b else 0,
+            "avg_rating": _rounded_avg(rev["avg_rating"]) if rev else None,
+            "review_count": _int(rev["review_count"]) if rev else 0,
+            "venues": owner_venues,
+            "venue_names": [v["name"] for v in owner_venues],
+        })
+
+    owners.sort(key=lambda item: (-item["net_revenue"], -item["total_venues"], item["id"]))
+    return owners
+
+
 def list_users(conn, role=None, status=None, q=None):
     """Return user accounts with venue_count and booking_count, optionally filtered."""
     sql = """
@@ -382,6 +517,81 @@ def create_user_account(conn, email, password, full_name, phone, role, auto_veri
         raise
     conn.commit()
     return cur.lastrowid
+
+
+def update_user_account(
+    conn,
+    user_id,
+    full_name,
+    email,
+    phone,
+    role=None,
+    password=None,
+    auto_verify=None,
+    now=None,
+):
+    """Edit an existing account with BR1, BR2, BR3, and BR7 validation."""
+    user = conn.execute(
+        "SELECT id, email, full_name, phone, role, password_hash, email_verified_at FROM user WHERE id = ?",
+        (user_id,),
+    ).fetchone()
+    if user is None:
+        raise BusinessRuleError(404, "User not found")
+
+    full_name = _as_str(full_name, "full_name").strip()
+    email = _as_str(email, "email").strip().casefold()
+    phone = _as_str(phone, "phone").strip()
+
+    if not full_name:
+        raise BusinessRuleError(400, "Please enter your full name", None, "full_name")
+    if len(full_name) > 100:
+        raise BusinessRuleError(400, "Full name must be at most 100 characters", None, "full_name")
+
+    if not auth.EMAIL_PATTERN.match(email):
+        raise BusinessRuleError(400, "Please enter a valid email address", None, "email")
+    if conn.execute("SELECT 1 FROM user WHERE lower(email) = ? AND id != ?", (email, user_id)).fetchone():
+        raise BusinessRuleError(409, "This email is already in use", "BR1", "email")
+
+    if not auth.PHONE_PATTERN.match(phone):
+        raise BusinessRuleError(400, "Phone number must be 10 digits", "BR3", "phone")
+    if not phone.startswith("0"):
+        raise BusinessRuleError(400, "Phone number must start with 0", "BR3", "phone")
+    if conn.execute("SELECT 1 FROM user WHERE phone = ? AND id != ?", (phone, user_id)).fetchone():
+        raise BusinessRuleError(409, "This phone number is already in use", "BR3", "phone")
+
+    if role is not None and _as_str(role, "role").strip() != "":
+        clean_role = _as_str(role, "role").strip()
+        if clean_role not in VALID_ROLES:
+            raise BusinessRuleError(400, "Invalid account role. Choose customer, owner, or admin.", "BR7", "role")
+        new_role = clean_role
+    else:
+        new_role = user["role"]
+
+    if password is not None and _as_str(password, "password").strip() != "":
+        raw_password = _as_str(password, "password")
+        auth.check_password(raw_password)
+        new_password_hash = generate_password_hash(raw_password)
+    else:
+        new_password_hash = user["password_hash"]
+
+    new_verified_at = user["email_verified_at"]
+    if auto_verify and not new_verified_at:
+        new_verified_at = (now or vn_now()).strftime(TIME_FORMAT)
+
+    try:
+        conn.execute(
+            """
+            UPDATE user
+            SET full_name = ?, email = ?, phone = ?, role = ?, password_hash = ?, email_verified_at = ?
+            WHERE id = ?
+            """,
+            (full_name, email, phone, new_role, new_password_hash, new_verified_at, user_id),
+        )
+    except Exception as exc:
+        if isinstance(exc, sqlite3.IntegrityError) or "unique" in str(exc).lower() or "duplicate" in str(exc).lower():
+            auth.raise_user_unique_conflict(conn, phone, exc)
+        raise
+    conn.commit()
 
 
 def suspend_user(conn, target_user_id, actor_user_id, reason=""):

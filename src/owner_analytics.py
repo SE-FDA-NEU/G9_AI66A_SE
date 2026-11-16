@@ -91,6 +91,36 @@ def get_owner_summary(conn, owner_id):
         for row in per_venue_rows
     ]
 
+    recent_review_rows = conn.execute(
+        """
+        SELECT r.id, r.rating, r.comment, r.created_at, r.hidden, r.report_count,
+               b.code AS booking_code, v.id AS venue_id, v.name AS venue_name,
+               u.full_name AS customer_name
+        FROM review r
+        JOIN booking b ON b.id = r.booking_id
+        JOIN venue v ON v.id = b.venue_id
+        JOIN user u ON u.id = b.customer_id
+        WHERE v.owner_id = ?
+        ORDER BY r.id DESC
+        LIMIT 15
+        """,
+        (owner_id,),
+    ).fetchall()
+
+    recent_alert_rows = conn.execute(
+        """
+        SELECT b.code, b.status, b.start_at, b.end_at, b.total_price, b.refund_amount,
+               v.name AS venue_name, u.full_name AS customer_name, u.phone AS customer_phone
+        FROM booking b
+        JOIN venue v ON v.id = b.venue_id
+        JOIN user u ON u.id = b.customer_id
+        WHERE v.owner_id = ?
+        ORDER BY b.id DESC
+        LIMIT 10
+        """,
+        (owner_id,),
+    ).fetchall()
+
     return {
         "total_venues": _int(venue_row["total_venues"]),
         "active_venues": _int(venue_row["active_venues"]),
@@ -103,6 +133,8 @@ def get_owner_summary(conn, owner_id):
         "total_refunded": _int(booking_row["total_refunded"]),
         "net_revenue": _int(booking_row["net_revenue"]),
         "per_venue": per_venue,
+        "recent_reviews": [dict(r) for r in recent_review_rows],
+        "recent_alerts": [dict(r) for r in recent_alert_rows],
     }
 
 
