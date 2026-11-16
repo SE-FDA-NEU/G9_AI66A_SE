@@ -2,45 +2,41 @@
 {% block title %}Book {{ venue.name if venue else "a venue" }}{% endblock %}
 {% block style %}
 <style>
-  main:has(.booking-page) { max-width: 900px; margin-top: 30px; }
-  .booking-page { max-width: 790px; margin: 0 auto; }
-  .booking-back { display: inline-block; margin-bottom: 18px; font-size: 13px; color: #637669; }
-  .booking-head { padding-bottom: 20px; border-bottom: 1px solid #dfe5dc; }
-  .booking-head h1 { margin: 0 0 7px; font: 700 clamp(34px, 5vw, 48px)/.98 'Barlow Condensed', sans-serif; }
-  .booking-head p { margin: 0; color: #707c72; font-size: 14px; }
-  .booking-steps { display: flex; align-items: center; gap: 24px; margin: 18px 0 22px; color: #475569; font-size: 12px; }
-  .booking-step { display: flex; align-items: center; gap: 8px; }
+  main:has(.booking-page) { max-width: 1240px; margin-top: 24px; }
+  .booking-page { max-width: 1200px; margin: 0 auto; }
+  .booking-back { display: inline-block; margin-bottom: 12px; font-size: 13px; color: #56705b; font-weight: 600; }
+  .booking-shell { background: #fff; border: 1px solid var(--border-color); border-radius: 12px; padding: 24px 28px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04); }
+  .booking-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0; }
+  .booking-head h1 { margin: 0; font: 700 clamp(28px, 3.6vw, 36px)/1 'Barlow Condensed', sans-serif; }
+  .booking-steps { display: flex; align-items: center; gap: 16px; margin: 0; color: #475569; font-size: 12px; }
+  .booking-step { display: flex; align-items: center; gap: 6px; }
   .booking-step.active { color: #285c3a; font-weight: 700; }
-  .booking-step span { display: grid; width: 22px; height: 22px; place-items: center; border-radius: 50%; background: #e8ece5; font-size: 11px; }
+  .booking-step span { display: grid; width: 20px; height: 20px; place-items: center; border-radius: 50%; background: #e8ece5; font-size: 11px; font-weight: 700; }
   .booking-step.active span { background: #285c3a; color: #fff; }
-  .venue-summary { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; padding: 20px 0; border-bottom: 1px solid #e2e7df; }
-  .venue-summary h2 { margin: 0 0 5px; font-size: 18px; }
-  .venue-summary p { margin: 0; color: #68746b; font-size: 13px; line-height: 1.6; }
-  .price-note { max-width: 210px; color: #68746b; font-size: 12px; line-height: 1.5; text-align: right; }
-  .booking-form { display: grid; grid-template-columns: 1.2fr 1fr 1fr auto; align-items: end; gap: 12px; padding: 20px 0; border-bottom: 1px solid #e2e7df; }
-  .booking-form label { display: flex; flex-direction: column; gap: 7px; color: #4b5a4e; font-size: 12px; font-weight: 700; }
-  .booking-form input, .booking-form select { min-height: 42px; }
-  .booking-form button { min-height: 42px; white-space: nowrap; }
-  .booking-empty { padding: 20px 0; color: #657167; font-size: 14px; }
-  .quote-panel { margin-top: 22px; padding: 20px; border: 1px solid #e1e5dc; border-radius: 10px; background: #fff; }
-  .quote-panel h2 { margin: 0 0 15px; font-size: 18px; }
+  .venue-summary { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; padding: 14px 0; border-bottom: 1px solid #e2e8f0; }
+  .venue-summary h2 { margin: 0 0 2px; font-size: 19px; }
+  .venue-summary p { margin: 0; color: #58655b; font-size: 13px; line-height: 1.5; }
+  .booking-form { display: grid; grid-template-columns: 1.2fr 1fr 1fr auto; align-items: end; gap: 12px; padding: 16px 0 4px; }
+  .booking-form label { display: flex; flex-direction: column; gap: 6px; color: #4b5a4e; font-size: 12px; font-weight: 600; }
+  .booking-form input, .booking-form select { height: 42px; min-height: 42px; }
+  .booking-form button { height: 42px; min-height: 42px; white-space: nowrap; padding: 0 20px; }
+  .booking-empty { padding: 16px 0 4px; color: #657167; font-size: 14px; }
+  .quote-panel { margin-top: 18px; padding: 18px 20px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fafbf9; }
+  .quote-panel h2 { margin: 0 0 12px; font-size: 17px; }
   .quote-scroll { overflow-x: auto; }
   .quote-scroll table { width: 100%; min-width: 500px; border-collapse: collapse; }
-  .quote-scroll th, .quote-scroll td { padding: 10px 8px; border-bottom: 1px solid #edf0eb; font-size: 13px; }
+  .quote-scroll th, .quote-scroll td { padding: 9px 8px; border-bottom: 1px solid #edf0eb; font-size: 13px; }
   .quote-scroll th { color: #788278; font-size: 10px; letter-spacing: .04em; text-align: left; text-transform: uppercase; }
   .quote-scroll .num { text-align: right; font-variant-numeric: tabular-nums; }
   .quote-total td { border-bottom: 0; color: #244b32; font-weight: 700; }
-  .quote-confirm { display: flex; justify-content: flex-end; margin-top: 16px; }
-  .booking-error { margin-top: 14px; padding: 12px 14px; border-left: 3px solid #c44b42; background: #fbf1ef; color: #85372f; font-size: 13px; }
-  .nearest-day { margin-top: 10px; font-size: 13px; }
-  .map-link { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; font-size: 12px; font-weight: 700; color: var(--brand); text-decoration: none; }
+  .quote-confirm { display: flex; justify-content: flex-end; margin-top: 14px; }
+  .booking-error { margin-top: 12px; padding: 10px 14px; border-left: 3px solid #c44b42; background: #fbf1ef; color: #85372f; font-size: 13px; }
+  .nearest-day { margin-top: 8px; font-size: 13px; }
+  .map-link { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; font-size: 12px; font-weight: 600; color: var(--brand); text-decoration: none; }
   .map-link:hover { text-decoration: underline; }
-  .seg-badge { display: inline-block; margin-left: 6px; padding: 2px 7px; border-radius: 9999px; font-size: 10px; font-weight: 800; text-transform: uppercase; vertical-align: middle; }
+  .seg-badge { display: inline-block; margin-left: 6px; padding: 2px 7px; border-radius: 9999px; font-size: 10px; font-weight: 700; text-transform: uppercase; vertical-align: middle; }
   .seg-badge.peak { background: #fef3c7; color: #92400e; }
   .seg-badge.standard { background: #e9efdf; color: #355e3e; }
-  .policy-box { margin-top: 16px; padding: 12px 14px; background: #f8fafc; border: 1px solid #e2e7df; border-radius: 8px; font-size: 12px; color: #475569; }
-  .policy-tiers { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
-  .policy-tier { background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px; font-weight: 600; }
   @media (max-width: 700px) {
     .booking-form { grid-template-columns: 1fr 1fr; }
     .booking-form label:first-child { grid-column: 1 / -1; }
@@ -61,15 +57,15 @@
   {% if not venue %}
   <div class="booking-error" role="alert">{{ error }}</div>
   {% else %}
+  <div class="booking-shell">
   <header class="booking-head">
     <h1>Choose a time to play</h1>
-    <p>Check the venue and price, then confirm your reservation.</p>
+    <div class="booking-steps" aria-label="Booking steps">
+      <div class="booking-step active"><span>1</span> Pick date and time</div>
+      <div class="booking-step {% if quote %}active{% endif %}"><span>2</span> Review price</div>
+      <div class="booking-step"><span>3</span> Confirm booking</div>
+    </div>
   </header>
-  <div class="booking-steps" aria-label="Booking steps">
-    <div class="booking-step active"><span>1</span> Pick date and time</div>
-    <div class="booking-step {% if quote %}active{% endif %}"><span>2</span> Review price</div>
-    <div class="booking-step"><span>3</span> Confirm booking</div>
-  </div>
 
   {% if error %}<div class="booking-error" role="alert">{{ error }}</div>{% endif %}
 
@@ -77,10 +73,14 @@
     <div>
       <h2>{{ venue.name }}</h2>
       <p>{{ venue.sport }} · {{ venue.address }}, {{ venue.area }}
-        <a class="map-link" href="https://www.google.com/maps/search/?api=1&query={{ (venue.name ~ ', ' ~ venue.address ~ ', ' ~ venue.area ~ ', Hanoi')|urlencode }}" target="_blank" rel="noopener">View on Map &#8599;</a><br>
-        Open {{ '%02d:00' % venue.open_hour }}–{{ '%02d:00' % venue.close_hour }}</p>
+        <a class="map-link" href="https://www.google.com/maps/search/?api=1&query={{ (venue.name ~ ', ' ~ venue.address ~ ', ' ~ venue.area ~ ', Hanoi')|urlencode }}" target="_blank" rel="noopener">View on Map &#8599;</a>
+        &middot; Open {{ '%02d:00' % venue.open_hour }}–{{ '%02d:00' % venue.close_hour }}</p>
     </div>
-    <div class="price-note">Prices can vary by day and time. The full amount is shown before you confirm.</div>
+    {% if venue.owner_phone %}
+    <a href="tel:{{ venue.owner_phone }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; font-weight: 700; text-decoration: none; font-size: 12px;">
+      &#128222; Host: {{ venue.owner_phone }}{% if venue.owner_name %} ({{ venue.owner_name }}){% endif %}
+    </a>
+    {% endif %}
   </section>
 
   <form class="booking-form" id="booking-filter-form" method="get">
@@ -131,14 +131,6 @@
       {% endif %}
       </tbody>
     </table></div>
-    <div class="policy-box">
-      <strong>Cancellation Policy:</strong>
-      <div class="policy-tiers">
-        <span class="policy-tier">&ge; 24h before start: 100% refund</span>
-        <span class="policy-tier">2h&ndash;24h before start: 50% refund</span>
-        <span class="policy-tier">&lt; 2h before start: Non-refundable</span>
-      </div>
-    </div>
     <form method="post" class="quote-confirm">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="date" id="confirm-date" value="{{ day.isoformat() }}">
@@ -148,6 +140,7 @@
     </form>
   </section>
   {% endif %}
+  </div>
   {% endif %}
 </div>
 

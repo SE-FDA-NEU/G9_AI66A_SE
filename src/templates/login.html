@@ -25,26 +25,10 @@
         <button type="submit" style="width: 100%; padding: 12px; margin-top: 4px; font-size: 15px;">Sign in</button>
       </form>
 
-      <div class="quick-demo-accounts">
-        <strong>Demo accounts · password <code>sanbong1</code></strong>
-        <div class="demo-btn-group">
-          <button type="button" class="demo-btn" onclick="fill('minh@example.com')">Customer (Minh)</button>
-          <button type="button" class="demo-btn" onclick="fill('lan.owner@example.com')">Venue Owner (Lan)</button>
-          <button type="button" class="demo-btn" onclick="fill('trang@example.com')">Customer (Trang)</button>
-        </div>
-      </div>
-
       <p class="muted" style="text-align: center; margin-top: 20px; font-size: 14px;">
         Don't have an account? <a href="/register" style="font-weight: 700;">Register &rarr;</a>
       </p>
     </div>
   </div>
 </div>
-
-<script>
-function fill(email) {
-  document.getElementById('login-email').value = email;
-  document.getElementById('login-pw').value = 'sanbong1';
-}
-</script>
 {% endblock %}

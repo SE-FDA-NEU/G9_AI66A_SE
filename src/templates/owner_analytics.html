@@ -40,6 +40,7 @@
   </div>
 
   {% if summary.per_venue %}
+  <h2 style="margin: 28px 0 14px; font-size: 20px; font-weight: 800; color: var(--text-main);">Performance by Venue</h2>
   <div class="table-responsive-wrapper">
     <table class="owner-table">
       <thead>
@@ -84,5 +85,69 @@
     You have no venues yet. <a href="/owner/venues/new">Add your first venue</a> to start tracking analytics.
   </div>
   {% endif %}
+
+  <h2 style="margin: 32px 0 14px; font-size: 20px; font-weight: 800; color: var(--text-main);">Owner Alerts: Customer Reviews &amp; Recent Bookings</h2>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 20px; align-items: start;">
+    <section class="card" style="padding: 20px; border-radius: 12px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color);">
+        <h3 style="margin: 0; font-size: 16px; font-weight: 800;">Customer Reviews Alert Feed</h3>
+        <span class="muted" style="font-size: 12px; font-weight: 700;">{{ summary.recent_reviews | length if summary.recent_reviews is defined else 0 }} recent</span>
+      </div>
+      {% if summary.recent_reviews %}
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        {% for r in summary.recent_reviews %}
+        <div style="padding: 12px 14px; border: 1px solid var(--border-color); border-radius: 10px; background: #fbfcfa;">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span style="font-weight: 800; color: #b45309; font-size: 14px;">★ {{ r.rating }}/5</span>
+            <a href="/owner/bookings/{{ r.booking_code }}" style="font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--brand); text-decoration: none;">{{ r.booking_code }}</a>
+          </div>
+          <div style="margin-top: 4px; font-size: 13px; font-weight: 700;">
+            <a href="/venues/{{ r.venue_id }}" style="color: var(--text-main); text-decoration: none;">{{ r.venue_name }}</a>
+            <span class="muted" style="font-weight: 500;"> &middot; by {{ r.customer_name }}</span>
+          </div>
+          {% if r.comment %}
+          <p style="margin: 6px 0 0; font-size: 13px; color: #374151; line-height: 1.45;">{{ r.comment }}</p>
+          {% else %}
+          <p class="muted" style="margin: 6px 0 0; font-size: 12px; font-style: italic;">No written comment</p>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="muted" style="margin: 0; font-size: 14px;">No customer reviews submitted for your venues yet.</p>
+      {% endif %}
+    </section>
+
+    <section class="card" style="padding: 20px; border-radius: 12px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color);">
+        <h3 style="margin: 0; font-size: 16px; font-weight: 800;">Recent Booking &amp; Cancellation Alerts</h3>
+        <a href="/owner/bookings" style="font-size: 12px; font-weight: 700; color: var(--brand); text-decoration: none;">View All &rarr;</a>
+      </div>
+      {% if summary.recent_alerts %}
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        {% for a in summary.recent_alerts %}
+        <div style="padding: 12px 14px; border: 1px solid var(--border-color); border-radius: 10px; background: #fbfcfa;">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <a href="/owner/bookings/{{ a.code }}" style="font-family: var(--font-mono); font-size: 13px; font-weight: 800; color: var(--brand); text-decoration: none;">{{ a.code }}</a>
+            <span style="font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 6px; {% if a.status == 'confirmed' %}background: #ecfdf5; color: #047857;{% elif a.status == 'completed' %}background: #f0fdf4; color: #15803d;{% else %}background: #fef2f2; color: #b91c1c;{% endif %}">
+              {{ a.status | capitalize }}
+            </span>
+          </div>
+          <div style="margin-top: 4px; font-size: 13px; font-weight: 700; color: var(--text-main);">
+            {{ a.venue_name }}
+            <span class="muted" style="font-weight: 600;"> &middot; {% if a.start_at %}{{ a.start_at[8:10] }}/{{ a.start_at[5:7] }}/{{ a.start_at[:4] }} {{ a.start_at[11:16] }}-{{ a.end_at[11:16] }}{% endif %}</span>
+          </div>
+          <div style="margin-top: 6px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12px;">
+            <span style="font-weight: 600;">{{ a.customer_name }} &middot; <a href="tel:{{ a.customer_phone }}" style="font-family: var(--font-mono); font-weight: 700; color: var(--brand); text-decoration: none;">📞 {{ a.customer_phone }}</a></span>
+            <span style="font-weight: 700; color: #286b45;">{{ "{:,}".format(a.total_price) }} VND</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="muted" style="margin: 0; font-size: 14px;">No recent booking or cancellation activity yet.</p>
+      {% endif %}
+    </section>
+  </div>
 </div>
 {% endblock %}

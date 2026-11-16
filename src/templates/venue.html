@@ -5,27 +5,27 @@
   .venue-header-box {
     background: #ffffff;
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
+    border-radius: 12px;
     overflow: hidden;
-    margin-bottom: 24px;
-    box-shadow: var(--shadow-sm);
+    margin-bottom: 20px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
   }
   .venue-cover-banner {
-    height: 250px;
+    height: 220px;
     position: relative;
     background-color: #153323;
     background-size: cover;
     background-position: center;
     display: flex;
     align-items: flex-end;
-    padding: 28px 32px;
+    padding: 24px 28px;
     color: #fff;
   }
   .venue-cover-banner::after {
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(10, 26, 18, 0.15) 0%, rgba(10, 26, 18, 0.82) 100%);
+    background: linear-gradient(180deg, rgba(10, 26, 18, 0.12) 0%, rgba(10, 26, 18, 0.80) 100%);
   }
   .venue-top-row {
     position: relative;
@@ -38,137 +38,117 @@
     gap: 16px;
   }
   .venue-title-group h1 {
-    margin: 0 0 10px;
-    font-size: clamp(28px, 4vw, 38px);
+    margin: 0 0 8px;
+    font-size: clamp(26px, 3.6vw, 36px);
     font-weight: 800;
     color: #ffffff !important;
-    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
   }
   .venue-pills {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     flex-wrap: wrap;
   }
   .venue-pills .pill {
-    padding: 5px 12px;
+    padding: 4px 10px;
     border-radius: 9999px;
     font-size: 12px;
     font-weight: 700;
   }
   .pill.sport { background: #d3eb7b; color: #143321; }
-  .pill.area { background: rgba(9, 24, 16, 0.78); border: 1px solid rgba(255, 255, 255, 0.28); backdrop-filter: blur(6px); color: #ffffff; }
+  .pill.area { background: rgba(9, 24, 16, 0.78); border: 1px solid rgba(255, 255, 255, 0.24); backdrop-filter: blur(6px); color: #ffffff; }
   .pill.rating { background: #fef3c7; color: #78350f; }
 
   .venue-header-content {
-    padding: 24px 32px;
+    padding: 20px 28px;
   }
   .facts-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 16px;
-    padding: 18px 20px;
-    background: #f8faf9;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
+    padding: 4px 0;
   }
   .fact-item .label {
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
   }
   .fact-item .value {
-    font-size: 16px;
-    font-weight: 800;
+    font-size: 15px;
+    font-weight: 700;
     color: var(--text-main);
-    margin-top: 4px;
+    margin-top: 2px;
   }
 
   .facts { display: none; }
 
-  .gallery { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 20px; }
-  .gallery img { width: 240px; height: 156px; object-fit: cover; border-radius: var(--radius-md); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); transition: transform 0.2s ease; }
-  .gallery img:hover { transform: scale(1.02); }
+  .gallery { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+  .gallery img { width: 220px; height: 144px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color); transition: transform 0.2s ease; }
+  .gallery img:hover { transform: scale(1.015); }
 
-  .day-picker { display: flex; gap: 10px; align-items: center; margin: 0; }
-  .day-picker label { display: flex; align-items: center; font-size: 13px; font-weight: 700; gap: 8px; margin: 0; white-space: nowrap; }
-  .day-picker input[type="date"] { height: 38px; min-height: 38px; padding: 6px 10px; font-size: 13px; }
+  .day-picker { display: flex; gap: 8px; align-items: center; margin: 0; }
+  .day-picker label { display: flex; align-items: center; font-size: 13px; font-weight: 600; gap: 8px; margin: 0; white-space: nowrap; }
+  .day-picker input[type="date"] { height: 36px; min-height: 36px; padding: 4px 10px; font-size: 13px; }
 
-  .slots { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-  .slot { min-height: 76px; padding: 12px 10px; border-radius: var(--radius-md); text-align: center; font-size: 13px; font-weight: 600; border: 1.5px solid; transition: all 0.15s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .slot b { display: block; font-variant-numeric: tabular-nums; font-size: 15px; margin-bottom: 3px; font-family: var(--font-mono); }
-  .slot.free { background: #f0fdf4; border-color: #86efac; color: #166534; cursor: pointer; text-decoration: none; }
-  .slot.free:hover { background: #dcfce7; border-color: #22c55e; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2); }
-  .slot.free.selected { background: #166534; border-color: #14532d; color: #ffffff; box-shadow: 0 4px 14px rgba(22, 101, 52, 0.3); transform: translateY(-2px); }
+  .slots { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .slot { min-height: 68px; padding: 10px 8px; border-radius: 8px; text-align: center; font-size: 13px; font-weight: 600; border: 1px solid; transition: all 0.15s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .slot b { display: block; font-variant-numeric: tabular-nums; font-size: 14px; margin-bottom: 2px; font-family: var(--font-mono); }
+  .slot.free { background: #f0fdf4; border-color: #bbf7d0; color: #166534; cursor: pointer; text-decoration: none; }
+  .slot.free:hover { background: #dcfce7; border-color: #22c55e; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(34, 197, 94, 0.15); }
+  .slot.free.selected { background: #166534; border-color: #14532d; color: #ffffff; box-shadow: 0 4px 12px rgba(22, 101, 52, 0.25); transform: translateY(-1px); }
   .slot.free.selected .slot-price, .slot.free.selected .slot-action { color: #dcfce7; }
   .slot-price { font-size: 11px; font-weight: 700; margin-top: 2px; font-family: var(--font-mono); }
-  .slot-peak-badge { display: inline-block; margin-top: 3px; padding: 1px 6px; border-radius: 9999px; font-size: 10px; font-weight: 800; background: #fef3c7; color: #92400e; text-transform: uppercase; }
+  .slot-peak-badge { display: inline-block; margin-top: 2px; padding: 1px 6px; border-radius: 9999px; font-size: 10px; font-weight: 700; background: #fef3c7; color: #92400e; text-transform: uppercase; }
   .slot.free.selected .slot-peak-badge { background: #fde68a; color: #78350f; }
-  .slot.booked { background: #fef2f2; border-color: #fca5a5; color: #991b1b; }
-  .slot.blocked { background: #f1f5f9; border-color: #cbd5e1; color: #64748b; }
+  .slot.booked { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+  .slot.blocked { background: #f1f5f9; border-color: #e2e8f0; color: #64748b; }
   .slot.past { background: #f8fafc; border-color: #e2e8f0; color: #64748b; }
 
   .selected-slot-bar {
     position: sticky;
     bottom: 16px;
     z-index: 20;
-    margin-top: 18px;
-    padding: 16px 20px;
+    margin-top: 16px;
+    padding: 14px 18px;
     background: #132e20;
     color: #ffffff;
-    border-radius: var(--radius-md);
-    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.28);
+    border-radius: 10px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.22);
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 14px;
+    gap: 12px;
   }
-  .selected-slot-meta { display: flex; flex-direction: column; gap: 3px; }
-  .selected-slot-title { font-size: 15px; font-weight: 800; color: #ffffff; }
+  .selected-slot-meta { display: flex; flex-direction: column; gap: 2px; }
+  .selected-slot-title { font-size: 14px; font-weight: 700; color: #ffffff; }
   .selected-slot-breakdown { font-size: 12px; color: #cbd5e1; }
   .selected-slot-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .selected-slot-total { font-size: 18px; font-weight: 800; color: #d3eb7b; font-family: var(--font-mono); margin-right: 6px; }
+  .selected-slot-total { font-size: 17px; font-weight: 800; color: #d3eb7b; font-family: var(--font-mono); margin-right: 4px; }
   .map-link {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    margin-top: 5px;
+    margin-top: 4px;
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--brand);
     text-decoration: none;
   }
   .map-link:hover { text-decoration: underline; }
-  .policy-box {
-    background: #f8faf9;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    padding: 12px 16px;
-    margin-top: 18px;
-    font-size: 12px;
-    color: var(--text-body);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-  .policy-box strong { color: var(--text-main); }
-  .policy-tiers { display: flex; flex-wrap: wrap; gap: 8px; }
-  .policy-tier { background: #fff; border: 1px solid var(--border-color); border-radius: 6px; padding: 4px 9px; font-size: 12px; font-weight: 600; }
 
   @media (max-width: 768px) {
-    .venue-cover-banner { height: 210px; padding: 20px 18px; }
-    .venue-header-content { padding: 18px; }
-    .gallery img { width: 100%; height: 180px; }
+    .venue-cover-banner { height: 190px; padding: 18px 16px; }
+    .venue-header-content { padding: 16px; }
+    .gallery img { width: 100%; height: 170px; }
     .slots { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
     .selected-slot-bar { flex-direction: column; align-items: stretch; }
     .selected-slot-actions { justify-content: space-between; }
   }
 
-  .state { padding: 28px; border-radius: var(--radius-md); background: #fff; border: 1.5px dashed var(--border-color); text-align: center; margin-bottom: 16px; font-weight: 600; color: var(--text-muted); }
+  .state { padding: 24px; border-radius: 10px; background: #fff; border: 1px dashed var(--border-color); text-align: center; margin-bottom: 12px; font-weight: 600; color: var(--text-muted); }
   .spinner { display: inline-block; width: 18px; height: 18px; border: 2.5px solid #cbd5e1; border-top-color: var(--brand);
              border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -176,6 +156,7 @@
 </style>
 {% endblock %}
 {% block content %}
+<div class="venue-detail-container">
 <p class="muted" style="margin-bottom: 14px;"><a href="/search" style="font-weight: 600;">&larr; Back to venue search</a></p>
 
 <div class="venue-header-box">
@@ -208,6 +189,16 @@
         <div class="label">Base rate</div>
         <div class="value" style="color: #286b45;">{{ "{:,}".format(venue.hourly_price) }} VND <small style="font-weight: 500; color: var(--text-muted); font-size: 13px;">/ hour</small></div>
       </div>
+      {% if venue.owner_phone %}
+      <div class="fact-item">
+        <div class="label">Venue Host Contact</div>
+        <div class="value" style="font-size: 14px;">
+          <a href="tel:{{ venue.owner_phone }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; font-weight: 700; text-decoration: none; font-family: var(--font-mono); font-size: 13px;">
+            &#128222; {{ venue.owner_phone }}{% if venue.owner_name %} &middot; <span style="font-family: var(--font-sans); font-weight: 600;">{{ venue.owner_name }}</span>{% endif %}
+          </a>
+        </div>
+      </div>
+      {% endif %}
     </div>
 
     <dl class="facts">
@@ -251,7 +242,7 @@
   </div>
   <div class="state" id="empty" role="status" hidden></div>
   <div id="data" hidden>
-    <p id="summary" style="font-weight: 700; margin-bottom: 14px; color: var(--text-main); font-size: 14px;"></p>
+    <p id="summary" style="font-weight: 600; margin-bottom: 12px; color: var(--text-main); font-size: 13px;"></p>
     <div class="slots" id="slots"></div>
     <div class="selected-slot-bar" id="selected-slot-bar" hidden>
       <div class="selected-slot-meta">
@@ -265,19 +256,44 @@
       </div>
     </div>
   </div>
-  <div class="policy-box">
-    <strong>Cancellation Policy</strong>
-    <div class="policy-tiers">
-      <span class="policy-tier">&ge; 24h: <strong>100% refund</strong></span>
-      <span class="policy-tier">2h&ndash;24h: <strong>50% refund</strong></span>
-      <span class="policy-tier">&lt; 2h: <strong>Non-refundable</strong></span>
-    </div>
-  </div>
   <noscript><div class="state">This page needs JavaScript to show the free hours.</div></noscript>
 </div>
 
+<!-- Location & Google Maps Section -->
+{% set gmap_query = venue.name ~ ', ' ~ venue.address ~ ', ' ~ venue.area ~ ', Hanoi, Vietnam' %}
+{% set gmap_dest = (venue.latitude ~ ',' ~ venue.longitude) if (venue.latitude and venue.longitude) else gmap_query %}
+<section id="venue-map" class="card venue-map-card" style="margin-top: 16px; padding: 20px 24px; border-radius: 12px;" aria-labelledby="venue-map-title">
+  <div class="venue-map-header">
+    <div>
+      <h2 id="venue-map-title" style="margin: 0 0 4px; font-size: 20px; font-weight: 800;">Location &amp; Google Maps</h2>
+      <p class="venue-map-address" style="margin: 0; color: var(--text-muted); font-size: 14px;">
+        &#128205; {{ venue.address }}, {{ venue.area }}, Hanoi
+        {% if venue.latitude and venue.longitude %}
+        <span class="coords-badge">{{ "%.4f"|format(venue.latitude) }}, {{ "%.4f"|format(venue.longitude) }}</span>
+        {% endif %}
+      </p>
+    </div>
+    <div class="venue-map-actions">
+      <a class="button secondary" href="https://www.google.com/maps/search/?api=1&query={{ gmap_query | urlencode }}" target="_blank" rel="noopener noreferrer">Open in Google Maps &#8599;</a>
+      <a class="button" href="https://www.google.com/maps/dir/?api=1&destination={{ gmap_dest | urlencode }}" target="_blank" rel="noopener noreferrer">Get Directions</a>
+    </div>
+  </div>
+  <div class="venue-map-frame-wrap">
+    <iframe
+      title="Google Map for {{ venue.name }}"
+      src="https://maps.google.com/maps?q={{ gmap_query | urlencode }}&t=&z=16&ie=UTF8&iwloc=&output=embed"
+      width="100%"
+      height="320"
+      style="border:0; border-radius:12px;"
+      loading="lazy"
+      referrerpolicy="no-referrer-when-downgrade"
+      allowfullscreen>
+    </iframe>
+  </div>
+</section>
+
 <!-- Reviews Section -->
-<div class="card" style="margin-top: 20px; padding: 24px; border-radius: 14px;">
+<div class="card" style="margin-top: 16px; padding: 20px 24px; border-radius: 12px;">
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
     <h2 style="margin: 0; font-size: 20px; font-weight: 800;">Reviews</h2>
     {% if rating_summary and rating_summary.avg_rating %}
@@ -317,6 +333,7 @@
     {% endfor %}
   </div>
   {% endif %}
+</div>
 </div>
 
 <script>

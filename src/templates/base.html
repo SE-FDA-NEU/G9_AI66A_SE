@@ -3,12 +3,15 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="view-transition" content="same-origin" />
     <title>{% block title %}{% endblock %} - Sports Venue Booking</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23d3eb7b'/%3E%3Crect x='5' y='7.5' width='22' height='17' rx='3' fill='none' stroke='%230f291e' stroke-width='2.2'/%3E%3Cline x1='16' y1='7.5' x2='16' y2='24.5' stroke='%230f291e' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3.5' fill='none' stroke='%230f291e' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='1.3' fill='%230f291e'/%3E%3C/svg%3E" />
     <link
       rel="stylesheet"
-      href="{{ url_for('static', filename='style.css') }}"
+      href="{{ url_for('static', filename='style.css', v='20261116d') }}"
     />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/customer.css', v='20261116d') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/manage.css', v='20261116d') }}" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -32,51 +35,55 @@
     {% block style %}{% endblock %}
   </head>
   <body>
+    <div id="nav-progress-bar" aria-hidden="true"></div>
     <a href="#main-content" class="skip-link">Skip to main content</a>
-    <header class="top">
-      <a class="brand" href="/search" aria-label="Sports Arena, home">
-        <span class="brand-icon" aria-hidden="true">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" focusable="false">
-            <rect x="2.5" y="4.5" width="19" height="15" rx="2.75" stroke="currentColor" stroke-width="2"/>
-            <line x1="12" y1="4.5" x2="12" y2="19.5" stroke="currentColor" stroke-width="1.75"/>
-            <circle cx="12" cy="12" r="3.1" stroke="currentColor" stroke-width="1.75"/>
-            <circle cx="12" cy="12" r="1.2" fill="currentColor"/>
-            <path d="M2.5 9.25H4.9C6.28 9.25 7.4 10.48 7.4 12C7.4 13.52 6.28 14.75 4.9 14.75H2.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
-            <path d="M21.5 9.25H19.1C17.72 9.25 16.6 10.48 16.6 12C16.6 13.52 17.72 14.75 19.1 14.75H21.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
-          </svg>
-        </span>
-        <span class="brand-text"><span class="brand-name">Sports Arena<span class="brand-period">.</span></span><small>HANOI COURT BOOKING</small></span>
-      </a>
-      <nav>
-        <a href="/search" class="nav-link">Find a venue</a>
-        {% if g.user %}
-          {% if g.user.role == 'customer' %}
-            <a href="/dashboard" class="nav-link">My page</a>
-            <a href="/my-bookings" class="nav-link">My bookings</a>
-          {% elif g.user.role == 'owner' %}
-            <a href="/owner/venues" class="nav-link">My venues</a>
-            <a href="/owner/bookings" class="nav-link">Bookings</a>
-            <a href="/owner/analytics" class="nav-link">Analytics</a>
-            <a href="/account/password" class="nav-link">Password</a>
-          {% else %}
-            <a href="/admin" class="nav-link">Administration</a>
-            <a href="/account/password" class="nav-link">Password</a>
-          {% endif %}
-          <div class="user-profile-badge">
-            <span class="user-avatar">{{ g.user.full_name[0] | upper }}</span>
-            <span class="who">{{ g.user.full_name }}</span>
+    <header class="top site-header">
+      <div class="header-inner">
+        <a class="brand" href="/search" aria-label="Sports Arena, home">
+          <span class="brand-icon" aria-hidden="true">
+            <img src="{{ url_for('static', filename='images/sports-arena-logo.png') }}" alt="" width="42" height="42">
+          </span>
+          <span class="brand-text"><span class="brand-name">Sports Arena<span class="brand-period">.</span></span><small>HANOI COURT BOOKING</small></span>
+        </a>
+        <nav>
+          <div class="nav-primary">
+            {% if g.user %}
+              {% if g.user.role == 'owner' %}
+                <a href="/owner/venues" class="nav-link">My Venues</a>
+                <a href="/owner/bookings" class="nav-link">Bookings</a>
+                <a href="/owner/analytics" class="nav-link">Analytics</a>
+                <a href="/search" class="nav-link">Explore Courts</a>
+              {% elif g.user.role == 'admin' %}
+                <a href="/admin" class="nav-link">Admin Portal</a>
+                <a href="/search" class="nav-link">Explore Courts</a>
+              {% else %}
+                <a href="/search" class="nav-link">Find a Venue</a>
+                <a href="/my-bookings" class="nav-link">My Bookings</a>
+                <a href="/dashboard" class="nav-link">Dashboard</a>
+              {% endif %}
+            {% else %}
+              <a href="/search" class="nav-link">Find a Venue</a>
+            {% endif %}
           </div>
-          <button class="link btn-logout" type="button" onclick="openSignoutModal()" aria-haspopup="dialog" aria-controls="signout-modal">Sign out</button>
-        {% else %}
-          <a href="/login" class="nav-link btn-login">Sign in</a>
-          <a href="/register" class="nav-link btn-register-nav">Register</a>
-        {% endif %}
 
-        <div class="lang-switcher" id="langSwitcher" title="Language Switcher">
-          <button type="button" class="lang-btn active" data-lang="en" aria-pressed="true" onclick="setLanguage('en')">EN</button>
-          <button type="button" class="lang-btn" data-lang="vi" aria-pressed="false" onclick="setLanguage('vi')">VI</button>
-        </div>
-      </nav>
+          <div class="nav-actions">
+            <div class="lang-switcher" id="langSwitcher" title="Language Switcher">
+              <button type="button" class="lang-btn active" data-lang="en" aria-pressed="true" onclick="setLanguage('en')">EN</button>
+              <button type="button" class="lang-btn" data-lang="vi" aria-pressed="false" onclick="setLanguage('vi')">VI</button>
+            </div>
+            {% if g.user %}
+              <a href="/account/password" class="user-profile-badge" title="Account & Password Settings">
+                <span class="user-avatar">{{ g.user.full_name[0] | upper }}</span>
+                <span class="who">{{ g.user.full_name }}</span>
+              </a>
+              <button class="link btn-logout" type="button" onclick="openSignoutModal()" aria-haspopup="dialog" aria-controls="signout-modal">Sign out</button>
+            {% else %}
+              <a href="/login" class="nav-link btn-login">Sign in</a>
+              <a href="/register" class="nav-link btn-register-nav">Register</a>
+            {% endif %}
+          </div>
+        </nav>
+      </div>
     </header>
 
     <main id="main-content" tabindex="-1">
@@ -85,18 +92,20 @@
           {% if category == "verify-link" %}
             <div class="flash flash-verify" role="status">
               <span class="flash-icon">✉️</span>
-              <div>
+              <div class="flash-body">
                 <strong>Verification Link:</strong> No email server is configured on this test instance. Use this link directly: 
                 <a href="{{ message }}" class="verify-action-link">Verify my email &rarr;</a>
               </div>
+              <button type="button" class="flash-close" aria-label="Dismiss notification" onclick="this.closest('.flash').remove()">&times;</button>
             </div>
           {% elif category == "reset-link" %}
             <div class="flash flash-verify" role="status">
               <span class="flash-icon">🔑</span>
-              <div>
+              <div class="flash-body">
                 <strong>Password Reset Link:</strong> No email server is configured on this test instance. Use this link directly: 
                 <a href="{{ message }}" class="verify-action-link">Reset my password &rarr;</a>
               </div>
+              <button type="button" class="flash-close" aria-label="Dismiss notification" onclick="this.closest('.flash').remove()">&times;</button>
             </div>
           {% else %}
             <div class="flash {{ category }}" role="{{ 'alert' if category == 'error' else 'status' }}">
@@ -105,7 +114,8 @@
               {% elif category == 'error' %}
                 <span class="flash-icon">⚠️</span>
               {% endif %}
-              <div>{{ message }}</div>
+              <div class="flash-body">{{ message }}</div>
+              <button type="button" class="flash-close" aria-label="Dismiss notification" onclick="this.closest('.flash').remove()">&times;</button>
             </div>
           {% endif %}
         {% endfor %}
@@ -130,11 +140,18 @@
         "Sports Arena.": "Sân Nhà.",
         "HANOI COURT BOOKING": "ĐẶT SÂN Ở HÀ NỘI",
         "Find a venue": "Tìm sân thể thao",
+        "Find a Venue": "Tìm sân thể thao",
+        "Explore Courts": "Khám phá sân",
         "My page": "Trang cá nhân",
+        "Dashboard": "Trang cá nhân",
         "My bookings": "Lịch sử đặt sân",
+        "My Bookings": "Lịch sử đặt sân",
         "My venues": "Cụm sân của tôi",
+        "My Venues": "Cụm sân của tôi",
         "Bookings": "Lịch đặt sân",
         "Administration": "Quản trị hệ thống",
+        "Admin Portal": "Quản trị hệ thống",
+        "Account & Password Settings": "Cài đặt tài khoản & Mật khẩu",
         "Sign out": "Đăng xuất",
         "Sign in": "Đăng nhập",
         "Register": "Đăng ký",
@@ -166,7 +183,6 @@
         "court.": "đúng ý.",
         "Great matches start with the right court.": "Kèo hay bắt đầu từ một chiếc sân đúng ý.",
         "Live schedules and hourly rates for football, badminton, tennis, and pickleball across Hanoi.": "Lịch trống và giá thuê theo giờ cho sân bóng đá, cầu lông, tennis, pickleball tại Hà Nội.",
-        "Live Aerial": "Toàn cảnh sân",
         "Find football pitches, badminton, tennis and pickleball courts near you. Check live availability, compare prices, and book in seconds.": "Tìm sân bóng đá, cầu lông, tennis và pickleball gần bạn. Xem giờ trống, so sánh giá và đặt lịch thuận tiện.",
         "venues taking bookings": "sân đang nhận đặt",
         "Sport discipline": "Môn thể thao",
@@ -254,8 +270,6 @@
         "Clear": "Bỏ chọn",
         "Book Selected Slots →": "Đặt khung giờ đã chọn →",
         "Book Selected Slots &rarr;": "Đặt khung giờ đã chọn →",
-        "Cancellation Policy": "Chính sách hoàn hủy",
-        "Cancellation Policy:": "Chính sách hoàn hủy:",
         "≥ 24h: 100% refund": "≥ 24h: Hoàn 100%",
         "2h–24h: 50% refund": "2h–24h: Hoàn 50%",
         "< 2h: Non-refundable": "< 2h: Không hoàn tiền",
@@ -637,7 +651,36 @@
         "📅 Schedule": "📅 Lịch sân",
         "You have no venues yet.": "Bạn chưa có sân nào.",
         "Add your first venue": "Thêm sân đầu tiên",
-        "to start tracking analytics.": "để bắt đầu theo dõi thống kê."
+        "to start tracking analytics.": "để bắt đầu theo dõi thống kê.",
+
+        // Admin Owner Management & KPIs
+        "Owners & KPIs": "Chủ sân & Chỉ số KPI",
+        "Edit": "Sửa",
+        "Edit Account": "Sửa tài khoản",
+        "Edit Owner": "Sửa thông tin chủ sân",
+        "+ Add Owner": "+ Thêm chủ sân",
+        "+ New Account": "+ Tạo tài khoản",
+        "Save Changes": "Lưu thay đổi",
+        "New Password (optional)": "Mật khẩu mới (tùy chọn)",
+        "Leave blank to keep current password": "Để trống nếu giữ nguyên mật khẩu hiện tại",
+        "Venues Portfolio": "Danh mục cụm sân",
+        "Owner Management": "Quản lý chủ sân",
+        "Total Owners": "Tổng số chủ sân",
+        "Manage Owners": "Quản lý chủ sân",
+        "Update Account": "Cập nhật tài khoản",
+        "Dismiss notification": "Đóng thông báo",
+        "Nearest to me": "Gần tôi nhất",
+        "Want recommendations near you? Share your location to find nearby courts with great prices and open slots.": "Muốn nhận gợi ý sân gần bạn? Chia sẻ vị trí để tìm sân gần nhất với giá tốt và còn giờ trống.",
+        "Use my location": "Dùng vị trí của tôi",
+        "Not now": "Để sau",
+        "Showing recommendations near your location": "Đang hiển thị gợi ý gần vị trí của bạn",
+        "Clear location": "Xóa vị trí",
+        "Nearby": "Gần bạn",
+        "Top rated": "Đánh giá cao",
+        "Great value & open": "Giá tốt & còn trống",
+        "Popular choice": "Lựa chọn phổ biến",
+        "Available today": "Còn trống hôm nay",
+        "Fully booked": "Đã kín lịch"
       };
 
       const PATTERNS_EN_VI = [
@@ -683,7 +726,8 @@
         { pattern: /^Gross\s+([\d,]+)\s*·\s*Refunded\s+([\d,]+)\s+VND$/i, replace: (m, g, r) => `Tổng thu ${g} · Đã hoàn ${r} VND` },
         { pattern: /^(\d+)\s+pending\s+hidden\s*·\s*(\d+)\s+reported$/i, replace: (m, p, r) => `${p} chờ duyệt ẩn · ${r} bị báo cáo` },
         { pattern: /^(\d+)\s+venues?\s*·\s*(\d+)\s+bookings?$/i, replace: (m, v, b) => `${v} sân · ${b} lượt đặt` },
-        { pattern: /^Rating\s+([\d.]+)\s+out\s+of\s+5$/i, replace: (m, n) => `Đánh giá ${n} trên 5` }
+        { pattern: /^Rating\s+([\d.]+)\s+out\s+of\s+5$/i, replace: (m, n) => `Đánh giá ${n} trên 5` },
+        { pattern: /^(?:📍\s*)?([\d.]+)\s*km$/i, replace: (m, n) => m.includes("📍") ? `📍 ${n} km` : `${n} km` }
       ];
 
       function translateValue(value, lang) {
@@ -801,6 +845,18 @@
     </div>
     {% endif %}
 
+    <!-- Global Custom Confirmation Modal -->
+    <div id="global-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="global-confirm-title" style="display:none; position:fixed; inset:0; z-index:9100; align-items:center; justify-content:center; background:rgba(15,23,42,0.55); backdrop-filter:blur(4px);">
+      <div style="background:#fff; border-radius:14px; padding:28px 32px; box-shadow:0 24px 48px -8px rgba(15,23,42,0.35); max-width:400px; width:90%; text-align:left; border:1px solid var(--border-color);">
+        <h2 id="global-confirm-title" style="margin:0 0 8px; font-size:18px; font-weight:800; color:#0f172a;">Confirm</h2>
+        <p id="global-confirm-message" style="margin:0 0 22px; color:#475569; font-size:13px; line-height:1.5; white-space:pre-line;"></p>
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+          <button id="global-confirm-cancel" type="button" class="button secondary" style="min-height:38px; height:38px; padding:0 16px; font-size:13px;">Cancel</button>
+          <button id="global-confirm-ok" type="button" class="button" style="min-height:38px; height:38px; padding:0 18px; font-size:13px; background:#dc2626; color:#fff;">Confirm</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Scroll To Top Button -->
     <button id="scroll-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Scroll back to top" title="Back to top" style="display:none; position:fixed; bottom:28px; right:28px; z-index:8000; width:46px; height:46px; background:linear-gradient(135deg,#0ea5e9,#0284c7); color:#fff; border:none; border-radius:50%; font-size:20px; cursor:pointer; box-shadow:0 4px 16px rgba(2,132,199,0.4); align-items:center; justify-content:center; transition:opacity 0.3s, transform 0.3s;">&#8679;</button>
 
@@ -857,6 +913,56 @@
       });
     }
 
+    // Global confirmation modal helper
+    (function() {
+      var gModal = document.getElementById('global-confirm-modal');
+      var gTitle = document.getElementById('global-confirm-title');
+      var gMsg = document.getElementById('global-confirm-message');
+      var gOk = document.getElementById('global-confirm-ok');
+      var gCancel = document.getElementById('global-confirm-cancel');
+      var currentCallback = null;
+
+      function closeGlobalConfirm() {
+        if (!gModal) return;
+        gModal.style.display = 'none';
+        currentCallback = null;
+      }
+
+      window.showConfirmModal = function(title, message, onConfirm) {
+        if (!gModal) {
+          if (window.confirm((title ? title + '\n\n' : '') + (message || ''))) {
+            if (typeof onConfirm === 'function') onConfirm();
+          }
+          return;
+        }
+        gTitle.textContent = title || (window.arenaText ? window.arenaText('Are you sure?') : 'Are you sure?');
+        gMsg.textContent = message || '';
+        currentCallback = onConfirm;
+        gModal.style.display = 'flex';
+        if (gCancel) gCancel.focus();
+      };
+
+      if (gCancel) gCancel.addEventListener('click', closeGlobalConfirm);
+      if (gOk) {
+        gOk.addEventListener('click', function() {
+          var cb = currentCallback;
+          closeGlobalConfirm();
+          if (typeof cb === 'function') cb();
+        });
+      }
+      if (gModal) {
+        gModal.addEventListener('click', function(e) {
+          if (e.target === gModal) closeGlobalConfirm();
+        });
+        document.addEventListener('keydown', function(e) {
+          if (gModal.style.display !== 'none' && e.key === 'Escape') {
+            closeGlobalConfirm();
+          }
+        });
+      }
+    })();
+
+    // Auto-dismiss .flash.success and .flash.info after 5 seconds + Next.js-style navigation & prefetch
     document.addEventListener('DOMContentLoaded', function() {
       var token = {{ csrf_token() | tojson }};
       document.querySelectorAll('form').forEach(function(form) {
@@ -867,6 +973,79 @@
           input.value = token;
           form.appendChild(input);
         }
+      });
+
+      // Auto-dismiss success/info flash alerts after 5 seconds
+      document.querySelectorAll('.flash.success, .flash.info').forEach(function(el) {
+        setTimeout(function() {
+          if (!el.parentNode) return;
+          el.classList.add('is-dismissing');
+          setTimeout(function() {
+            if (el.parentNode) el.remove();
+          }, 260);
+        }, 5000);
+      });
+
+      // Next.js-style top progress bar & hover link prefetching
+      var progressBar = document.getElementById('nav-progress-bar');
+      var prefetched = new Set();
+
+      function startProgress() {
+        if (!progressBar) return;
+        progressBar.classList.remove('is-done');
+        progressBar.classList.add('is-active');
+      }
+
+      function finishProgress() {
+        if (!progressBar) return;
+        progressBar.classList.remove('is-active');
+        progressBar.classList.add('is-done');
+        setTimeout(function() {
+          progressBar.classList.remove('is-done');
+        }, 250);
+      }
+
+      window.addEventListener('pageshow', finishProgress);
+
+      function isPrefetchableLink(a) {
+        if (!a || !a.href) return false;
+        if (a.target && a.target !== '_self') return false;
+        if (a.hasAttribute('download')) return false;
+        var href = a.getAttribute('href') || '';
+        if (!href.startsWith('/') || href.startsWith('//') || href.startsWith('/logout') || href.endsWith('/ics')) return false;
+        return a.origin === window.location.origin;
+      }
+
+      function prefetchUrl(url) {
+        if (prefetched.has(url) || url === window.location.href) return;
+        prefetched.add(url);
+        var link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = url;
+        link.as = 'document';
+        document.head.appendChild(link);
+      }
+
+      document.addEventListener('mouseover', function(e) {
+        var a = e.target.closest ? e.target.closest('a') : null;
+        if (isPrefetchableLink(a)) prefetchUrl(a.href);
+      }, { passive: true });
+
+      document.addEventListener('touchstart', function(e) {
+        var a = e.target.closest ? e.target.closest('a') : null;
+        if (isPrefetchableLink(a)) prefetchUrl(a.href);
+      }, { passive: true });
+
+      document.addEventListener('click', function(e) {
+        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        var a = e.target.closest ? e.target.closest('a') : null;
+        if (!isPrefetchableLink(a)) return;
+        if (a.href === window.location.href) return;
+        startProgress();
+      });
+
+      document.addEventListener('submit', function(e) {
+        if (!e.defaultPrevented) startProgress();
       });
     });
     </script>

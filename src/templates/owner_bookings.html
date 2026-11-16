@@ -35,19 +35,17 @@
 
   {% set day_display = date_str[8:10] ~ '/' ~ date_str[5:7] ~ '/' ~ date_str[:4] %}
 
+  {% if bookings %}
   <div style="margin-bottom: 14px; display: flex; justify-content: space-between; align-items: baseline;">
     <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: var(--text-main);">
-      {% if bookings %}
-        {{ bookings | length }} booking{% if bookings | length > 1 %}s{% endif %} on {{ day_display }}{% if selected_venue %} - {{ selected_venue.name }}{% endif %}
-      {% else %}
-        No bookings on {{ day_display }}
-      {% endif %}
+      {{ bookings | length }} booking{% if bookings | length > 1 %}s{% endif %} on {{ day_display }}{% if selected_venue %} - {{ selected_venue.name }}{% endif %}
     </h2>
   </div>
+  {% endif %}
 
   {% if not bookings %}
   <div class="empty card" style="text-align: center; padding: 40px 20px;">
-    <h3 style="margin: 0 0 6px; font-size: 17px; font-weight: 700;">No bookings on {{ day_display }}</h3>
+    <h3 style="margin: 0 0 6px; font-size: 17px; font-weight: 700;">No bookings on {{ day_display }}{% if selected_venue %} - {{ selected_venue.name }}{% endif %}</h3>
     <p class="muted" style="margin: 0; font-size: 14px;">Select another date above to check reservations.</p>
   </div>
   {% else %}
@@ -62,6 +60,7 @@
           <th style="padding: 13px 16px;">Customer</th>
           <th style="padding: 13px 16px;">Phone</th>
           <th style="padding: 13px 16px;">Status</th>
+          <th style="padding: 13px 16px; text-align: right;">Action</th>
         </tr>
       </thead>
       <tbody>
@@ -80,6 +79,9 @@
             <span style="font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 6px; {% if b.status == 'confirmed' %}background: #ecfdf5; color: #047857;{% elif b.status == 'completed' %}background: #f0fdf4; color: #15803d;{% else %}background: #fef2f2; color: #b91c1c;{% endif %}">
               {{ b.status | capitalize }}
             </span>
+          </td>
+          <td style="padding: 13px 16px; text-align: right;">
+            <a href="/owner/bookings/{{ b.code }}" class="button secondary btn-table-action">View</a>
           </td>
         </tr>
         {% endfor %}

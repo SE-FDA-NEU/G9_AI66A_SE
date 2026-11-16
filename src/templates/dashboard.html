@@ -1,23 +1,23 @@
 {% extends "base.html" %}
 {% block title %}My page{% endblock %}
 {% block content %}
-<div class="dashboard-container">
-  <div class="dashboard-header">
-    <div class="user-welcome">
-      <div class="avatar-large">{{ g.user.full_name[0] | upper }}</div>
+<div class="dashboard-container" style="gap: 16px;">
+  <div class="dashboard-header" style="padding: 20px 24px; border-radius: 12px;">
+    <div class="user-welcome" style="gap: 14px;">
+      <div class="avatar-large" style="width: 46px; height: 46px; font-size: 19px; box-shadow: none;">{{ g.user.full_name[0] | upper }}</div>
       <div>
-        <h1 style="margin: 0 0 4px;">{{ g.user.full_name }}</h1>
-        <div class="header-badges">
-          <span class="role-badge"><span class="badge-dot"></span> {{ g.user.role | capitalize }}</span>
+        <h1 style="margin: 0 0 4px; font-size: 26px;">{{ g.user.full_name }}</h1>
+        <div class="header-badges" style="gap: 8px;">
+          <span class="role-badge" style="padding: 4px 10px; font-size: 12px;"><span class="badge-dot"></span> {{ g.user.role | capitalize }}</span>
           {% if g.user.email_verified_at %}
-            <span class="verified-badge">Verified</span>
+            <span class="verified-badge" style="padding: 4px 10px; font-size: 12px;">Verified</span>
           {% else %}
-            <span class="unverified-badge">Unverified</span>
+            <span class="unverified-badge" style="padding: 4px 10px; font-size: 12px;">Unverified</span>
           {% endif %}
         </div>
       </div>
     </div>
-    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
       <a class="button" href="/search">Find a venue</a>
       <a class="button secondary" href="/my-bookings">My bookings</a>
       <a class="button secondary" href="/account/password">Change password</a>
@@ -36,18 +36,18 @@
   </div>
   {% endif %}
 
-  <div class="dashboard-section">
-    <div class="section-header-row" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+  <div class="dashboard-section" style="padding: 20px 24px; border-radius: 12px;">
+    <div class="section-header-row" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
       <div style="display: flex; align-items: center; gap: 10px;">
-        <h2>Upcoming reservations</h2>
+        <h2 style="font-size: 18px;">Upcoming reservations</h2>
         <span class="badge-count">{{ upcoming_bookings | length if upcoming_bookings else 0 }} active</span>
       </div>
-      <a href="/my-bookings" style="font-size: 13px; font-weight: 700; color: #286b45; text-decoration: none;">All bookings &rarr;</a>
+      <a href="/my-bookings" style="font-size: 13px; font-weight: 600; color: #286b45; text-decoration: none;">All bookings &rarr;</a>
     </div>
     {% if upcoming_bookings %}
-    <div class="bookings-grid">
+    <div class="bookings-grid" style="gap: 12px;">
       {% for b in upcoming_bookings %}
-      <div class="booking-card-item">
+      <div class="booking-card-item" style="padding: 16px; border-radius: 10px;">
         <div class="booking-card-header">
           <span class="booking-code-pill">{{ b.code }}</span>
           <span class="booking-status-tag">Confirmed</span>
