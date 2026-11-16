@@ -3,13 +3,11 @@
 {% block content %}
 <div class="auth-stage">
   <div class="auth-wrapper">
-    <div class="auth-card" style="text-align: center;">
-      <div class="auth-header">
-        <h1>Something went wrong</h1>
-      </div>
-      <div class="flash error" role="alert" style="justify-content: center; margin-top: 16px;">{{ message or error }}</div>
-      <p style="margin: 20px 0 0;"><a class="button" href="/search" style="width: 100%;">Back to the search page</a></p>
+    <div class="auth-header">
+      <h1>Something went wrong</h1>
     </div>
+    <div class="flash flash--error error" role="alert">{{ message or error }}</div>
+    <p><a class="btn-primary btn-block" href="/search">Back to the search page</a></p>
   </div>
 </div>
 {% endblock %}

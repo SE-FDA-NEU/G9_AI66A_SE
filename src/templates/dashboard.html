@@ -1,74 +1,71 @@
 {% extends "base.html" %}
 {% block title %}My page{% endblock %}
 {% block content %}
-<div class="container">
-  <header class="page-header">
-    <div class="page-header__title-row">
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <div class="user-welcome">
+      <div class="avatar-large">{{ g.user.full_name[0] | upper }}</div>
       <div>
-        <h1>{{ g.user.full_name }}</h1>
-        <div class="dashboard-user-meta">
-          <span class="meta">{{ g.user.role | capitalize }}</span>
-          <span class="sep">&middot;</span>
+        <h1 style="margin: 0 0 4px;">{{ g.user.full_name }}</h1>
+        <div class="header-badges">
+          <span class="role-badge"><span class="badge-dot"></span> {{ g.user.role | capitalize }}</span>
           {% if g.user.email_verified_at %}
-            <span class="status status--success">Verified</span>
+            <span class="verified-badge">Verified</span>
           {% else %}
-            <span class="status status--warning">Unverified</span>
+            <span class="unverified-badge">Unverified</span>
           {% endif %}
         </div>
       </div>
-      <div class="page-header__actions">
-        <a class="btn-primary" href="/search">Find a venue</a>
-        <a class="btn-secondary" href="/my-bookings">My bookings</a>
-        <a class="btn-ghost" href="/account/password">Change password</a>
-      </div>
     </div>
-  </header>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <a class="button" href="/search">Find a venue</a>
+      <a class="button secondary" href="/my-bookings">My bookings</a>
+      <a class="button secondary" href="/account/password">Change password</a>
+    </div>
+  </div>
 
   {% if not g.user.email_verified_at %}
-  <div class="flash flash--error" role="alert">
-    <div>
+  <div class="flash error unverified-callout" role="alert">
+    <div class="callout-body">
       <strong>Verification pending:</strong> Please verify your email before booking. Use the verification link shown on the sign-in page.
-      <form method="post" action="/verify/resend" class="form-actions">
+      <form method="post" action="/verify/resend" style="margin-top: 10px">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="btn-secondary btn-sm">Send a new link</button>
+        <button type="submit" class="secondary">Send a new link</button>
       </form>
     </div>
   </div>
   {% endif %}
 
-  <section class="section" aria-labelledby="upcoming-title">
-    <div class="section__head">
-      <h2 id="upcoming-title">Upcoming reservations</h2>
-      <a href="/my-bookings" class="small">All bookings ({{ upcoming_bookings | length if upcoming_bookings else 0 }}) &rarr;</a>
+  <div class="dashboard-section">
+    <div class="section-header-row" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <h2>Upcoming reservations</h2>
+        <span class="badge-count">{{ upcoming_bookings | length if upcoming_bookings else 0 }} active</span>
+      </div>
+      <a href="/my-bookings" style="font-size: 13px; font-weight: 700; color: #286b45; text-decoration: none;">All bookings &rarr;</a>
     </div>
-
     {% if upcoming_bookings %}
-    <ul class="list">
+    <div class="bookings-grid">
       {% for b in upcoming_bookings %}
-      <li class="list__item dashboard-booking-row">
-        <div>
-          <div class="cluster">
-            <span class="mono small">{{ b.code }}</span>
-            <span class="sep">&middot;</span>
-            <span class="status status--success">Confirmed</span>
-          </div>
-          <h3>{{ b.venue_name }}</h3>
-          <p class="meta mono">{{ b.start_at[8:10] }}/{{ b.start_at[5:7] }}/{{ b.start_at[:4] }} &middot; {{ b.start_at[11:] }}&ndash;{{ b.end_at[11:] }}</p>
+      <div class="booking-card-item">
+        <div class="booking-card-header">
+          <span class="booking-code-pill">{{ b.code }}</span>
+          <span class="booking-status-tag">Confirmed</span>
         </div>
-        <div class="cluster">
-          <span class="num">{{ "{:,}".format(b.total_price) }} VND</span>
-          <a href="/bookings/{{ b.code }}" class="btn-secondary btn-sm">View Voucher</a>
+        <div class="booking-card-title">{{ b.venue_name }}</div>
+        <div class="booking-card-time">
+          <span>{{ b.start_at[8:10] }}/{{ b.start_at[5:7] }}/{{ b.start_at[:4] }} &middot; {{ b.start_at[11:] }}&ndash;{{ b.end_at[11:] }}</span>
         </div>
-      </li>
+        <div class="booking-card-footer">
+          <div class="booking-price-val">{{ "{:,}".format(b.total_price) }} VND</div>
+          <a href="/bookings/{{ b.code }}" class="btn-ticket-link">View Voucher &rarr;</a>
+        </div>
+      </div>
       {% endfor %}
-    </ul>
-    {% else %}
-    <div class="empty">
-      <p>No upcoming bookings</p>
-      <p class="muted">Find a court and reserve a time slot.</p>
-      <a href="/search" class="btn-secondary">Browse available courts</a>
     </div>
+    {% else %}
+    <p class="muted" style="margin: 0;">No upcoming bookings. <a href="/search">Browse available courts &rarr;</a></p>
     {% endif %}
-  </section>
+  </div>
 </div>
 {% endblock %}

@@ -14,6 +14,7 @@ To run it on a new machine, follow [`SETUP.md`](SETUP.md).
 | 2. Wireframes                 | @lequangk2006-sys | #70   |
 | 3. Error messages             | @lequangk2006-sys | #70   |
 | 4. What changed since M2      | @thunopro         | #71   |
+| 5. Design system              | @thunopro         | -     |
 
 ---
 
@@ -377,3 +378,36 @@ we just sent: Verify my email"*) while `SHOW_VERIFICATION_LINK=1` in `.env`. The
 expiry (BR4) still applies to the link. Updated: `design.md` section 1 (Email service row,
 `images/architecture.png`), `.env.example`. This is also why US01 is marked
 **partly works** in section 1.
+
+---
+
+## 5. Design system
+
+All pages share a single restrained design system defined in [`src/static/style.css`](../src/static/style.css) and [`src/templates/base.html`](../src/templates/base.html) (with page-specific extensions in `src/static/css/customer.css` and `src/static/css/manage.css`).
+
+### Principles
+
+- **Restrained surfaces:** White (`--bg`) and warm off-white (`--bg-subtle`) with 1px `--border` hairlines only on header/footer edges, table/list row dividers, inputs, secondary buttons, and `.panel` summaries. No gradients, glows, `backdrop-filter`, hover lifts, or decorative pill badges.
+- **Typography:** `Inter` (400/500/600) with system fallback (`--font`), `tabular-nums` (`.num`) on prices, times, and counts, and `--font-mono` (`.mono`) on booking codes.
+- **Radius & elevation:** `--r-sm` (4px), `--r` (6px), 50% on avatars/status dots. Shadows are reserved for popovers (`--shadow-pop`) and modals (`--shadow-modal`).
+- **Accessibility & motion:** WCAG AA contrast, visible `--focus` ring, semantic landmarks, and 120ms color/background transitions honoring `prefers-reduced-motion`.
+
+### Tokens (`:root` in `src/static/style.css`)
+
+| Category | Tokens |
+| -------- | ------ |
+| Brand | `--brand: #1f6b43`, `--brand-hover: #185636`, `--brand-subtle: #eaf3ed` |
+| Neutrals | `--gray-0` (`#ffffff`), `--gray-50` (`#f7f7f5`), `--gray-100` (`#efefec`), `--gray-200` (`#e3e3df`), `--gray-300` (`#cfcfc9`), `--gray-500` (`#6f716b`), `--gray-700` (`#3d3f3a`), `--gray-900` (`#1b1c1a`) |
+| Semantic | `--success` / `--success-bg`, `--warning` / `--warning-bg`, `--danger` / `--danger-bg`, `--info` / `--info-bg` |
+| Spacing & radius | `--s1` (4px) through `--s16` (64px), `--r-sm` (4px), `--r` (6px) |
+| Overlays & focus | `--shadow-pop`, `--shadow-modal`, `--focus` |
+
+### Shared class contract
+
+- **Layout:** `.container` (1120px), `.container--narrow` (640px), `.container--auth` (400px), `.page-header` (`__back`, `__title-row`, `__actions`, `__desc`), `.section` (`__head`), `.stack`, `.cluster`, `.split`, `.grid-2`.
+- **Text:** `.muted`, `.meta`, `.small`, `.mono`, `.num`, `.sep`, `.visually-hidden`.
+- **Buttons:** `button` / `.button` / `.btn-primary`, `.btn-secondary`, `.btn-ghost`, `.btn-danger`, `.btn-danger-solid`; modifiers `.btn-sm`, `.btn-lg`, `.btn-block`; legacy aliases `.btn-success-outline`, `.btn-warning-outline`, `.btn-danger-outline`.
+- **Forms:** `.field` (`__help`, `__error`, `--error`), `.form-grid`, `.form-actions`, `.filter-bar`.
+- **Data display:** `table` / `.table`, `.table-scroll`, `.row-actions`, `.list` / `.list__item`, `.dl-grid`, `.stats` / `.stat` (`.stat__sub`), `.status` + `--success|--warning|--danger|--neutral|--info`.
+- **Navigation & feedback:** `.tabs` (`.tabs__count`), `.flash` + `--success|--error|--warning|--info` (`.flash__close`), `.empty`, `.modal` (`__panel`, `__title`, `__body`, `__actions`), `.panel`, `.thumb`.
+

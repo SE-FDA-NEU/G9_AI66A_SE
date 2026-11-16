@@ -169,11 +169,16 @@ def create_booking(conn, user, venue_id, day, start_hour, hours, now=None):
 
 def find_for_customer(conn, code, user):
     """One booking with its venue and price lines; only its own customer may read it (BR14)."""
+    import payment
+    payment.ensure_payment_table(conn)
     booking = conn.execute(
-        "SELECT b.*, v.name AS venue_name, v.address, v.area, v.sport,"
-        " owner.full_name AS owner_name, owner.phone AS owner_phone"
+        "SELECT b.*, v.name AS venue_name, v.address, v.area, v.sport, v.latitude, v.longitude,"
+        " owner.full_name AS owner_name, owner.phone AS owner_phone,"
+        " ps.status AS payment_status, ps.paid_amount, ps.refunded_amount, ps.token AS payment_token"
         " FROM booking b JOIN venue v ON v.id = b.venue_id"
-        " JOIN user owner ON owner.id = v.owner_id WHERE b.code = ?", (code,)).fetchone()
+        " JOIN user owner ON owner.id = v.owner_id"
+        " LEFT JOIN payment_session ps ON ps.booking_code = b.code"
+        " WHERE b.code = ?", (code,)).fetchone()
     if booking is None:
         raise BusinessRuleError("BR14", "Booking not found", 404)
     if booking["customer_id"] != user["id"]:
@@ -197,16 +202,20 @@ def upcoming(conn, user_id, now=None):
 
 def list_for_customer(conn, user_id, status_filter=None, now=None):
     """Chronological list of all bookings for customer user_id (BR14), newest created first."""
+    import payment
+    payment.ensure_payment_table(conn)
     now = now or vn_now()
     now_str = now.strftime("%Y-%m-%d %H:%M")
     base_sql = """
     SELECT b.id, b.code, b.customer_id, b.venue_id, b.start_at, b.end_at, b.total_price,
            b.status, b.refund_amount, b.created_at, b.cancelled_at,
            v.name AS venue_name, v.address, v.sport,
-           owner.full_name AS owner_name, owner.phone AS owner_phone
+           owner.full_name AS owner_name, owner.phone AS owner_phone,
+           ps.status AS payment_status, ps.paid_amount, ps.refunded_amount, ps.token AS payment_token
     FROM booking b
     JOIN venue v ON v.id = b.venue_id
     JOIN user owner ON owner.id = v.owner_id
+    LEFT JOIN payment_session ps ON ps.booking_code = b.code
     WHERE b.customer_id = ?
     """
     params = [user_id]
@@ -300,6 +309,9 @@ def cancel_booking(conn, code, user, now=None):
         conn.rollback()
         raise
     conn.commit()
+
+    import payment
+    payment.auto_refund_for_booking(conn, code, refund_amount, row["total_price"], now)
 
     return {
         "code": code,

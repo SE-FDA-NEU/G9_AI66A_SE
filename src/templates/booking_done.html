@@ -2,17 +2,14 @@
 {% block title %}Booking {{ booking.code if booking else "not found" }}{% endblock %}
 {% block style %}
 <style>
-  main:has(.ticket-page) { max-width: 1200px; margin-top: 32px; }
-  .ticket-page { max-width: 1120px; margin: 0 auto; }
+  main:has(.ticket-page) { max-width: 860px; margin-top: 32px; }
+  .ticket-page { max-width: 760px; margin: 0 auto; }
   .ticket-page > .back-link { display: inline-block; margin-bottom: 18px; color: #56705b; font-size: 13px; }
   .ticket-card { overflow: hidden; border: 1px solid #e1e5dc; border-radius: 12px; background: #fff; }
   .ticket-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 25px 28px; background: #183b2b; color: #fff; }
   .ticket-card .ticket-top h1, .ticket-top h1 { margin: 2px 0 0; color: #ffffff !important; font: 700 31px/1.05 'Barlow Condensed', sans-serif; }
   .ticket-kicker { color: #cddbbc; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
   .ticket-status { padding: 6px 10px; border: 1px solid rgba(211,235,123,.45); border-radius: 6px; color: #e1f39e; font-size: 12px; white-space: nowrap; }
-  .ticket-host-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.22); color: #f0f7ec; font-size: 12px; font-weight: 600; white-space: nowrap; }
-  .ticket-host-pill a { color: #e1f39e; font-family: var(--font-mono); font-weight: 700; text-decoration: none; }
-  .ticket-host-pill a:hover { text-decoration: underline; }
   .ticket-body { padding: 26px 28px; }
   .ticket-code-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding-bottom: 22px; border-bottom: 1px dashed #d4dbd1; }
   .ticket-label { margin: 0 0 5px; color: #526054; font-size: 12px; font-weight: 600; }
@@ -87,9 +84,6 @@
       background: #fafafa !important;
       color: #444 !important;
     }
-    .ticket-map-section {
-      display: none !important;
-    }
   }
 </style>
 {% endblock %}
@@ -105,13 +99,15 @@
         <div class="ticket-kicker">Booking confirmation</div>
         <h1 id="ticket-title">Your court is reserved</h1>
       </div>
-      <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
-        <div class="ticket-status">{{ booking.status|capitalize }}</div>
-        {% if booking.owner_name or booking.owner_phone %}
-        <div class="ticket-host-pill">
-          📞 Venue Host: {{ booking.owner_name }} &middot; <a href="tel:{{ booking.owner_phone }}">{{ booking.owner_phone }}</a>
-        </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+        {% set refunded = booking.refunded_amount if booking.refunded_amount is defined and booking.refunded_amount is not none else (booking.refund_amount or 0) %}
+        {% if booking.payment_status == 'paid' %}
+        <div class="ticket-status" style="background: #15803D; border-color: #86EFAC; color: #FFFFFF; border-radius: 4px;">Online QR Paid</div>
         {% endif %}
+        {% if refunded > 0 or booking.status == 'cancelled' %}
+        <div class="ticket-status" style="background: #FEF2F2; border-color: #FECACA; color: #B91C1C; border-radius: 4px;">Auto-Refunded: {{ "{:,}".format(refunded) }} VND</div>
+        {% endif %}
+        <div class="ticket-status">{{ booking.status|capitalize }}</div>
       </div>
     </div>
     <div class="ticket-body">
@@ -128,23 +124,19 @@
           <p class="ticket-label">Venue</p>
           <strong>{{ booking.venue_name }}</strong>
           <span class="muted">{{ booking.address }}{% if booking.area %}, {{ booking.area }}{% endif %}</span>
+          {% set ticket_gmap_q = (booking.latitude ~ ',' ~ booking.longitude) if (booking.latitude is not none and booking.longitude is not none) else (booking.address ~ (', ' ~ booking.area if booking.area else '') ~ ', Hanoi, Vietnam') %}
           <div>
-            {% set ticket_map_query = booking.venue_name ~ ', ' ~ booking.address ~ (', ' ~ booking.area if booking.area else '') ~ ', Hanoi, Vietnam' %}
-            <a class="map-link" href="https://www.google.com/maps/dir/?api=1&destination={{ ticket_map_query | urlencode }}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; font-size: 12px; font-weight: 700; color: var(--brand); text-decoration: none;">Get Directions (Google Maps) &#8599;</a>
+            <a class="map-link" href="https://www.google.com/maps/search/?api=1&query={{ ticket_gmap_q | urlencode }}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; font-size: 12px; font-weight: 700; color: var(--brand); text-decoration: none;">Get Directions (Google Maps) &#8599;</a>
           </div>
         </div>
         <div><p class="ticket-label">Date</p><strong>{{ booking.start_at[8:10] }}/{{ booking.start_at[5:7] }}/{{ booking.start_at[:4] }}</strong></div>
         <div><p class="ticket-label">Time</p><strong>{{ booking.start_at[11:] }}–{{ booking.end_at[11:] }}</strong></div>
       </div>
 
-      <div class="ticket-map-section" style="margin-top: 18px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap;">
-          <p class="ticket-label" style="margin: 0;">Venue Location &amp; Google Maps</p>
-          <a href="https://www.google.com/maps/search/?api=1&query={{ ticket_map_query | urlencode }}" target="_blank" rel="noopener noreferrer" style="font-size: 12px; font-weight: 600; color: var(--brand); text-decoration: none;">Open in Google Maps &#8599;</a>
-        </div>
+      <div class="ticket-map-section no-print" style="margin-top: 16px;">
         <iframe
           title="Google Map for {{ booking.venue_name }}"
-          src="https://maps.google.com/maps?q={{ ticket_map_query | urlencode }}&t=&z=16&ie=UTF8&iwloc=&output=embed"
+          src="https://maps.google.com/maps?q={{ ticket_gmap_q | urlencode }}&amp;t=&amp;z=16&amp;ie=UTF8&amp;iwloc=&amp;output=embed"
           width="100%"
           height="220"
           style="border:0; border-radius:10px; display:block;"
@@ -166,13 +158,14 @@
           </tbody>
         </table>
       </div>
-      <div class="ticket-note">Pay at the venue upon arrival — please present your booking code at the court reception.</div>
+      {% if booking.payment_status == 'paid' %}
+      <div class="ticket-note">Payment confirmed via Online QR. Cancellations trigger automatic instant refunds in accordance with BR15.</div>
+      {% else %}
+      <div class="ticket-note">This demo does not collect online payments. Please confirm payment arrangements with the venue.</div>
+      {% endif %}
       <div class="ticket-actions">
-        <a class="button" href="/my-bookings">View my bookings</a>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-          <a class="button secondary" href="/my-bookings/{{ booking.code }}/ics">Add to Calendar (.ics)</a>
-          <button class="button secondary" type="button" onclick="window.print()">Print booking</button>
-        </div>
+        <a href="/my-bookings">View my bookings</a>
+        <button class="button secondary" type="button" onclick="window.print()">Print booking</button>
       </div>
     </div>
   </section>

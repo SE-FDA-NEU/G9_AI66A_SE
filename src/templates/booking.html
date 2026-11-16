@@ -1,139 +1,156 @@
 {% extends "base.html" %}
 {% block title %}Book {{ venue.name if venue else "a venue" }}{% endblock %}
-
+{% block style %}
+<style>
+  main:has(.booking-page) { max-width: 900px; margin-top: 30px; }
+  .booking-page { max-width: 790px; margin: 0 auto; }
+  .booking-back { display: inline-block; margin-bottom: 18px; font-size: 13px; color: #637669; }
+  .booking-head { padding-bottom: 20px; border-bottom: 1px solid #dfe5dc; }
+  .booking-head h1 { margin: 0 0 7px; font: 700 clamp(34px, 5vw, 48px)/.98 'Barlow Condensed', sans-serif; }
+  .booking-head p { margin: 0; color: #707c72; font-size: 14px; }
+  .booking-steps { display: flex; align-items: center; gap: 24px; margin: 18px 0 22px; color: #475569; font-size: 12px; }
+  .booking-step { display: flex; align-items: center; gap: 8px; }
+  .booking-step.active { color: #285c3a; font-weight: 700; }
+  .booking-step span { display: grid; width: 22px; height: 22px; place-items: center; border-radius: 50%; background: #e8ece5; font-size: 11px; }
+  .booking-step.active span { background: #285c3a; color: #fff; }
+  .venue-summary { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; padding: 20px 0; border-bottom: 1px solid #e2e7df; }
+  .venue-summary h2 { margin: 0 0 5px; font-size: 18px; }
+  .venue-summary p { margin: 0; color: #68746b; font-size: 13px; line-height: 1.6; }
+  .price-note { max-width: 210px; color: #68746b; font-size: 12px; line-height: 1.5; text-align: right; }
+  .booking-form { display: grid; grid-template-columns: 1.2fr 1fr 1fr auto; align-items: end; gap: 12px; padding: 20px 0; border-bottom: 1px solid #e2e7df; }
+  .booking-form label { display: flex; flex-direction: column; gap: 7px; color: #4b5a4e; font-size: 12px; font-weight: 700; }
+  .booking-form input, .booking-form select { min-height: 42px; }
+  .booking-form button { min-height: 42px; white-space: nowrap; }
+  .booking-empty { padding: 20px 0; color: #657167; font-size: 14px; }
+  .quote-panel { margin-top: 22px; padding: 20px; border: 1px solid #e1e5dc; border-radius: 10px; background: #fff; }
+  .quote-panel h2 { margin: 0 0 15px; font-size: 18px; }
+  .quote-scroll { overflow-x: auto; }
+  .quote-scroll table { width: 100%; min-width: 500px; border-collapse: collapse; }
+  .quote-scroll th, .quote-scroll td { padding: 10px 8px; border-bottom: 1px solid #edf0eb; font-size: 13px; }
+  .quote-scroll th { color: #788278; font-size: 10px; letter-spacing: .04em; text-align: left; text-transform: uppercase; }
+  .quote-scroll .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .quote-total td { border-bottom: 0; color: #244b32; font-weight: 700; }
+  .quote-confirm { display: flex; flex-direction: column; align-items: stretch; gap: 12px; margin-top: 16px; }
+  .quote-confirm button { align-self: flex-end; }
+  .payment-requirement-note { padding: 10px 14px; background: #F6F5F1; border: 1px solid #E4E2DC; border-left: 3px solid #15803D; border-radius: 6px; font-size: 13px; color: #111315; line-height: 1.5; }
+  .booking-error { margin-top: 14px; padding: 12px 14px; border-left: 3px solid #c44b42; background: #fbf1ef; color: #85372f; font-size: 13px; }
+  .nearest-day { margin-top: 10px; font-size: 13px; }
+  .map-link { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; font-size: 12px; font-weight: 700; color: var(--brand); text-decoration: none; }
+  .map-link:hover { text-decoration: underline; }
+  .seg-badge { display: inline-block; margin-left: 6px; padding: 2px 7px; border-radius: 9999px; font-size: 10px; font-weight: 800; text-transform: uppercase; vertical-align: middle; }
+  .seg-badge.peak { background: #fef3c7; color: #92400e; }
+  .seg-badge.standard { background: #e9efdf; color: #355e3e; }
+  .policy-box { margin-top: 16px; padding: 12px 14px; background: #f8fafc; border: 1px solid #e2e7df; border-radius: 8px; font-size: 12px; color: #475569; }
+  .policy-tiers { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+  .policy-tier { background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px; font-weight: 600; }
+  @media (max-width: 700px) {
+    .booking-form { grid-template-columns: 1fr 1fr; }
+    .booking-form label:first-child { grid-column: 1 / -1; }
+    .booking-form button { grid-column: 1 / -1; }
+    .venue-summary { flex-direction: column; }
+    .price-note { text-align: left; }
+  }
+  @media (max-width: 440px) {
+    .booking-steps { gap: 10px; justify-content: space-between; font-size: 10px; }
+    .booking-step { gap: 5px; }
+    .quote-panel { padding: 14px; }
+  }
+</style>
+{% endblock %}
 {% block content %}
-<div class="container container--narrow">
-  <header class="page-header">
-    <a class="page-header__back" href="/search">&larr; Back to search</a>
-    {% if venue %}
-    <div class="page-header__title-row">
-      <div>
-        <h1>Choose a time to play</h1>
-        <div class="booking-steps" aria-label="Booking steps">
-          <span class="booking-step is-active">1. Pick date and time</span>
-          <span class="sep">&middot;</span>
-          <span class="booking-step {% if quote %}is-active{% endif %}">2. Review price</span>
-          <span class="sep">&middot;</span>
-          <span class="booking-step">3. Confirm booking</span>
-        </div>
-      </div>
-    </div>
-    {% endif %}
-  </header>
-
+<div class="booking-page">
+  <a class="booking-back" href="/search">&larr; Back to search</a>
   {% if not venue %}
-  <div class="flash flash--error" role="alert">{{ error }}</div>
+  <div class="booking-error" role="alert">{{ error }}</div>
   {% else %}
-  {% if error %}<div class="flash flash--error" role="alert">{{ error }}</div>{% endif %}
+  <header class="booking-head">
+    <h1>Choose a time to play</h1>
+    <p>Check the venue and price, then confirm your reservation.</p>
+  </header>
+  <div class="booking-steps" aria-label="Booking steps">
+    <div class="booking-step active"><span>1</span> Pick date and time</div>
+    <div class="booking-step {% if quote %}active{% endif %}"><span>2</span> Review price</div>
+    <div class="booking-step"><span>3</span> Confirm booking</div>
+  </div>
 
-  <dl class="dl-grid">
+  {% if error %}<div class="booking-error" role="alert">{{ error }}</div>{% endif %}
+
+  <section class="venue-summary">
     <div>
-      <dt>Venue</dt>
-      <dd>{{ venue.name }}</dd>
+      <h2>{{ venue.name }}</h2>
+      <p>{{ venue.sport }} · {{ venue.address }}, {{ venue.area }}
+        <a class="map-link" href="https://www.google.com/maps/search/?api=1&query={{ (venue.name ~ ', ' ~ venue.address ~ ', ' ~ venue.area ~ ', Hanoi')|urlencode }}" target="_blank" rel="noopener">View on Map &#8599;</a><br>
+        Open {{ '%02d:00' % venue.open_hour }}–{{ '%02d:00' % venue.close_hour }}</p>
     </div>
-    <div>
-      <dt>Location</dt>
-      <dd>
-        {{ venue.sport }} &middot; {{ venue.address }}, {{ venue.area }}
-        <br>
-        <a class="small" href="https://www.google.com/maps/search/?api=1&query={{ (venue.name ~ ', ' ~ venue.address ~ ', ' ~ venue.area ~ ', Hanoi')|urlencode }}" target="_blank" rel="noopener">View on Map</a>
-      </dd>
-    </div>
-    <div>
-      <dt>Opening hours</dt>
-      <dd class="mono">{{ '%02d:00' % venue.open_hour }}&ndash;{{ '%02d:00' % venue.close_hour }}</dd>
-    </div>
-    {% if venue.owner_phone %}
-    <div>
-      <dt>Host contact</dt>
-      <dd><a href="tel:{{ venue.owner_phone }}" class="mono">{{ venue.owner_phone }}</a>{% if venue.owner_name %} &middot; {{ venue.owner_name }}{% endif %}</dd>
-    </div>
-    {% endif %}
-  </dl>
-
-  <section class="section">
-    <form class="booking-form-row" id="booking-filter-form" method="get">
-      <div class="field">
-        <label for="booking-date">Choose date</label>
-        <input type="date" name="date" id="booking-date" value="{{ day.isoformat() }}">
-      </div>
-      {% if free %}
-      <div class="field">
-        <label for="booking-start-hour">Start time</label>
-        <select name="start_hour" id="booking-start-hour">
-          {% for h in free %}<option value="{{ h }}" {% if start == h|string %}selected{% endif %}>{{ '%02d:00' % h }}</option>{% endfor %}
-        </select>
-      </div>
-      <div class="field">
-        <label for="booking-hours">Duration</label>
-        <select name="hours" id="booking-hours">
-          {% for n in range(1, max_hours + 1) %}<option value="{{ n }}" {% if hours == n|string %}selected{% endif %}>{{ n }} {{ "hour" if n == 1 else "hours" }}</option>{% endfor %}
-        </select>
-      </div>
-      {% endif %}
-      <button type="submit" class="btn-secondary">{{ "Check price" if free else "Change date" }}</button>
-    </form>
-
-    {% if not free %}
-    <div class="empty">
-      <p>This venue is fully booked on {{ day.strftime('%d/%m/%Y') }}</p>
-      {% if nearest %}
-      <p class="muted"><a href="?date={{ nearest.isoformat() }}">Nearest date with free hours: {{ nearest.strftime('%d/%m/%Y') }}</a></p>
-      {% endif %}
-    </div>
-    {% endif %}
-
-    <div id="quote-loading" class="meta" role="status" hidden>Calculating&hellip;</div>
-    <div id="live-quote-error" class="flash flash--error" role="alert" hidden></div>
-
-    {% if free %}
-    <section class="panel section" id="quote-panel" {% if not quote %}hidden{% endif %}>
-      <h2 id="quote-heading">{% if quote %}Price for {{ day.strftime('%d/%m/%Y') }}, {{ quote.segments[0]['from'] }}&ndash;{{ quote.segments[-1]['to'] }}{% endif %}</h2>
-      <div class="table-scroll">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Time</th>
-              <th class="num">Hours</th>
-              <th class="num">Rate per hour</th>
-              <th class="num">Subtotal (VND)</th>
-            </tr>
-          </thead>
-          <tbody id="quote-tbody">
-          {% if quote %}
-          {% for s in quote.segments %}
-            <tr>
-              <td>
-                {{ s['from'] }}&ndash;{{ s['to'] }}
-                {% if s.price_per_hour > venue.hourly_price %}
-                <span class="seg-tag is-peak">Peak</span>
-                {% else %}
-                <span class="seg-tag">Standard</span>
-                {% endif %}
-              </td>
-              <td class="num">{{ s.hours }}</td>
-              <td class="num">{{ "{:,}".format(s.price_per_hour) }}</td>
-              <td class="num">{{ "{:,}".format(s.price) }}</td>
-            </tr>
-          {% endfor %}
-            <tr>
-              <td colspan="3"><strong>Total</strong></td>
-              <td class="num"><strong>{{ "{:,}".format(quote.total_price) }} VND</strong></td>
-            </tr>
-          {% endif %}
-          </tbody>
-        </table>
-      </div>
-      <form method="post" class="form-actions">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="hidden" name="date" id="confirm-date" value="{{ day.isoformat() }}">
-        <input type="hidden" name="start_hour" id="confirm-start-hour" value="{{ start }}">
-        <input type="hidden" name="hours" id="confirm-hours" value="{{ hours }}">
-        <button type="submit" class="btn-primary">Confirm booking</button>
-      </form>
-    </section>
-    {% endif %}
+    <div class="price-note">Prices can vary by day and time. The full amount is shown before you confirm.</div>
   </section>
+
+  <form class="booking-form" id="booking-filter-form" method="get">
+    <label>Choose date<input type="date" name="date" id="booking-date" value="{{ day.isoformat() }}"></label>
+    {% if free %}
+    <label>Start time<select name="start_hour" id="booking-start-hour">
+      {% for h in free %}<option value="{{ h }}" {% if start == h|string %}selected{% endif %}>{{ '%02d:00' % h }}</option>{% endfor %}
+    </select></label>
+    <label>Duration<select name="hours" id="booking-hours">
+      {% for n in range(1, max_hours + 1) %}<option value="{{ n }}" {% if hours == n|string %}selected{% endif %}>{{ n }} {{ "hour" if n == 1 else "hours" }}</option>{% endfor %}
+    </select></label>
+    {% endif %}
+    <button type="submit">{{ "Check price" if free else "Change date" }}</button>
+  </form>
+
+  {% if not free %}
+  <div class="booking-empty">
+    This venue is fully booked on {{ day.strftime('%d/%m/%Y') }}
+    {% if nearest %}<p class="nearest-day"><a href="?date={{ nearest.isoformat() }}">Nearest date with free hours: {{ nearest.strftime('%d/%m/%Y') }} &rarr;</a></p>{% endif %}
+  </div>
+  {% endif %}
+
+  <div id="quote-loading" role="status" style="margin-top: 12px; font-size: 13px; color: #475569;" hidden>Calculating...</div>
+  <div id="live-quote-error" class="booking-error" role="alert" hidden></div>
+
+  {% if free %}
+  <section class="quote-panel" id="quote-panel" {% if not quote %}hidden{% endif %}>
+    <h2 id="quote-heading">{% if quote %}Price for {{ day.strftime('%d/%m/%Y') }}, {{ quote.segments[0]['from'] }}–{{ quote.segments[-1]['to'] }}{% endif %}</h2>
+    <div class="quote-scroll"><table>
+      <thead><tr><th>Time</th><th class="num">Hours</th><th class="num">Rate per hour</th><th class="num">Subtotal (VND)</th></tr></thead>
+      <tbody id="quote-tbody">
+      {% if quote %}
+      {% for s in quote.segments %}
+      <tr>
+        <td>{{ s['from'] }}–{{ s['to'] }}
+          {% if s.price_per_hour > venue.hourly_price %}
+          <span class="seg-badge peak">Peak</span>
+          {% else %}
+          <span class="seg-badge standard">Standard</span>
+          {% endif %}
+        </td>
+        <td class="num">{{ s.hours }}</td>
+        <td class="num">{{ "{:,}".format(s.price_per_hour) }}</td>
+        <td class="num">{{ "{:,}".format(s.price) }}</td>
+      </tr>
+      {% endfor %}
+        <tr class="quote-total"><td colspan="3">Total</td><td class="num">{{ "{:,}".format(quote.total_price) }} VND</td></tr>
+      {% endif %}
+      </tbody>
+    </table></div>
+    <div class="policy-box">
+      <strong>Cancellation Policy:</strong>
+      <div class="policy-tiers">
+        <span class="policy-tier">&ge; 24h before start: 100% refund</span>
+        <span class="policy-tier">2h&ndash;24h before start: 50% refund</span>
+        <span class="policy-tier">&lt; 2h before start: Non-refundable</span>
+      </div>
+    </div>
+    <form method="post" id="confirm-booking-form" action="/booking/{{ venue.id }}/checkout" class="quote-confirm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="date" id="confirm-date" value="{{ day.isoformat() }}">
+      <input type="hidden" name="start_hour" id="confirm-start-hour" value="{{ start }}">
+      <input type="hidden" name="hours" id="confirm-hours" value="{{ hours }}">
+      <div class="payment-requirement-note">Online QR payment is required to confirm your slot. Cancellations trigger automatic instant refunds (BR15).</div>
+      <button type="submit">Proceed to Online QR Payment &rarr;</button>
+    </form>
+  </section>
+  {% endif %}
   {% endif %}
 </div>
 
@@ -175,12 +192,14 @@
     const seq = ++quoteSeq;
     errEl.hidden = true;
     if (loadingEl) loadingEl.hidden = false;
+    panelEl.style.opacity = "0.6";
     try {
       const res = await fetch(`/api/quote/${venueId}?date=${encodeURIComponent(day)}&start_hour=${encodeURIComponent(startH)}&hours=${encodeURIComponent(hours)}`);
       if (seq !== quoteSeq) return;
       const data = await res.json();
       if (seq !== quoteSeq) return;
       if (loadingEl) loadingEl.hidden = true;
+      panelEl.style.opacity = "1";
       cDate.value = day;
       cStart.value = startH;
       cHours.value = hours;
@@ -198,15 +217,16 @@
       const rowsHtml = segs.map((s) => {
         const isPeak = s.price_per_hour > standardPrice;
         const badge = isPeak
-          ? '<span class="seg-tag is-peak">Peak</span>'
-          : '<span class="seg-tag">Standard</span>';
+          ? '<span class="seg-badge peak">Peak</span>'
+          : '<span class="seg-badge standard">Standard</span>';
         return `<tr><td>${s.from}–${s.to} ${badge}</td><td class="num">${s.hours}</td><td class="num">${fmt(s.price_per_hour)}</td><td class="num">${fmt(s.price)}</td></tr>`;
       }).join("");
-      tbodyEl.innerHTML = rowsHtml + `<tr><td colspan="3"><strong>Total</strong></td><td class="num"><strong>${fmt(data.total_price)} VND</strong></td></tr>`;
+      tbodyEl.innerHTML = rowsHtml + `<tr class="quote-total"><td colspan="3">Total</td><td class="num">${fmt(data.total_price)} VND</td></tr>`;
       panelEl.hidden = false;
     } catch (e) {
       if (seq !== quoteSeq) return;
       if (loadingEl) loadingEl.hidden = true;
+      panelEl.style.opacity = "1";
       cDate.value = day;
       cStart.value = startH;
       cHours.value = hours;

@@ -1,366 +1,140 @@
 {% extends "base.html" %}
 {% block title %}Manage Schedule - {{ venue.name }}{% endblock %}
 {% block content %}
-<div class="container">
-  <header class="page-header">
-    <a href="/owner/venues" class="page-header__back">&larr; Back to my venues</a>
-    <div class="page-header__title-row">
-      <h1>Schedule: {{ venue.name }}</h1>
-      <div class="page-header__actions">
-        <button type="button" class="btn-secondary" onclick="openScheduleModal('edit-venue-modal')">Edit hours &amp; base rate</button>
-        <a href="/owner/venues/{{ venue.id }}/pricing" class="btn-secondary">Pricing rules</a>
-        <a href="/venues/{{ venue.id }}" target="_blank" class="btn-primary">View public page</a>
-      </div>
-    </div>
-    <p class="page-header__desc">
-      {{ venue.address }} &middot; {{ "%02d:00" | format(venue.open_hour) }}&ndash;{{ "%02d:00" | format(venue.close_hour) }} &middot; Base: <span class="num">{{ "{:,}".format(venue.hourly_price) }} VND/h</span>
-    </p>
-  </header>
+<div class="owner-container">
+  <div>
+    <a href="/owner/venues" class="muted" style="text-decoration: none; font-weight: 600;">&larr; Back to My Venues</a>
+  </div>
 
-  <div class="split">
-    <form method="get" action="/owner/venues/{{ venue.id }}/schedule" class="filter-bar">
-      <div class="field">
-        <label for="schedule-date">Date</label>
-        <input id="schedule-date" type="date" name="date" value="{{ day_str }}" onchange="this.form.submit()">
+  <div class="card" style="padding: 22px 24px; border-radius: 14px; background: #173b2c; color: #fff;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+      <div>
+        <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #d3eb7b; font-weight: 700;">Schedule &amp; Maintenance</span>
+        <h1 style="margin: 4px 0 4px; font-size: 28px; font-weight: 800; color: #fff !important;">{{ venue.name }}</h1>
+        <p style="margin: 0; font-size: 13px; color: #d0ddd2;">{{ venue.address }} &middot; {{ "%02d:00" | format(venue.open_hour) }}&ndash;{{ "%02d:00" | format(venue.close_hour) }}</p>
       </div>
-      <button type="submit" class="btn-secondary">View date</button>
-    </form>
-
-    <div class="schedule-legend" aria-label="Slot status legend">
-      <span class="legend-item"><span class="legend-swatch legend-swatch--free" aria-hidden="true"></span>Free</span>
-      <span class="legend-item"><span class="legend-swatch legend-swatch--booked" aria-hidden="true"></span>Booked</span>
-      <span class="legend-item"><span class="legend-swatch legend-swatch--blocked" aria-hidden="true"></span>Blocked</span>
+      <a href="/venues/{{ venue.id }}" target="_blank" class="button secondary" style="font-size: 13px; font-weight: 700;">
+        View Public Page
+      </a>
     </div>
   </div>
 
-  <section class="section">
-    <div class="section__head">
-      <h2>Block time range (single day or date range)</h2>
-    </div>
-    <form method="post" action="/owner/venues/{{ venue.id }}/schedule/batch-block" class="filter-bar">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-      <div class="field">
-        <label for="batch-start-date">From date</label>
-        <input id="batch-start-date" type="date" name="start_date" value="{{ day_str }}" required>
-      </div>
-
-      <div class="field">
-        <label for="batch-end-date">To date</label>
-        <input id="batch-end-date" type="date" name="end_date" value="{{ day_str }}" required>
-      </div>
-
-      <div class="field">
-        <label for="batch-start-hour">From hour</label>
-        <select id="batch-start-hour" name="start_hour" required>
-          {% for h in range(venue.open_hour, venue.close_hour) %}
-          <option value="{{ h }}" {% if h == venue.open_hour %}selected{% endif %}>{{ "%02d:00" | format(h) }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="batch-end-hour">To hour</label>
-        <select id="batch-end-hour" name="end_hour" required>
-          {% for h in range(venue.open_hour + 1, venue.close_hour + 1) %}
-          <option value="{{ h }}" {% if h == venue.open_hour + 1 %}selected{% endif %}>{{ "%02d:00" | format(h) }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="batch-reason">Reason (optional)</label>
-        <input id="batch-reason" type="text" name="reason" placeholder="Reason (optional)" value="">
-      </div>
-
-      <button type="submit" class="btn-secondary">Confirm batch block</button>
+  <!-- Day picker bar -->
+  <div class="card" style="padding: 16px 22px; border-radius: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+    <form method="get" action="/owner/venues/{{ venue.id }}/schedule" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+      <label style="font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; margin: 0;">
+        Date
+        <input type="date" name="date" value="{{ day_str }}" onchange="this.form.submit()" style="height: 40px; min-height: 40px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--border-color); font-weight: 600;">
+      </label>
+      <button type="submit" class="button" style="font-weight: 700; height: 40px; min-height: 40px; padding: 0 16px;">View Date</button>
     </form>
-  </section>
 
-  <section class="section">
-    <div class="section__head">
-      <h2>Hourly schedule for {{ day_str[8:10] }}/{{ day_str[5:7] }}/{{ day_str[:4] }}</h2>
+    <div style="display: flex; gap: 14px; font-size: 12px; font-weight: 600;">
+      <span style="display: inline-flex; align-items: center; gap: 5px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: #10b981; display: inline-block;"></span> Free</span>
+      <span style="display: inline-flex; align-items: center; gap: 5px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: #ef4444; display: inline-block;"></span> Booked</span>
+      <span style="display: inline-flex; align-items: center; gap: 5px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: #94a3b8; display: inline-block;"></span> Blocked</span>
     </div>
+  </div>
 
-    <div class="schedule-grid">
+  <!-- Slots Grid -->
+  <div class="card" style="padding: 22px; border-radius: 14px;">
+    <h2 style="margin: 0 0 16px; font-size: 18px; font-weight: 800;">
+      Hourly Schedule for {{ day_str[8:10] }}/{{ day_str[5:7] }}/{{ day_str[:4] }}
+    </h2>
+
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;">
       {% for s in slots %}
-      {% set slot_price = hour_prices.get(s.hour, venue.hourly_price) if hour_prices is defined else venue.hourly_price %}
-      <div class="slot-card slot-card--{{ s.status }}">
-        <div class="slot-card__head">
-          <strong class="slot-card__time">{{ s.start }} - {{ s.end }}</strong>
+      <div style="border-radius: 10px; padding: 14px; min-height: 92px; border: 1px solid var(--border-color); display: flex; flex-direction: column; justify-content: space-between; gap: 10px;
+                  {% if s.status == 'free' %}background: #f0fdf4; border-color: #bbf7d0;
+                  {% elif s.status == 'booked' %}background: #fef2f2; border-color: #fecaca;
+                  {% elif s.status == 'blocked' %}background: #f1f5f9; border-color: #cbd5e1;
+                  {% else %}background: #f8fafc; opacity: 0.75;{% endif %}">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <strong style="font-size: 14px; font-family: var(--font-mono);">{{ s.start }} - {{ s.end }}</strong>
+          
           {% if s.status == 'free' %}
-            <span class="status status--success">Free</span>
+            <span style="font-size: 11px; font-weight: 700; color: #15803d; background: #dcfce7; padding: 2px 8px; border-radius: 4px;">Free</span>
           {% elif s.status == 'booked' %}
-            <span class="status status--danger">Booked</span>
+            <span style="font-size: 11px; font-weight: 700; color: #b91c1c; background: #fee2e2; padding: 2px 8px; border-radius: 4px;">Booked</span>
           {% elif s.status == 'blocked' %}
-            <span class="status status--neutral">Blocked</span>
+            <span style="font-size: 11px; font-weight: 700; color: #475569; background: #e2e8f0; padding: 2px 8px; border-radius: 4px;">Blocked</span>
           {% else %}
-            <span class="meta">Past</span>
-          {% endif %}
-        </div>
-
-        <div class="slot-card__price">
-          <span>{{ "{:,}".format(slot_price) }} VND/h</span>
-          {% if slot_price != venue.hourly_price %}
-            <span class="meta">Custom</span>
+            <span style="font-size: 11px; font-weight: 600; color: #475569;">Past</span>
           {% endif %}
         </div>
 
         {% if s.status == 'blocked' %}
-        <div class="slot-card__note">
+        <div style="font-size: 12px; color: #334155; font-weight: 600;">
           Blocked - {{ s.reason }}
         </div>
         <form method="post" action="/owner/venues/{{ venue.id }}/schedule/unblock">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="hidden" name="date" value="{{ day_str }}">
           <input type="hidden" name="hour" value="{{ s.hour }}">
-          <button type="submit" class="btn-secondary btn-sm btn-block">Unblock slot</button>
+          <button type="submit" class="button secondary" style="font-size: 12px; font-weight: 700; width: 100%; height: 34px; min-height: 34px; padding: 0 10px;">
+            Unblock Slot
+          </button>
         </form>
 
         {% elif s.status == 'booked' %}
-        <div class="slot-card__note slot-card__note--danger">
-          Booked (<span class="mono">{{ s.booking_code }}</span>)
+        <div style="font-size: 12px; color: #b91c1c; font-weight: 600;">
+          Booked ({{ s.booking_code }})
         </div>
 
         {% elif s.status == 'free' %}
-        <form method="post" action="/owner/venues/{{ venue.id }}/schedule/block" class="slot-card__form">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <form method="post" action="/owner/venues/{{ venue.id }}/schedule/block" style="display: flex; gap: 6px; align-items: center;">
           <input type="hidden" name="date" value="{{ day_str }}">
           <input type="hidden" name="hour" value="{{ s.hour }}">
-          <input type="text" name="reason" aria-label="Block reason" placeholder="Reason (optional)" value="">
-          <button type="submit" class="btn-secondary btn-sm">Block</button>
+          <input type="text" name="reason" aria-label="Block reason" placeholder="Reason" value="Grass maintenance" style="font-size: 12px; height: 34px; min-height: 34px; padding: 0 8px; flex: 1; min-width: 0; border: 1px solid var(--border-color); border-radius: 6px;" required>
+          <button type="submit" class="button" style="font-size: 12px; font-weight: 700; height: 34px; min-height: 34px; padding: 0 12px; border-radius: 6px; background: #475569; color: #fff;">
+            Block
+          </button>
         </form>
 
         {% else %}
-        <div class="slot-card__note">Past slot</div>
+        <div style="font-size: 12px; color: #64748b;">
+          Past slot
+        </div>
         {% endif %}
       </div>
       {% endfor %}
     </div>
-  </section>
+  </div>
 
-  {% if hours is defined and weekdays is defined %}
-  <section class="section">
-    <div class="section__head">
-      <div>
-        <h2>Time-range pricing (from &ndash; to &amp; hourly rate)</h2>
-        <p class="meta">Standard rate: {{ "{:,}".format(venue.hourly_price) }} VND/h. Set custom hourly rates for specific time ranges.</p>
-      </div>
-    </div>
+  <!-- Batch Block Form -->
+  <div class="card" style="padding: 22px; border-radius: 14px;">
+    <h3 style="margin: 0 0 14px; font-size: 16px; font-weight: 800;">Batch Block (Multi-day)</h3>
 
-    <form method="post" action="/owner/venues/{{ venue.id }}/pricing" class="filter-bar">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <input type="hidden" name="next" value="/owner/venues/{{ venue.id }}/schedule?date={{ day_str }}">
+    <form method="post" action="/owner/venues/{{ venue.id }}/schedule/batch-block" style="display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;">
+      <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700;">
+        From Date
+        <input type="date" name="start_date" value="{{ day_str }}" required style="height: 44px; min-height: 44px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--border-color);">
+      </label>
 
-      <div class="field">
-        <label for="sched-rule-weekday">Weekday</label>
-        <select id="sched-rule-weekday" name="weekday" required>
-          <option value="all">All days (Mon&ndash;Sun)</option>
-          <option value="weekdays">Weekdays (Mon&ndash;Fri)</option>
-          <option value="weekends">Weekends (Sat&ndash;Sun)</option>
-          {% for w in weekdays %}
-          <option value="{{ loop.index0 }}" {% if day is defined and day.weekday() == loop.index0 %}selected{% endif %}>{{ w }}</option>
-          {% endfor %}
-        </select>
-      </div>
+      <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700;">
+        To Date
+        <input type="date" name="end_date" value="{{ day_str }}" required style="height: 44px; min-height: 44px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--border-color);">
+      </label>
 
-      <div class="field">
-        <label for="sched-rule-start">From</label>
-        <select id="sched-rule-start" name="start_hour" required>
-          {% for h in hours[:-1] %}
-          <option value="{{ h }}" {% if h == 17 %}selected{% endif %}>{{ "%02d:00" | format(h) }}</option>
-          {% endfor %}
-        </select>
-      </div>
+      <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700;">
+        Start Hour
+        <input type="number" name="start_hour" min="{{ venue.open_hour }}" max="{{ venue.close_hour - 1 }}" value="{{ venue.open_hour }}" required style="width: 90px; height: 44px; min-height: 44px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--border-color);">
+      </label>
 
-      <div class="field">
-        <label for="sched-rule-end">To</label>
-        <select id="sched-rule-end" name="end_hour" required>
-          {% for h in hours[1:] %}
-          <option value="{{ h }}" {% if h == 20 %}selected{% endif %}>{{ "%02d:00" | format(h) }}</option>
-          {% endfor %}
-        </select>
-      </div>
+      <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700;">
+        End Hour
+        <input type="number" name="end_hour" min="{{ venue.open_hour + 1 }}" max="{{ venue.close_hour }}" value="{{ venue.open_hour + 1 }}" required style="width: 90px; height: 44px; min-height: 44px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--border-color);">
+      </label>
 
-      <div class="field">
-        <label for="sched-rule-price">Hourly rate (VND)</label>
-        <input id="sched-rule-price" type="text" name="price_per_hour" placeholder="e.g. {{ '{:,}'.format(venue.hourly_price) }}" value="" required>
-      </div>
+      <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; flex: 1; min-width: 180px;">
+        Reason
+        <input type="text" name="reason" value="Regular pitch maintenance" required style="height: 44px; min-height: 44px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+      </label>
 
-      <button type="submit" class="btn-secondary">Save time-range rate</button>
+      <button type="submit" class="button" style="font-weight: 700; height: 44px; min-height: 44px; background: #334155;">
+        Confirm Batch Block
+      </button>
     </form>
-
-    {% if pricing_rules %}
-    <div class="table-scroll">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Weekday</th>
-            <th>Time range</th>
-            <th class="num">Rate (VND/h)</th>
-            <th class="num">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for r in pricing_rules %}
-          <tr>
-            <td>{{ weekdays[r.weekday] }}</td>
-            <td class="mono">{{ "%02d:00" | format(r.start_hour) }} &ndash; {{ "%02d:00" | format(r.end_hour) }}</td>
-            <td class="num">{{ "{:,}".format(r.price_per_hour) }} VND</td>
-            <td class="num">
-              <div class="row-actions">
-                <button type="button" class="btn-secondary btn-sm"
-                        data-rule-id="{{ r.id }}"
-                        data-weekday="{{ r.weekday }}"
-                        data-start-hour="{{ r.start_hour }}"
-                        data-end-hour="{{ r.end_hour }}"
-                        data-price="{{ r.price_per_hour }}"
-                        onclick="openEditRuleModal(this)">Edit</button>
-                <form method="post" action="/owner/venues/{{ venue.id }}/pricing/{{ r.id }}/delete" class="inline-form">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <input type="hidden" name="next" value="/owner/venues/{{ venue.id }}/schedule?date={{ day_str }}">
-                  <button type="submit" class="btn-danger-outline btn-sm">Delete</button>
-                </form>
-              </div>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    {% endif %}
-  </section>
-  {% endif %}
-
-  <!-- Edit Venue Operating Hours & Base Rate Modal -->
-  <div id="edit-venue-modal" class="modal js-modal" hidden onclick="if(event.target===this) closeScheduleModal('edit-venue-modal')">
-    <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="sched-edit-venue-title">
-      <div class="modal__head">
-        <h3 id="sched-edit-venue-title" class="modal__title">Edit operating hours &amp; base rate</h3>
-        <button type="button" class="btn-ghost btn-sm" onclick="closeScheduleModal('edit-venue-modal')" aria-label="Close modal">&times;</button>
-      </div>
-      <form method="post" action="/owner/venues/{{ venue.id }}/edit" class="stack">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="hidden" name="next" value="/owner/venues/{{ venue.id }}/schedule?date={{ day_str }}">
-        <input type="hidden" name="sport" value="{{ venue.sport }}">
-        <input type="hidden" name="area" value="{{ venue.area }}">
-
-        <div class="field">
-          <label for="sched-venue-name">Venue name</label>
-          <input id="sched-venue-name" type="text" name="name" value="{{ venue.name }}" required>
-        </div>
-        <div class="field">
-          <label for="sched-venue-address">Address</label>
-          <input id="sched-venue-address" type="text" name="address" value="{{ venue.address }}" required>
-        </div>
-        <div class="form-grid">
-          <div class="field">
-            <label for="sched-open-hour">Open hour</label>
-            <select id="sched-open-hour" name="open_hour" required>
-              {% for h in range(0, 24) %}
-              <option value="{{ h }}" {% if h == venue.open_hour %}selected{% endif %}>{{ "%02d:00" | format(h) }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="field">
-            <label for="sched-close-hour">Close hour</label>
-            <select id="sched-close-hour" name="close_hour" required>
-              {% for h in range(1, 25) %}
-              <option value="{{ h }}" {% if h == venue.close_hour %}selected{% endif %}>{{ "%02d:00" | format(h) }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="field field--full">
-            <label for="sched-hourly-price">Standard rate (VND/h)</label>
-            <input id="sched-hourly-price" type="text" name="hourly_price" value="{{ venue.hourly_price }}" required>
-          </div>
-        </div>
-        <div class="modal__actions">
-          <button type="button" class="btn-secondary" onclick="closeScheduleModal('edit-venue-modal')">Cancel</button>
-          <button type="submit" class="btn-primary">Save settings</button>
-        </div>
-      </form>
-    </div>
   </div>
-
-  <!-- Edit Pricing Rule Modal -->
-  {% if hours is defined and weekdays is defined %}
-  <div id="edit-rule-modal" class="modal js-modal" hidden onclick="if(event.target===this) closeScheduleModal('edit-rule-modal')">
-    <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="sched-edit-rule-title">
-      <div class="modal__head">
-        <h3 id="sched-edit-rule-title" class="modal__title">Edit pricing rule</h3>
-        <button type="button" class="btn-ghost btn-sm" onclick="closeScheduleModal('edit-rule-modal')" aria-label="Close modal">&times;</button>
-      </div>
-      <form id="edit-rule-form" method="post" action="/owner/venues/{{ venue.id }}/pricing/1/edit" class="stack">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="hidden" name="next" value="/owner/venues/{{ venue.id }}/schedule?date={{ day_str }}">
-        <div class="field">
-          <label for="er-weekday">Weekday</label>
-          <select id="er-weekday" name="weekday" required>
-            {% for w in weekdays %}
-            <option value="{{ loop.index0 }}">{{ w }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="form-grid">
-          <div class="field">
-            <label for="er-start">From hour</label>
-            <select id="er-start" name="start_hour" required>
-              {% for h in hours[:-1] %}
-              <option value="{{ h }}">{{ "%02d:00" | format(h) }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="field">
-            <label for="er-end">To hour</label>
-            <select id="er-end" name="end_hour" required>
-              {% for h in hours[1:] %}
-              <option value="{{ h }}">{{ "%02d:00" | format(h) }}</option>
-              {% endfor %}
-            </select>
-          </div>
-        </div>
-        <div class="field">
-          <label for="er-price">Hourly rate (VND)</label>
-          <input type="text" id="er-price" name="price_per_hour" required>
-        </div>
-        <div class="modal__actions">
-          <button type="button" class="btn-secondary" onclick="closeScheduleModal('edit-rule-modal')">Cancel</button>
-          <button type="submit" class="btn-primary">Update rule</button>
-        </div>
-      </form>
-    </div>
-  </div>
-  {% endif %}
-
-  <script>
-  function openScheduleModal(id) {
-    var modal = document.getElementById(id);
-    if (!modal) return;
-    modal.hidden = false;
-    modal.classList.add("is-open");
-  }
-  function closeScheduleModal(id) {
-    var modal = document.getElementById(id);
-    if (!modal) return;
-    modal.classList.remove("is-open");
-    modal.hidden = true;
-  }
-  function openEditRuleModal(btn) {
-    var ruleId = btn.getAttribute("data-rule-id");
-    document.getElementById("edit-rule-form").action = "/owner/venues/{{ venue.id }}/pricing/" + ruleId + "/edit";
-    document.getElementById("er-weekday").value = btn.getAttribute("data-weekday");
-    document.getElementById("er-start").value = btn.getAttribute("data-start-hour");
-    document.getElementById("er-end").value = btn.getAttribute("data-end-hour");
-    document.getElementById("er-price").value = btn.getAttribute("data-price");
-    openScheduleModal("edit-rule-modal");
-  }
-  document.addEventListener("keydown", function(e) {
-    if (e.key === "Escape") {
-      closeScheduleModal("edit-venue-modal");
-      closeScheduleModal("edit-rule-modal");
-    }
-  });
-  </script>
 </div>
 {% endblock %}

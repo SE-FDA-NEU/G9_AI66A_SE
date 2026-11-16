@@ -387,13 +387,13 @@ def test_owner_route_input_guards_do_not_500(client):
 def test_ui_markers_on_venue_booking_and_owner_pages(client, db):
     """Normal: verify expected UX markers across venue, booking, and owner templates."""
     venue_html = client.get("/venues/1").get_data(as_text=True)
-    assert "Cancellation Policy" not in venue_html
+    assert "Cancellation Policy" in venue_html
     assert "Get Directions (Google Maps)" in venue_html
     assert "slot-price" in venue_html
 
     _login_on(client, "minh@example.com")
     booking_html = client.get("/booking/1").get_data(as_text=True)
-    assert "Cancellation Policy" not in booking_html
+    assert "Cancellation Policy" in booking_html
     assert "View on Map" in booking_html
 
     with connect(db) as conn:

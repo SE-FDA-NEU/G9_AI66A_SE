@@ -97,7 +97,7 @@ def _ensure_schema(database=None):
                 _migrate_postgres_columns(conn)
                 try:
                     has_popular = conn.execute(
-                        "SELECT 1 FROM venue WHERE name = 'San Bong C500 (Hoc vien An Ninh)' LIMIT 1"
+                        "SELECT 1 FROM venue WHERE name = 'San Bong C500 (Hoc vien An Ninh)' AND open_hour = 5 LIMIT 1"
                     ).fetchone()
                     if has_popular is None:
                         from hanoi_popular_venues import sync_popular_venues

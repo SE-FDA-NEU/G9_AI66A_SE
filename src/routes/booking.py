@@ -13,6 +13,7 @@ from flask import (Blueprint, Response, current_app, flash, g, jsonify, redirect
                    request, session, url_for)
 
 import booking as svc
+import payment
 import reviews
 import venues
 from db import connect
@@ -357,6 +358,131 @@ def booking_ics(code):
             mimetype="text/calendar; charset=utf-8",
             headers={"Content-Disposition": f'attachment; filename="booking-{booking["code"]}.ics"'},
         )
+
+
+@bp.route("/booking/<int:venue_id>/checkout", methods=["POST"])
+def payment_checkout_create(venue_id):
+    """Create a QR payment session for a booking request and redirect to checkout."""
+    with _connect() as conn:
+        user = _current_user(conn)
+        if user is None:
+            return _unauthenticated_html()
+        f = request.form
+        try:
+            sess = payment.create_session(
+                conn, user, venue_id, f.get("date"), f.get("start_hour"), f.get("hours"), _now()
+            )
+            return redirect(url_for("booking.payment_checkout", token=sess["token"]))
+        except BusinessRuleError as e:
+            if e.status == 404:
+                return render_template("booking.html", venue=None, error=e.message), 404
+            return _booking_page(conn, user, venue_id, request.form, e.message, e.status)
+
+
+@bp.route("/payment/<token>", methods=["GET"])
+def payment_checkout(token):
+    """Render the QR payment checkout page for a payment session."""
+    with _connect() as conn:
+        user = _current_user(conn)
+        if user is None:
+            return _unauthenticated_html()
+        try:
+            sess = payment.get_session(conn, token, user)
+        except BusinessRuleError as e:
+            return render_template("error.html", error=e.message), e.status
+    scan_url = url_for("booking.payment_scan", token=token, _external=True)
+    return render_template(
+        "payment_checkout.html",
+        session=sess,
+        qr_svg=payment.generate_qr_svg(scan_url),
+        scan_url=scan_url,
+        error=None,
+    )
+
+
+@bp.route("/payment/<token>/scan", methods=["GET", "POST"])
+def payment_scan(token):
+    """Simulated QR scanner page where the user enters the exact amount to pay."""
+    with _connect() as conn:
+        if request.method == "GET":
+            try:
+                sess = payment.get_session(conn, token)
+            except BusinessRuleError as e:
+                return render_template("error.html", error=e.message), e.status
+            already_accepted = sess["status"] in ("accepted", "paid", "refunded", "partially_refunded")
+            return render_template(
+                "payment_scan.html",
+                session=sess,
+                accepted=already_accepted,
+                otp_code=sess["otp_code"] if already_accepted else None,
+                error=None,
+            )
+
+        try:
+            sess = payment.accept_qr_payment(conn, token, request.form.get("amount", ""))
+            return render_template(
+                "payment_scan.html",
+                session=sess,
+                accepted=True,
+                otp_code=sess["otp_code"],
+                error=None,
+            )
+        except BusinessRuleError as e:
+            if e.status == 404:
+                return render_template("error.html", error=e.message), 404
+            sess = payment.get_session(conn, token)
+            return render_template(
+                "payment_scan.html",
+                session=sess,
+                accepted=False,
+                otp_code=None,
+                error=e.message,
+            ), e.status
+
+
+@bp.route("/payment/<token>/confirm", methods=["POST"])
+def payment_confirm(token):
+    """Verify OTP and finalize the booking."""
+    with _connect() as conn:
+        user = _current_user(conn)
+        if user is None:
+            return _unauthenticated_html()
+        try:
+            result = payment.confirm_and_book(
+                conn, token, user, request.form.get("otp_code", ""), _now()
+            )
+            return redirect(url_for("booking.booking_detail", code=result["code"]))
+        except BusinessRuleError as e:
+            if e.status in (403, 404):
+                return render_template("error.html", error=e.message), e.status
+            sess = payment.get_session(conn, token, user)
+            scan_url = url_for("booking.payment_scan", token=token, _external=True)
+            return render_template(
+                "payment_checkout.html",
+                session=sess,
+                qr_svg=payment.generate_qr_svg(scan_url),
+                scan_url=scan_url,
+                error=e.message,
+            ), e.status
+
+
+@bp.route("/api/payment/<token>/status", methods=["GET"])
+def api_payment_status(token):
+    """Poll payment session status (pending/accepted/paid) for the owning customer."""
+    with _connect() as conn:
+        user = _current_user(conn)
+        if user is None:
+            return _unauthenticated_json("Please sign in")
+        try:
+            s = payment.get_session(conn, token, user)
+            return jsonify(
+                status=s["status"],
+                paid_amount=s["paid_amount"],
+                booking_code=s["booking_code"],
+            )
+        except BusinessRuleError as e:
+            return jsonify(e.as_json()), e.status
+
 
 
 

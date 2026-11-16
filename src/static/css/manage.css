@@ -1,1 +1,249 @@
 /* Owner and admin page styles. Uses tokens from style.css. */
+
+/* Utility & layout helpers scoped to owner/admin pages */
+.js-modal[hidden] {
+  display: none;
+}
+
+.inline-form {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  margin: 0;
+}
+
+.input-compact {
+  height: 30px;
+  min-height: 30px;
+  padding: 0 var(--s2);
+  font-size: 13px;
+  width: 148px;
+}
+
+.field--full {
+  grid-column: 1 / -1;
+}
+
+.field--checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.field--checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  min-height: 16px;
+  margin: 0;
+}
+
+.cell-sub {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Breakdown flat 4px bars (admin overview) */
+.share-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  min-width: 112px;
+}
+
+.bar-track--sm {
+  margin-top: var(--s1);
+  max-width: 140px;
+}
+
+.bar-progress {
+  flex: 1;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: var(--gray-100);
+  overflow: hidden;
+  display: block;
+}
+
+.bar-progress::-webkit-progress-bar {
+  background: var(--gray-100);
+  border-radius: var(--r-sm);
+}
+
+.bar-progress::-webkit-progress-value {
+  background: var(--brand);
+  border-radius: var(--r-sm);
+}
+
+.bar-progress::-moz-progress-bar {
+  background: var(--brand);
+  border-radius: var(--r-sm);
+}
+
+/* Moderation sub-filters */
+.mod-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s5);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--s4);
+}
+
+.mod-filters__link {
+  display: inline-block;
+  padding: var(--s2) 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 120ms ease;
+}
+
+.mod-filters__link:hover {
+  color: var(--text);
+}
+
+.mod-filters__link.is-active {
+  color: var(--text);
+  box-shadow: inset 0 -2px 0 var(--brand);
+}
+
+.mod-item__comment {
+  margin: var(--s2) 0 var(--s3);
+  font-size: 14px;
+  color: var(--text);
+}
+
+/* Schedule legend & flat slot grid */
+.schedule-legend {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.legend-swatch--free {
+  background: var(--success);
+}
+
+.legend-swatch--booked {
+  background: var(--danger);
+}
+
+.legend-swatch--blocked {
+  background: var(--gray-300);
+}
+
+.schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--s3);
+}
+
+.slot-card {
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: var(--s3);
+  min-height: 104px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--s2);
+  background: var(--bg);
+}
+
+.slot-card--free {
+  background: var(--success-bg);
+}
+
+.slot-card--booked {
+  background: var(--danger-bg);
+}
+
+.slot-card--blocked {
+  background: var(--gray-100);
+}
+
+.slot-card--past {
+  background: var(--bg-subtle);
+  opacity: 0.75;
+}
+
+.slot-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.slot-card__time {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.slot-card__price {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.slot-card__note {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.slot-card__note--danger {
+  color: var(--danger);
+}
+
+.slot-card__form {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.slot-card__form input[type="text"] {
+  height: 30px;
+  min-height: 30px;
+  padding: 0 var(--s2);
+  font-size: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Modal close button & header */
+.modal__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s3);
+  margin-bottom: var(--s4);
+}
+
+.modal__head .modal__title {
+  margin: 0;
+}
