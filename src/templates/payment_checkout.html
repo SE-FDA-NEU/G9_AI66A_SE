@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+{% block title %}Online QR Payment{% endblock %}
+{% block style %}
+<style>
+  main:has(.checkout-page) { max-width: 960px; margin-top: 28px; }
+  .checkout-page { max-width: 900px; margin: 0 auto; color: #111315; }
+  .checkout-back { display: inline-block; margin-bottom: 16px; font-size: 13px; color: #15803D; font-weight: 600; text-decoration: none; }
+  .checkout-back:hover { text-decoration: underline; }
+  .checkout-shell {
+    background: #F6F5F1;
+    border: 1px solid #E4E2DC;
+    border-radius: 8px;
+    padding: 24px;
+  }
+  .checkout-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid #E4E2DC;
+  }
+  .checkout-kicker {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #15803D;
+    margin-bottom: 4px;
+  }
+  .checkout-head h1 {
+    margin: 0;
+    font: 700 clamp(26px, 4vw, 34px)/1.05 'Barlow Condensed', sans-serif;
+    color: #111315;
+  }
+  .checkout-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .checkout-status-badge.pending {
+    background: #FEF3C7;
+    color: #92400E;
+    border: 1px solid #F59E0B;
+  }
+  .checkout-status-badge.accepted {
+    background: #DCFCE7;
+    color: #15803D;
+    border: 1px solid #86EFAC;
+  }
+  .checkout-status-badge.paid {
+    background: #15803D;
+    color: #FFFFFF;
+    border: 1px solid #15803D;
+  }
+  .checkout-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.05fr;
+    gap: 20px;
+    margin-top: 20px;
+  }
+  .checkout-card {
+    background: #FFFFFF;
+    border: 1px solid #E4E2DC;
+    border-radius: 8px;
+    padding: 20px;
+  }
+  .checkout-card h2 {
+    margin: 0 0 14px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #111315;
+  }
+  .summary-list {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+  }
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #E4E2DC;
+    font-size: 13px;
+  }
+  .summary-row:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+  .summary-label {
+    color: #525860;
+    font-weight: 600;
+  }
+  .summary-value {
+    color: #111315;
+    font-weight: 700;
+    text-align: right;
+  }
+  .summary-amount {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 800;
+    color: #15803D;
+    font-variant-numeric: tabular-nums;
+  }
+  .checkout-steps {
+    margin: 18px 0 0;
+    padding: 14px 16px;
+    background: #F6F5F1;
+    border: 1px solid #E4E2DC;
+    border-radius: 6px;
+  }
+  .checkout-steps h3 {
+    margin: 0 0 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #111315;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .checkout-steps ol {
+    margin: 0;
+    padding-left: 18px;
+    display: grid;
+    gap: 6px;
+    font-size: 13px;
+    color: #334155;
+    line-height: 1.45;
+  }
+  .qr-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+    background: #FFFFFF;
+    border: 1px solid #E4E2DC;
+    border-radius: 8px;
+    margin-bottom: 14px;
+  }
+  .qr-svg-frame {
+    padding: 10px;
+    background: #FFFFFF;
+    border: 1px solid #E4E2DC;
+    border-radius: 6px;
+    line-height: 0;
+  }
+  .qr-ref {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #525860;
+  }
+  .qr-ref code {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: #111315;
+    background: #F6F5F1;
+    padding: 2px 6px;
+    border: 1px solid #E4E2DC;
+    border-radius: 4px;
+  }
+  .btn-simulator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 11px 16px;
+    background: #15803D;
+    color: #FFFFFF !important;
+    border: 1px solid #15803D;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    box-sizing: border-box;
+  }
+  .btn-simulator:hover {
+    background: #166534;
+    border-color: #166534;
+  }
+  .otp-form {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid #E4E2DC;
+    display: grid;
+    gap: 10px;
+  }
+  .otp-form label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #111315;
+  }
+  .otp-form input[name="otp_code"] {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid #E4E2DC;
+    border-radius: 6px;
+    background: #FFFFFF;
+    color: #111315;
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-align: center;
+    box-sizing: border-box;
+  }
+  .otp-form input[name="otp_code"]:focus {
+    outline: 2px solid #15803D;
+    outline-offset: 1px;
+  }
+  .btn-confirm-pay {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 16px;
+    background: #111315;
+    color: #FFFFFF;
+    border: 1px solid #111315;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-confirm-pay:hover {
+    background: #1f2428;
+  }
+  @media (max-width: 720px) {
+    .checkout-grid { grid-template-columns: 1fr; }
+    .checkout-head { flex-direction: column; }
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div class="checkout-page">
+  <a class="checkout-back" href="/booking/{{ pay.venue_id }}">&larr; Back to slot selection</a>
+
+  <section class="checkout-shell" aria-labelledby="checkout-title">
+    {% if error %}<div class="flash error" role="alert" style="margin-bottom: 16px;">{{ error }}</div>{% endif %}
+    <div class="checkout-head">
+      <div>
+        <div class="checkout-kicker">Mandatory Online QR Payment</div>
+        <h1 id="checkout-title">Complete Payment to Confirm Slot</h1>
+      </div>
+      <div
+        id="payment-status-badge"
+        class="checkout-status-badge {{ pay.status if pay.status in ('pending', 'accepted', 'paid') else 'pending' }}"
+        role="status"
+        aria-live="polite"
+      >
+        {% if pay.status == 'paid' %}
+          Paid
+        {% elif pay.status == 'accepted' %}
+          Payment Accepted &mdash; Enter Code
+        {% else %}
+          Pending Scan
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="checkout-grid">
+      <div class="checkout-card">
+        <h2>Booking Summary</h2>
+        <div class="summary-list">
+          <div class="summary-row">
+            <span class="summary-label">Venue</span>
+            <span class="summary-value">{{ pay.venue_name }}</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Sport / Area</span>
+            <span class="summary-value">
+              {% if pay.sport %}{{ pay.sport }}{% endif %}{% if pay.sport and pay.area %} &middot; {% endif %}{% if pay.area %}{{ pay.area }}{% endif %}{% if not pay.sport and not pay.area %}Court Reservation{% endif %}
+            </span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Date</span>
+            <span class="summary-value">
+              {% if pay.date %}{{ pay.date }}{% elif pay.start_at %}{{ pay.start_at[8:10] }}/{{ pay.start_at[5:7] }}/{{ pay.start_at[:4] }}{% endif %}
+            </span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Time Slot</span>
+            <span class="summary-value">
+              {% if pay.time_slot %}{{ pay.time_slot }}{% elif pay.start_at and pay.end_at %}{{ pay.start_at[11:16] }}&ndash;{{ pay.end_at[11:16] }}{% endif %}
+            </span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Total Amount</span>
+            <span class="summary-amount">{{ "{:,}".format(pay.amount) }} VND</span>
+          </div>
+        </div>
+
+        <div class="checkout-steps">
+          <h3>How to Pay (3 Steps)</h3>
+          <ol>
+            <li>Scan QR or open Simulator using the button on the right.</li>
+            <li>Enter exact amount (<strong>{{ "{:,}".format(pay.amount) }}</strong>) &amp; click Accept.</li>
+            <li>Enter the 6-digit confirmation code shown in the simulator below.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="checkout-card">
+        <h2>Scan QR Code</h2>
+        <div class="qr-box">
+          <div class="qr-svg-frame">{{ qr_svg | safe }}</div>
+          <div class="qr-ref">Payment reference: <code>{{ pay.token }}</code></div>
+        </div>
+
+        <a href="/payment/{{ pay.token }}/scan" target="_blank" rel="noopener" class="btn-simulator">
+          Open QR Scanner Simulator &#8599;
+        </a>
+
+        <form method="post" action="/payment/{{ pay.token }}/confirm" class="otp-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <label for="otp-code">6-Digit Confirmation Code</label>
+          <input
+            id="otp-code"
+            type="text"
+            name="otp_code"
+            maxlength="6"
+            inputmode="numeric"
+            pattern="[0-9]{6}"
+            autocomplete="one-time-code"
+            required
+            placeholder="6-digit code"
+          />
+          <button type="submit" class="btn-confirm-pay">Verify &amp; Confirm Booking</button>
+        </form>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function() {
+  const badge = document.getElementById("payment-status-badge");
+  const statusUrl = "/api/payment/{{ pay.token }}/status";
+  if (!badge) return;
+
+  let timerId = null;
+
+  function applyStatus(status) {
+    badge.classList.remove("pending", "accepted", "paid");
+    if (status === "paid") {
+      badge.classList.add("paid");
+      badge.textContent = "Paid";
+      if (timerId) {
+        clearInterval(timerId);
+        timerId = null;
+      }
+    } else if (status === "accepted") {
+      badge.classList.add("accepted");
+      badge.textContent = "Payment Accepted \u2014 Enter Code";
+    } else {
+      badge.classList.add("pending");
+      badge.textContent = "Pending Scan";
+    }
+  }
+
+  async function pollStatus() {
+    try {
+      const res = await fetch(statusUrl, { headers: { "Accept": "application/json" } });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data && data.status) {
+        applyStatus(data.status);
+      }
+    } catch (_) {
+      // Keep polling silently on transient network error
+    }
+  }
+
+  if ("{{ pay.status }}" !== "paid") {
+    timerId = setInterval(pollStatus, 1500);
+  }
+})();
+</script>
+{% endblock %}

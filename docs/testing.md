@@ -68,6 +68,18 @@ Every P0 story is covered by at least three test cases: at least one normal case
 | **TC-34** | **US06** Owner adds venue | Boundary | Photo upload size = 5 MB + 1 byte | HTTP 413 Payload Too Large / 422, file size limit exceeded | boundary, just above |
 | **TC-35** | **US06** Owner adds venue | Error | Customer account attempts to access `/owner/venues/new` | HTTP 403 Forbidden, customer denied access to owner portal (BR14) | error |
 
+### Additional P1/P2, Security, Analytics, and Admin Coverage (`BR15`–`BR19`)
+
+| Suite | Scope & Rules Covered | Key Scenarios Verified |
+|---|---|---|
+| `tests/test_my_bookings.py` | **US07–08** (`BR14`, `BR15`) | Tiered cancellation (>= 24 h 100% refund, 2–24 h 50% refund, < 2 h refused), `.ics` export, ownership guard |
+| `tests/test_owner_schedule.py` | **US09** (`BR14`, `BR16`, `BR17`) | Single-slot block/unblock, batch-block skipping booked days atomically, out-of-range hour validation |
+| `tests/test_owner_pricing.py` | **US11** (`BR12`, `BR13`, `BR14`) | Peak-hour pricing rule creation, overlap rejection, rule deletion |
+| `tests/test_reviews.py` | **US12** (`BR14`, `BR18`, `BR19`) | Review submission on completed bookings (including past `end_at`), 1–5 star & 1,000-char bounds, 3-report auto-hide |
+| `tests/test_owner_analytics.py` | **US10** (`BR14`) | Owner revenue/booking summary metrics, per-venue breakdown, CSV export, customer 403 guard |
+| `tests/test_admin.py` | **US26–28** (`BR14`, `BR19`) | Admin stats API, user creation/suspension, venue activation toggle, review moderation |
+| `tests/test_security_and_password.py`<br>`tests/test_security_and_fixes.py` | Security & regression fixes (`BR2`, `BR14`, `BR18`) | Session CSRF validation (`X-CSRFToken` & form), 20 req/min rate limiting (429), password reset (1 h expiry, single-use, non-enumeration), `safe_next` open-redirect guard, `CompatRow._normalize` `:00` preservation |
+
 ---
 
 ## 3. Automated tests
@@ -190,9 +202,7 @@ tests/test_venue.py::test_gallery_shows_only_this_venues_photos PASSED   [100%]
 ============================= 89 passed in 22.50s ==============================
 ```
 
-The output above is the baseline captured when this guide was first written. After the
-Following Milestone 5 operations and monitoring test additions, `python -m pytest -q` passed **289 tests** on 11/11/2026
-(`289 passed`); the run time varies by machine.
+The output above is the baseline captured when this guide was first written. Following Milestone 4/5 feature, security, owner analytics, admin, and operations test additions, `python -m pytest -q` collects **352 tests** (`352 passed`); the run time varies by machine.
 
 ---
 

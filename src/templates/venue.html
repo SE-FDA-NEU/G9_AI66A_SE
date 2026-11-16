@@ -6,22 +6,43 @@
     background: #ffffff;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
-    padding: 32px;
+    overflow: hidden;
     margin-bottom: 24px;
     box-shadow: var(--shadow-sm);
   }
+  .venue-cover-banner {
+    height: 250px;
+    position: relative;
+    background-color: #153323;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: flex-end;
+    padding: 28px 32px;
+    color: #fff;
+  }
+  .venue-cover-banner::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(10, 26, 18, 0.15) 0%, rgba(10, 26, 18, 0.82) 100%);
+  }
   .venue-top-row {
+    position: relative;
+    z-index: 2;
+    width: 100%;
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: flex-end;
     flex-wrap: wrap;
     gap: 16px;
-    margin-bottom: 24px;
   }
   .venue-title-group h1 {
     margin: 0 0 10px;
-    font-size: 28px;
+    font-size: clamp(28px, 4vw, 38px);
     font-weight: 800;
+    color: #ffffff !important;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
   }
   .venue-pills {
     display: flex;
@@ -29,27 +50,29 @@
     flex-wrap: wrap;
   }
   .venue-pills .pill {
-    padding: 6px 14px;
+    padding: 5px 12px;
     border-radius: 9999px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
   }
-  .pill.sport { background: #e9efdf; color: #355e3e; }
-  .pill.area { background: #f1f5f9; color: #475569; }
-  .pill.rating { background: #fef3c7; color: #b45309; }
+  .pill.sport { background: #d3eb7b; color: #143321; }
+  .pill.area { background: rgba(9, 24, 16, 0.78); border: 1px solid rgba(255, 255, 255, 0.28); backdrop-filter: blur(6px); color: #ffffff; }
+  .pill.rating { background: #fef3c7; color: #78350f; }
 
+  .venue-header-content {
+    padding: 24px 32px;
+  }
   .facts-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 16px;
-    padding: 20px;
-    background: #f8fafc;
+    padding: 18px 20px;
+    background: #f8faf9;
     border-radius: var(--radius-md);
     border: 1px solid var(--border-color);
-    margin-bottom: 24px;
   }
   .fact-item .label {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     color: var(--text-muted);
     text-transform: uppercase;
@@ -62,150 +85,166 @@
     margin-top: 4px;
   }
 
-  .amenities-section {
-    margin-bottom: 24px;
-  }
-  .amenities-title {
-    font-size: 14px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--text-muted);
-    margin-bottom: 12px;
-  }
-  .amenities-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px;
-  }
-  .amenity-chip {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: #f8fafc;
-    border: 1px solid var(--border-color);
-    padding: 10px 14px;
-    border-radius: var(--radius-sm);
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-main);
-  }
+  .facts { display: none; }
 
-  .facts { display: none; } /* Kept for DOM parser backwards compatibility */
-
-  .gallery { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 24px; }
-  .gallery img { width: 240px; height: 160px; object-fit: cover; border-radius: var(--radius-md); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); transition: transform 0.2s ease; }
+  .gallery { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 20px; }
+  .gallery img { width: 240px; height: 156px; object-fit: cover; border-radius: var(--radius-md); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); transition: transform 0.2s ease; }
   .gallery img:hover { transform: scale(1.02); }
 
-  .day-picker { display: flex; gap: 14px; align-items: end; margin-bottom: 20px; }
-  .day-picker label { display: flex; flex-direction: column; font-size: 13px; font-weight: 700; gap: 6px; }
+  .day-picker { display: flex; gap: 10px; align-items: center; margin: 0; }
+  .day-picker label { display: flex; align-items: center; font-size: 13px; font-weight: 700; gap: 8px; margin: 0; white-space: nowrap; }
+  .day-picker input[type="date"] { height: 38px; min-height: 38px; padding: 6px 10px; font-size: 13px; }
 
-  .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
-  .slot { padding: 14px 10px; border-radius: var(--radius-md); text-align: center; font-size: 13px; font-weight: 600; border: 1.5px solid; transition: all 0.2s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .slot b { display: block; font-variant-numeric: tabular-nums; font-size: 15px; margin-bottom: 4px; font-family: var(--font-mono); }
+  .slots { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .slot { min-height: 76px; padding: 12px 10px; border-radius: var(--radius-md); text-align: center; font-size: 13px; font-weight: 600; border: 1.5px solid; transition: all 0.15s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .slot b { display: block; font-variant-numeric: tabular-nums; font-size: 15px; margin-bottom: 3px; font-family: var(--font-mono); }
   .slot.free { background: #f0fdf4; border-color: #86efac; color: #166534; cursor: pointer; text-decoration: none; }
-  .slot.free:hover { background: #dcfce7; border-color: #22c55e; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(34, 197, 94, 0.25); }
+  .slot.free:hover { background: #dcfce7; border-color: #22c55e; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2); }
+  .slot.free.selected { background: #166534; border-color: #14532d; color: #ffffff; box-shadow: 0 4px 14px rgba(22, 101, 52, 0.3); transform: translateY(-2px); }
+  .slot.free.selected .slot-price, .slot.free.selected .slot-action { color: #dcfce7; }
+  .slot-price { font-size: 11px; font-weight: 700; margin-top: 2px; font-family: var(--font-mono); }
+  .slot-peak-badge { display: inline-block; margin-top: 3px; padding: 1px 6px; border-radius: 9999px; font-size: 10px; font-weight: 800; background: #fef3c7; color: #92400e; text-transform: uppercase; }
+  .slot.free.selected .slot-peak-badge { background: #fde68a; color: #78350f; }
   .slot.booked { background: #fef2f2; border-color: #fca5a5; color: #991b1b; }
   .slot.blocked { background: #f1f5f9; border-color: #cbd5e1; color: #64748b; }
-  .slot.past { background: #f8fafc; border-color: #e2e8f0; color: #94a3b8; }
+  .slot.past { background: #f8fafc; border-color: #e2e8f0; color: #64748b; }
 
-  .state { padding: 32px; border-radius: var(--radius-md); background: #fff; border: 1.5px dashed var(--border-color); text-align: center; margin-bottom: 16px; font-weight: 600; color: var(--text-muted); }
-  .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid #cbd5e1; border-top-color: var(--brand);
-             border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 10px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  [hidden] { display: none !important; }
-
-  .peak-notice-box {
-    background: #fffbeb;
-    border: 1px solid #fde68a;
+  .selected-slot-bar {
+    position: sticky;
+    bottom: 16px;
+    z-index: 20;
+    margin-top: 18px;
+    padding: 16px 20px;
+    background: #132e20;
+    color: #ffffff;
     border-radius: var(--radius-md);
-    padding: 14px 18px;
-    margin-bottom: 20px;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.28);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .selected-slot-meta { display: flex; flex-direction: column; gap: 3px; }
+  .selected-slot-title { font-size: 15px; font-weight: 800; color: #ffffff; }
+  .selected-slot-breakdown { font-size: 12px; color: #cbd5e1; }
+  .selected-slot-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .selected-slot-total { font-size: 18px; font-weight: 800; color: #d3eb7b; font-family: var(--font-mono); margin-right: 6px; }
+  .map-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 5px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--brand);
+    text-decoration: none;
+  }
+  .map-link:hover { text-decoration: underline; }
+  .policy-box {
+    background: #f8faf9;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    margin-top: 18px;
+    font-size: 12px;
+    color: var(--text-body);
     display: flex;
     align-items: center;
-    gap: 12px;
-    font-size: 13px;
-    color: #92400e;
-    font-weight: 600;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
   }
+  .policy-box strong { color: var(--text-main); }
+  .policy-tiers { display: flex; flex-wrap: wrap; gap: 8px; }
+  .policy-tier { background: #fff; border: 1px solid var(--border-color); border-radius: 6px; padding: 4px 9px; font-size: 12px; font-weight: 600; }
+
+  @media (max-width: 768px) {
+    .venue-cover-banner { height: 210px; padding: 20px 18px; }
+    .venue-header-content { padding: 18px; }
+    .gallery img { width: 100%; height: 180px; }
+    .slots { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .selected-slot-bar { flex-direction: column; align-items: stretch; }
+    .selected-slot-actions { justify-content: space-between; }
+  }
+
+  .state { padding: 28px; border-radius: var(--radius-md); background: #fff; border: 1.5px dashed var(--border-color); text-align: center; margin-bottom: 16px; font-weight: 600; color: var(--text-muted); }
+  .spinner { display: inline-block; width: 18px; height: 18px; border: 2.5px solid #cbd5e1; border-top-color: var(--brand);
+             border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  [hidden] { display: none !important; }
 </style>
 {% endblock %}
 {% block content %}
-<p class="muted" style="margin-bottom: 16px;"><a href="/search" style="font-weight: 600;">&larr; Back to venue search</a></p>
+<p class="muted" style="margin-bottom: 14px;"><a href="/search" style="font-weight: 600;">&larr; Back to venue search</a></p>
 
 <div class="venue-header-box">
-  <div class="venue-top-row">
-    <div class="venue-title-group">
-      <h1>{{ venue.name }}</h1>
-      <div class="venue-pills">
-        <span class="pill sport">{{ venue.sport }}</span>
-        <span class="pill area">📍 {{ venue.area }}</span>
-        {% if rating_summary and rating_summary.avg_rating %}<span class="pill rating">★ {{ rating_summary.avg_rating }} · {{ rating_summary.review_count }} review{% if rating_summary.review_count > 1 %}s{% endif %}</span>{% endif %}
+  <div class="venue-cover-banner venue-photo-placeholder sport-{{ venue.sport|lower }} image-{{ venue.id % (4 if venue.sport == 'Football' else 5) }}" style="margin-top:0; border-radius:0;">
+    <div class="venue-top-row">
+      <div class="venue-title-group">
+        <h1>{{ venue.name }}</h1>
+        <div class="venue-pills">
+          <span class="pill sport">{{ venue.sport }}</span>
+          <span class="pill area">{{ venue.area }}</span>
+          {% if rating_summary and rating_summary.avg_rating %}<span class="pill rating">★ {{ rating_summary.avg_rating }} · {{ rating_summary.review_count }} review{% if rating_summary.review_count > 1 %}s{% endif %}</span>{% endif %}
+        </div>
+      </div>
+      <a class="button" href="/booking/{{ venue.id }}" style="padding: 11px 22px; font-size: 14px; background: #d3eb7b; color: #143321;">Book This Venue</a>
+    </div>
+  </div>
+
+  <div class="venue-header-content">
+    <div class="facts-grid">
+      <div class="fact-item">
+        <div class="label">Address</div>
+        <div class="value">{{ venue.address }}, {{ venue.area }}</div>
+        {% set gmap_target = (venue.latitude ~ ',' ~ venue.longitude) if (venue.latitude is not none and venue.longitude is not none) else (venue.address ~ ', ' ~ venue.area ~ ', Hanoi, Vietnam') %}
+        <a class="map-link" href="https://www.google.com/maps/search/?api=1&query={{ gmap_target | urlencode }}" target="_blank" rel="noopener noreferrer">Open in Google Maps &#8599;</a>
+      </div>
+      <div class="fact-item">
+        <div class="label">Opening hours</div>
+        <div class="value">{{ '%02d:00' % venue.open_hour }} &ndash; {{ '%02d:00' % venue.close_hour }}</div>
+      </div>
+      <div class="fact-item">
+        <div class="label">Base rate</div>
+        <div class="value" style="color: #286b45;">{{ "{:,}".format(venue.hourly_price) }} VND <small style="font-weight: 500; color: var(--text-muted); font-size: 13px;">/ hour</small></div>
       </div>
     </div>
-    <a class="button" href="/booking/{{ venue.id }}" style="padding: 12px 26px; font-size: 15px;">Book This Venue</a>
-  </div>
 
-  <div class="facts-grid">
-    <div class="fact-item">
-      <div class="label">Location & Address</div>
-      <div class="value">{{ venue.address }}, {{ venue.area }}</div>
-    </div>
-    <div class="fact-item">
-      <div class="label">Operating Hours</div>
-      <div class="value">{{ '%02d:00' % venue.open_hour }} &ndash; {{ '%02d:00' % venue.close_hour }}</div>
-    </div>
-    <div class="fact-item">
-      <div class="label">Standard Hourly Rate</div>
-      <div class="value" style="color: #286b45;">{{ "{:,}".format(venue.hourly_price) }} VND <small style="font-weight: 500; color: var(--text-muted); font-size: 13px;">/ hour</small></div>
-    </div>
-  </div>
+    <dl class="facts">
+      <dt>Sport</dt><dd>{{ venue.sport }}</dd>
+      <dt>Area</dt><dd>{{ venue.area }}</dd>
+      <dt>Address</dt><dd>{{ venue.address }}, {{ venue.area }}</dd>
+      <dt>Opening hours</dt><dd>{{ '%02d:00' % venue.open_hour }}&ndash;{{ '%02d:00' % venue.close_hour }}</dd>
+      <dt>Standard price</dt><dd>{{ "{:,}".format(venue.hourly_price) }} VND per hour</dd>
+    </dl>
 
-  <dl class="facts">
-    <dt>Sport</dt><dd>{{ venue.sport }}</dd>
-    <dt>Area</dt><dd>{{ venue.area }}</dd>
-    <dt>Address</dt><dd>{{ venue.address }}, {{ venue.area }}</dd>
-    <dt>Opening hours</dt><dd>{{ '%02d:00' % venue.open_hour }}&ndash;{{ '%02d:00' % venue.close_hour }}</dd>
-    <dt>Standard price</dt><dd>{{ "{:,}".format(venue.hourly_price) }} VND per hour
-      <span class="muted">(peak hours may cost more - the exact price is shown before you confirm)</span></dd>
-  </dl>
-
-  {% if photos %}
-  <div class="gallery">
-    {% for p in photos %}<img src="/venues/{{ venue.id }}/photos/{{ p.id }}" alt="Photo {{ loop.index }} of {{ venue.name }}">{% endfor %}
+    {% if photos %}
+    <div class="gallery">
+      {% for p in photos %}<img src="/venues/{{ venue.id }}/photos/{{ p.id }}" alt="Photo {{ loop.index }} of {{ venue.name }}">{% endfor %}
+    </div>
+    {% endif %}
   </div>
-  {% else %}
-  <div class="venue-photo-placeholder sport-{{ venue.sport|lower }} image-{{ venue.id % (4 if venue.sport == 'Football' else 5) }}" role="img" aria-label="Illustrative photo {{ venue.sport }}">
-    <span>Illustrative photo · {{ venue.sport }}</span>
-  </div>
-  {% endif %}
 </div>
 
 <div class="card">
-  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
-    <div>
-      <h2 style="margin: 0 0 4px;">Live Availability &amp; Free Hours</h2>
-      <p class="muted" style="margin: 0;">Click any green slot to proceed directly to instant checkout.</p>
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--border-color);">
+    <div style="display: flex; align-items: center; gap: 18px; flex-wrap: wrap;">
+      <h2 style="margin: 0;">Available hours</h2>
+      <div style="font-size: 12px; display: flex; gap: 12px; color: var(--text-muted); font-weight: 600;">
+        <span style="display: inline-flex; align-items: center; gap: 5px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: #86efac; display: inline-block;"></span> Free</span>
+        <span style="display: inline-flex; align-items: center; gap: 5px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: #fca5a5; display: inline-block;"></span> Booked</span>
+        <span style="display: inline-flex; align-items: center; gap: 5px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: #cbd5e1; display: inline-block;"></span> Closed</span>
+      </div>
     </div>
-    <div style="font-size: 13px; display: flex; gap: 12px; color: var(--text-muted);">
-      <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: #86efac; display: inline-block;"></span> Free (Bookable)</span>
-      <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: #fca5a5; display: inline-block;"></span> Booked</span>
-      <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: #cbd5e1; display: inline-block;"></span> Closed</span>
-    </div>
+
+    <form class="day-picker" onsubmit="return false">
+      <label>Select Date
+        <input type="date" id="day" value="{{ day }}" min="{{ today }}">
+      </label>
+    </form>
   </div>
 
-  <div class="peak-notice-box">
-    <span>⚡</span>
-    <span><strong>Peak Pricing Notice:</strong> Slots between 17:00 and 21:00 apply evening rates. Transparently itemized in your price quote.</span>
-  </div>
-
-  <form class="day-picker" onsubmit="return false">
-    <label>Select Date
-      <input type="date" id="day" value="{{ day }}" min="{{ today }}">
-    </label>
-  </form>
-
-  <!-- One of the four states below is visible at a time (docs/ui.md section 2). -->
   <div class="state" id="loading" role="status"><span class="spinner"></span>Loading free hours&hellip;</div>
   <div class="state" id="error" role="alert" hidden>
     <p id="error-text"></p>
@@ -213,48 +252,72 @@
   </div>
   <div class="state" id="empty" role="status" hidden></div>
   <div id="data" hidden>
-    <p id="summary" style="font-weight: 700; margin-bottom: 18px; color: var(--text-main); font-size: 15px;"></p>
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+      <p id="summary" style="font-weight: 700; margin: 0; color: var(--text-main); font-size: 14px;"></p>
+      <div class="duration-presets" role="group" aria-label="Quick duration" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+        <span style="font-size:12px; font-weight:600; color:var(--text-muted);">Quick duration:</span>
+        <button type="button" class="button secondary duration-preset-btn is-active" data-duration="1" style="padding:4px 10px; font-size:12px;">1h</button>
+        <button type="button" class="button secondary duration-preset-btn" data-duration="2" style="padding:4px 10px; font-size:12px;">2h</button>
+        <button type="button" class="button secondary duration-preset-btn" data-duration="3" style="padding:4px 10px; font-size:12px;">3h</button>
+        <button type="button" class="button secondary duration-preset-btn" data-duration="4" style="padding:4px 10px; font-size:12px;">4h</button>
+      </div>
+    </div>
     <div class="slots" id="slots"></div>
+    <div class="selected-slot-bar" id="selected-slot-bar" hidden>
+      <div class="selected-slot-meta">
+        <div class="selected-slot-title" id="selected-slot-range"></div>
+        <div class="selected-slot-breakdown" id="selected-slot-breakdown">Fetching live quote&hellip;</div>
+      </div>
+      <div class="selected-slot-actions">
+        <span class="selected-slot-total" id="selected-slot-total"></span>
+        <button type="button" id="clear-slots-btn" class="button secondary" style="padding: 8px 12px; font-size: 12px;">Clear</button>
+        <a id="book-selected-btn" class="button" href="/booking/{{ venue.id }}" style="padding: 10px 18px; font-size: 14px;">Book Selected Slots &rarr;</a>
+      </div>
+    </div>
+  </div>
+  <div class="policy-box">
+    <strong>Cancellation Policy</strong>
+    <div class="policy-tiers">
+      <span class="policy-tier">&ge; 24h: <strong>100% refund</strong></span>
+      <span class="policy-tier">2h&ndash;24h: <strong>50% refund</strong></span>
+      <span class="policy-tier">&lt; 2h: <strong>Non-refundable</strong></span>
+    </div>
   </div>
   <noscript><div class="state">This page needs JavaScript to show the free hours.</div></noscript>
 </div>
 
 <!-- Reviews Section -->
-<div class="card" style="margin-top: 24px; padding: 24px; border-radius: 12px;">
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
-    <div>
-      <h2 style="margin: 0 0 4px; font-size: 20px; font-weight: 800;">⭐ Player Reviews &amp; Ratings</h2>
-      <p class="muted" style="margin: 0; font-size: 13px;">Verified feedback from players who completed matches at this venue.</p>
-    </div>
+<div class="card" style="margin-top: 20px; padding: 24px; border-radius: 14px;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+    <h2 style="margin: 0; font-size: 20px; font-weight: 800;">Reviews</h2>
     {% if rating_summary and rating_summary.avg_rating %}
-    <div style="display: flex; align-items: center; gap: 8px; background: #fffbeb; border: 1px solid #fde68a; padding: 6px 14px; border-radius: 20px;">
-      <span style="font-size: 20px; color: #f59e0b;">★</span>
-      <span style="font-size: 18px; font-weight: 800; color: #b45309;">{{ rating_summary.avg_rating }} / 5.0</span>
-      <span class="muted" style="font-size: 12px;">({{ rating_summary.review_count }} review{% if rating_summary.review_count > 1 %}s{% endif %})</span>
+    <div style="display: flex; align-items: center; gap: 6px; background: #fffbeb; border: 1px solid #fde68a; padding: 5px 12px; border-radius: 20px;">
+      <span style="font-size: 16px; color: #f59e0b;">★</span>
+      <span style="font-size: 15px; font-weight: 800; color: #b45309;">{{ rating_summary.avg_rating }}</span>
+      <span class="muted" style="font-size: 12px;">({{ rating_summary.review_count }})</span>
     </div>
     {% endif %}
   </div>
 
   {% if not reviews %}
-  <div class="empty" style="text-align: center; padding: 32px 16px; border: 1px dashed var(--border-color); border-radius: 8px;">
-    <p class="muted" style="margin: 0;">No reviews for this venue yet. Book a session and be the first to share your experience!</p>
-  </div>
+  <p class="muted" style="margin: 0;">No reviews yet.</p>
   {% else %}
-  <div style="display: flex; flex-direction: column; gap: 16px;">
+  <div style="display: flex; flex-direction: column; gap: 14px;">
     {% for r in reviews %}
-    <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+    <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 14px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-weight: 700; font-size: 14px;">{{ r.author_name }}</span>
-          <span style="color: #f59e0b; font-size: 14px;">
+          <span style="color: #f59e0b; font-size: 13px;">
             {% for _ in range(r.rating) %}★{% endfor %}{% for _ in range(5 - r.rating) %}☆{% endfor %}
           </span>
         </div>
         <div style="display: flex; align-items: center; gap: 12px;">
           <span class="muted" style="font-size: 12px;">{{ r.created_at[:10] }}</span>
           <form method="post" action="/venues/{{ venue.id }}/reviews/{{ r.id }}/report" style="margin: 0; display: inline;">
-            <button type="submit" title="Report review for moderation" style="background: none; border: 0; color: #94a3b8; font-size: 12px; cursor: pointer; text-decoration: underline; padding: 0;">
-              🚩 Report
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" title="Report review" style="background: none; border: 0; color: #64748b; font-size: 12px; cursor: pointer; text-decoration: underline; padding: 0; min-height: auto; box-shadow: none;">
+              Report
             </button>
           </form>
         </div>
@@ -268,27 +331,172 @@
 
 <script>
 const venueId = {{ venue.id }};
+const standardPrice = {{ venue.hourly_price }};
 const dayInput = document.getElementById("day");
 const STATES = ["loading", "error", "empty", "data"];
+
+let currentSlots = [];
+let currentSlotPrices = {};
+let selectedStartHour = null;
+let selectedEndHour = null;
+let preferredDuration = 1;
+let quoteSeq = 0;
+let slotsSeq = 0;
 
 function show(...visible) {
   for (const id of STATES) document.getElementById(id).hidden = !visible.includes(id);
 }
 
-function asDisplayDate(iso) {             // 2026-10-20 -> 20/10/2026
+function asDisplayDate(iso) {
   const [y, m, d] = iso.split("-");
   return `${d}/${m}/${y}`;
 }
 
+function formatVnd(amount) {
+  return Number(amount || 0).toLocaleString("en-US");
+}
+
+function slotHour(slot) {
+  return typeof slot.hour === "number" ? slot.hour : parseInt(slot.start.split(":")[0], 10);
+}
+
+function priceForHour(hour, slot) {
+  if (currentSlotPrices && currentSlotPrices[hour] !== undefined) return currentSlotPrices[hour];
+  if (currentSlotPrices && currentSlotPrices[String(hour)] !== undefined) return currentSlotPrices[String(hour)];
+  if (slot && typeof slot.price === "number") return slot.price;
+  return standardPrice;
+}
+
+function isContiguousFree(startH, endH) {
+  if (endH < startH || (endH - startH + 1) > 4) return false;
+  const byHour = new Map(currentSlots.map((s) => [slotHour(s), s]));
+  for (let h = startH; h <= endH; h++) {
+    const s = byHour.get(h);
+    if (!s || s.status !== "free") return false;
+  }
+  return true;
+}
+
+function updateSelectedUI() {
+  const bar = document.getElementById("selected-slot-bar");
+  const cells = document.querySelectorAll("#slots .slot.free");
+  for (const cell of cells) {
+    const h = parseInt(cell.dataset.hour, 10);
+    const active = selectedStartHour !== null && h >= selectedStartHour && h <= selectedEndHour;
+    cell.classList.toggle("selected", active);
+  }
+  if (selectedStartHour === null) {
+    bar.hidden = true;
+    return;
+  }
+  const hours = selectedEndHour - selectedStartHour + 1;
+  const startStr = `${String(selectedStartHour).padStart(2, "0")}:00`;
+  const endStr = `${String(selectedEndHour + 1).padStart(2, "0")}:00`;
+  document.getElementById("selected-slot-range").textContent =
+    `${startStr}–${endStr} (${hours} ${hours === 1 ? "hour" : "hours"})`;
+  document.getElementById("book-selected-btn").href =
+    `/booking/${venueId}?date=${encodeURIComponent(dayInput.value)}&start_hour=${selectedStartHour}&hours=${hours}`;
+  bar.hidden = false;
+  fetchSelectedQuote(dayInput.value, selectedStartHour, hours);
+}
+
+async function fetchSelectedQuote(day, startH, hours) {
+  const seq = ++quoteSeq;
+  const breakdownEl = document.getElementById("selected-slot-breakdown");
+  const totalEl = document.getElementById("selected-slot-total");
+  breakdownEl.textContent = "Calculating quote...";
+  try {
+    const res = await fetch(`/api/quote/${venueId}?date=${encodeURIComponent(day)}&start_hour=${startH}&hours=${hours}`);
+    if (seq !== quoteSeq) return;
+    if (res.ok) {
+      const q = await res.json();
+      if (seq !== quoteSeq) return;
+      const parts = (q.segments || []).map((seg) => {
+        const tag = seg.price_per_hour > standardPrice ? "Peak" : "Standard";
+        return `${seg.from}–${seg.to} (${tag}: ${formatVnd(seg.price_per_hour)}/h)`;
+      });
+      breakdownEl.textContent = parts.join(" · ") || `${hours}h selected`;
+      totalEl.textContent = `${formatVnd(q.total_price)} VND`;
+      return;
+    }
+  } catch (err) {
+    if (seq !== quoteSeq) return;
+  }
+  if (seq !== quoteSeq) return;
+  let total = 0;
+  let peakCount = 0;
+  for (let h = startH; h <= startH + hours - 1; h++) {
+    const p = priceForHour(h);
+    total += p;
+    if (p > standardPrice) peakCount++;
+  }
+  breakdownEl.textContent = peakCount > 0
+    ? `${hours - peakCount}h Standard · ${peakCount}h Peak`
+    : `${hours}h Standard rate`;
+  totalEl.textContent = `${formatVnd(total)} VND`;
+}
+
+function handleSlotClick(event, hour) {
+  event.preventDefault();
+  if (selectedStartHour === null) {
+    let targetEnd = hour + preferredDuration - 1;
+    while (targetEnd > hour && !isContiguousFree(hour, targetEnd)) {
+      targetEnd--;
+    }
+    selectedStartHour = hour;
+    selectedEndHour = targetEnd;
+  } else if (selectedStartHour === hour && selectedEndHour === hour) {
+    selectedStartHour = null;
+    selectedEndHour = null;
+  } else if (hour > selectedStartHour && hour <= selectedStartHour + 3 && isContiguousFree(selectedStartHour, hour)) {
+    selectedEndHour = hour;
+  } else {
+    let targetEnd = hour + preferredDuration - 1;
+    while (targetEnd > hour && !isContiguousFree(hour, targetEnd)) {
+      targetEnd--;
+    }
+    selectedStartHour = hour;
+    selectedEndHour = targetEnd;
+  }
+  updateSelectedUI();
+}
+
+document.querySelectorAll(".duration-preset-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    preferredDuration = parseInt(btn.dataset.duration || "1", 10) || 1;
+    document.querySelectorAll(".duration-preset-btn").forEach((b) => {
+      b.classList.toggle("is-active", b === btn);
+    });
+    if (selectedStartHour !== null) {
+      let targetEnd = selectedStartHour + preferredDuration - 1;
+      while (targetEnd > selectedStartHour && !isContiguousFree(selectedStartHour, targetEnd)) {
+        targetEnd--;
+      }
+      selectedEndHour = targetEnd;
+      updateSelectedUI();
+    }
+  });
+});
+
 function slotCell(slot) {
   const text = (label) => window.arenaText ? window.arenaText(label) : label;
+  const h = slotHour(slot);
+  const price = priceForHour(h, slot);
+  const isPeak = price > standardPrice;
+  const peakBadge = isPeak ? `<span class="slot-peak-badge">Peak</span>` : "";
+
   if (slot.status === "free") {
     const a = document.createElement("a");
     a.className = "slot free";
-    const startH = parseInt(slot.start.split(":")[0]);
-    a.href = `/booking/${venueId}?date=${encodeURIComponent(dayInput.value)}&start_hour=${startH}&hours=1`;
-    a.title = `${text("Click to book")} ${slot.start}-${slot.end}`;
-    a.innerHTML = `<b>${slot.start}-${slot.end}</b><span style="font-size:11px; font-weight:700; text-transform:uppercase;">${text("Book now")} &rarr;</span>`;
+    a.dataset.hour = String(h);
+    a.href = `/booking/${venueId}?date=${encodeURIComponent(dayInput.value)}&start_hour=${h}&hours=1`;
+    a.title = `${text("Click to select")} ${slot.start}-${slot.end}`;
+    a.innerHTML =
+      `<b>${slot.start}-${slot.end}</b>` +
+      `<span class="slot-price">${formatVnd(price)} VND</span>` +
+      peakBadge +
+      `<span class="slot-action" style="font-size:10px; font-weight:700; text-transform:uppercase; margin-top:4px;">${text("Select")}</span>`;
+    a.addEventListener("click", (e) => handleSlotClick(e, h));
     return a;
   }
   const cell = document.createElement("div");
@@ -298,25 +506,34 @@ function slotCell(slot) {
 }
 
 async function loadSlots() {
+  const seq = ++slotsSeq;
   const day = dayInput.value;
+  selectedStartHour = null;
+  selectedEndHour = null;
+  document.getElementById("selected-slot-bar").hidden = true;
   show("loading");
   history.replaceState(null, "", `?date=${day}`);
   let response, body;
   try {
     response = await fetch(`/api/venues/${venueId}?date=${encodeURIComponent(day)}`);
+    if (seq !== slotsSeq) return;
     body = await response.json();
+    if (seq !== slotsSeq) return;
   } catch (err) {
+    if (seq !== slotsSeq) return;
     document.getElementById("error-text").textContent = window.arenaText
       ? window.arenaText("We can't reach the server. Check that the app is still running, then try again.")
       : "We can't reach the server. Check that the app is still running, then try again.";
     return show("error");
   }
-  if (!response.ok) {                     // e.g. a date in the past (BR10): the server says why
+  if (!response.ok) {
     document.getElementById("error-text").textContent = window.arenaText ? window.arenaText(body.error) : body.error;
     return show("error");
   }
+  currentSlots = body.slots || [];
+  currentSlotPrices = body.slot_prices || {};
   const grid = document.getElementById("slots");
-  grid.replaceChildren(...body.slots.map((slot) => slotCell(slot)));
+  grid.replaceChildren(...currentSlots.map((slot) => slotCell(slot)));
   if (window.arenaTranslate) window.arenaTranslate(grid);
   const word = (value) => window.arenaText ? window.arenaText(value) : value;
   document.getElementById("summary").textContent =
@@ -330,6 +547,11 @@ async function loadSlots() {
   show("data");
 }
 
+document.getElementById("clear-slots-btn").addEventListener("click", () => {
+  selectedStartHour = null;
+  selectedEndHour = null;
+  updateSelectedUI();
+});
 dayInput.addEventListener("change", loadSlots);
 document.getElementById("retry").addEventListener("click", loadSlots);
 loadSlots();

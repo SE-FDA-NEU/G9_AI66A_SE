@@ -7,8 +7,8 @@ works on both backends thanks to `db_compat.CompatConnection`.
 import os
 import sqlite3
 import threading
+import time
 from pathlib import Path
-from urllib.parse import urlparse
 
 from flask import current_app, g
 
@@ -42,16 +42,17 @@ def _postgres_connect(url):
         "keepalives_count": 3,
     }
     try:
-        conn = psycopg2.connect(
-            url,
-            options=f"-c search_path={POSTGRES_SCHEMA},public",
-            **kwargs,
-        )
+        conn = psycopg2.connect(url, **kwargs)
     except TypeError:
-        # Fallback for unit tests where connect() mock lacks options or keepalive arguments
+        # Fallback for unit tests where connect() mock lacks keepalive arguments
         conn = psycopg2.connect(url, cursor_factory=psycopg2.extras.RealDictCursor)
 
     psycopg2.extras.register_uuid()
+    # Neon's PgBouncer pooler rejects startup `options=-c search_path=...`, so set it
+    # after connecting and commit so subsequent rollbacks do not revert the session setting.
+    with conn.cursor() as cursor:
+        cursor.execute(f'SET search_path TO "{POSTGRES_SCHEMA}", public')
+    conn.commit()
     return CompatConnection(conn, "postgres")
 
 
@@ -63,28 +64,33 @@ def _is_connection_alive(conn):
         with conn._conn.cursor() as cur:
             cur.execute("SELECT 1")
         return True
-    except Exception:
+    except Exception:  # noqa: BLE001
         return False
 
 
 def _get_reusable_postgres_conn():
     conn = getattr(_THREAD_LOCAL, "pg_conn", None)
     if conn is not None:
-        if _is_connection_alive(conn):
-            try:
+        last_ok = getattr(_THREAD_LOCAL, "pg_last_ok", 0.0)
+        recently_ok = (time.monotonic() - last_ok) < 15.0
+        try:
+            if not conn._conn.closed and (recently_ok or _is_connection_alive(conn)):
                 conn._conn.rollback()  # Ensure clean STATUS_READY state
+                _THREAD_LOCAL.pg_last_ok = time.monotonic()
                 return conn
-            except Exception:
-                pass
+        except Exception:  # noqa: BLE001, S110
+            pass
         # Connection dead or timed out by Neon; safely clean up
         try:
             conn.close()
-        except Exception:
+        except Exception:  # noqa: BLE001, S110
             pass
         _THREAD_LOCAL.pg_conn = None
+        _THREAD_LOCAL.pg_last_ok = 0.0
 
     new_conn = _postgres_connect(os.environ["DATABASE_URL"])
     _THREAD_LOCAL.pg_conn = new_conn
+    _THREAD_LOCAL.pg_last_ok = time.monotonic()
     return new_conn
 
 
@@ -120,12 +126,14 @@ def close_db(_error=None):
                 # Never auto-commit here; business transactions commit explicitly.
                 # Rollback ensures clean state and releases uncommitted locks.
                 conn.rollback()
-            except Exception:
+                _THREAD_LOCAL.pg_last_ok = time.monotonic()
+            except Exception:  # noqa: BLE001
                 try:
                     conn.close()
-                except Exception:
+                except Exception:  # noqa: BLE001, S110
                     pass
                 _THREAD_LOCAL.pg_conn = None
+                _THREAD_LOCAL.pg_last_ok = 0.0
         else:
             conn.close()
 

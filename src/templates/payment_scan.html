@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% block title %}QR Scanner Simulator{% endblock %}
+{% block style %}
+<style>
+  main:has(.sim-page) { max-width: 520px; margin-top: 32px; }
+  .sim-page { max-width: 440px; margin: 0 auto; }
+  .sim-card {
+    background: #FFFFFF;
+    border: 1px solid #E4E2DC;
+    border-radius: 8px;
+    overflow: hidden;
+    color: #111315;
+  }
+  .sim-header {
+    background: #111315;
+    color: #FFFFFF;
+    padding: 18px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .sim-header-title {
+    margin: 0;
+    font: 700 20px/1.1 'Barlow Condensed', sans-serif;
+    letter-spacing: 0.02em;
+    color: #FFFFFF;
+  }
+  .sim-header-tag {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: #15803D;
+    color: #FFFFFF;
+  }
+  .sim-body {
+    padding: 20px;
+    background: #F6F5F1;
+  }
+  .sim-details {
+    background: #FFFFFF;
+    border: 1px solid #E4E2DC;
+    border-radius: 6px;
+    padding: 14px 16px;
+    display: grid;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .sim-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 13px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #E4E2DC;
+  }
+  .sim-row:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+  .sim-label {
+    color: #525860;
+    font-weight: 600;
+  }
+  .sim-val {
+    color: #111315;
+    font-weight: 700;
+    text-align: right;
+  }
+  .sim-val.mono {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .sim-amount {
+    font-family: var(--font-mono);
+    font-size: 17px;
+    font-weight: 800;
+    color: #15803D;
+    font-variant-numeric: tabular-nums;
+  }
+  .sim-form {
+    background: #FFFFFF;
+    border: 1px solid #E4E2DC;
+    border-radius: 6px;
+    padding: 16px;
+    display: grid;
+    gap: 12px;
+  }
+  .sim-form label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #111315;
+  }
+  .sim-form input[name="amount"] {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid #E4E2DC;
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 700;
+    color: #111315;
+    background: #FFFFFF;
+    box-sizing: border-box;
+  }
+  .sim-form input[name="amount"]:focus {
+    outline: 2px solid #15803D;
+    outline-offset: 1px;
+  }
+  .sim-submit {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 16px;
+    background: #15803D;
+    color: #FFFFFF;
+    border: 1px solid #15803D;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .sim-submit:hover {
+    background: #166534;
+    border-color: #166534;
+  }
+  .sim-accepted {
+    background: #DCFCE7;
+    border: 1px solid #15803D;
+    border-radius: 6px;
+    padding: 18px 16px;
+    text-align: center;
+  }
+  .sim-accepted-title {
+    margin: 0 0 6px;
+    font-size: 16px;
+    font-weight: 800;
+    color: #15803D;
+  }
+  .sim-accepted-desc {
+    margin: 0 0 14px;
+    font-size: 13px;
+    color: #111315;
+  }
+  .sim-otp-box {
+    background: #FFFFFF;
+    border: 1px solid #15803D;
+    border-radius: 6px;
+    padding: 12px;
+  }
+  .sim-otp-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #525860;
+    margin-bottom: 4px;
+  }
+  .sim-otp-code {
+    font-family: var(--font-mono);
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    font-variant-numeric: tabular-nums;
+    color: #111315;
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div class="sim-page">
+  <section class="sim-card" aria-labelledby="sim-title">
+    <div class="sim-header">
+      <h1 id="sim-title" class="sim-header-title">Mobile Banking Simulator</h1>
+      <span class="sim-header-tag">QR Pay</span>
+    </div>
+
+    <div class="sim-body">
+      {% if error %}<div class="flash error" role="alert" style="margin-bottom: 16px;">{{ error }}</div>{% endif %}
+      <div class="sim-details">
+        <div class="sim-row">
+          <span class="sim-label">Merchant</span>
+          <span class="sim-val">Sports Arena &middot; {{ pay.venue_name }}</span>
+        </div>
+        <div class="sim-row">
+          <span class="sim-label">Reference</span>
+          <span class="sim-val mono">{{ pay.token }}</span>
+        </div>
+        <div class="sim-row">
+          <span class="sim-label">Required Amount</span>
+          <span class="sim-amount">{{ "{:,}".format(pay.amount) }} VND</span>
+        </div>
+      </div>
+
+      {% if pay.status in ('accepted', 'paid') %}
+      <div class="sim-accepted" role="status">
+        <p class="sim-accepted-title">Payment Accepted</p>
+        <p class="sim-accepted-desc">Enter this 6-digit confirmation code on the checkout page to finalize your booking.</p>
+        <div class="sim-otp-box">
+          <div class="sim-otp-label">6-Digit Confirmation Code</div>
+          <div class="sim-otp-code">{{ pay.otp_code }}</div>
+        </div>
+      </div>
+      {% else %}
+      <form method="post" action="/payment/{{ pay.token }}/scan" class="sim-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <label for="scan-amount">Transfer Amount (VND)</label>
+        <input
+          id="scan-amount"
+          type="text"
+          name="amount"
+          required
+          inputmode="numeric"
+          placeholder="e.g. {{ pay.amount }}"
+        />
+        <button type="submit" class="sim-submit">Accept &amp; Transfer</button>
+      </form>
+      {% endif %}
+    </div>
+  </section>
+</div>
+{% endblock %}

@@ -11,7 +11,7 @@ Evaluates:
 """
 
 import sys
-import time
+
 from playwright.sync_api import sync_playwright
 
 BASE_URL = "http://127.0.0.1:5000"
@@ -64,7 +64,7 @@ EXPECTED_VI_NAV = {
     "Administration": "Quản trị hệ thống",
 }
 
-class TestReporter:
+class EvaluationReporter:
     def __init__(self):
         self.results = []
         self.errors = []
@@ -110,18 +110,39 @@ def check_page_text(page, role, url, lang, reporter):
                 reporter.record(role, url, lang, False, f"Navbar has untranslated English text in VI mode: '{en_word}' (expected '{vi_expected}')")
                 return False
 
+    # Check navbar links and language toggle presence
+    has_nav_and_lang = page.evaluate("""(expectedLang) => {
+        const nav = document.querySelector('nav');
+        const langEn = document.querySelector('.lang-btn[data-lang="en"]');
+        const langVi = document.querySelector('.lang-btn[data-lang="vi"]');
+        const activeBtn = document.querySelector(`.lang-btn[data-lang="${expectedLang}"]`);
+        return Boolean(
+            nav &&
+            nav.querySelectorAll('a').length >= 1 &&
+            langEn &&
+            langVi &&
+            activeBtn &&
+            activeBtn.getAttribute('aria-pressed') === 'true'
+        );
+    }""", lang)
+    if not has_nav_and_lang:
+        reporter.record(role, url, lang, False, "Missing navbar links or language switcher buttons (.lang-btn[data-lang])")
+        return False
+
     # Check for overflow
     overflow = page.evaluate("""() => {
         return document.documentElement.scrollWidth > window.innerWidth + 5;
     }""")
     if overflow:
         reporter.add_warning(f"Horizontal overflow detected on {url} (lang={lang})")
+        reporter.record(role, url, lang, False, f"Horizontal overflow detected on {url}")
+        return False
 
     reporter.record(role, url, lang, True, "Page content & translations verified clean")
     return True
 
-def test_page_both_langs(page, role, path, reporter):
-    url = f"{BASE_URL}{path}"
+def evaluate_page_both_langs(page, role, path, reporter, base_url=BASE_URL):
+    url = f"{base_url}{path}"
     console_logs = []
     page_errors = []
 
@@ -130,8 +151,8 @@ def test_page_both_langs(page, role, path, reporter):
 
     response = page.goto(url, wait_until="networkidle")
     if not response or response.status >= 400:
-        if path == "/verify":
-            # Verify without token returns 400 with friendly message
+        if path in ("/verify", "/reset-password"):
+            # Verify and reset-password without token return 400 with friendly message
             pass
         else:
             reporter.record(role, url, "load", False, f"HTTP status {response.status if response else 'None'}")
@@ -150,18 +171,18 @@ def test_page_both_langs(page, role, path, reporter):
     if page_errors:
         reporter.record(role, url, "runtime", False, f"JavaScript errors: {page_errors}")
 
-def login_user(page, email, password):
-    page.goto(f"{BASE_URL}/login", wait_until="networkidle")
+def login_user(page, email, password, base_url=BASE_URL):
+    page.goto(f"{base_url}/login", wait_until="networkidle")
     page.fill('input[name="email"]', email)
     page.fill('input[name="password"]', password)
     page.click('button[type="submit"]')
     page.wait_for_load_state("networkidle")
 
-def run_all_tests():
-    reporter = TestReporter()
+def run_all_tests(base_url=BASE_URL):
+    reporter = EvaluationReporter()
     print("=" * 70)
     print("STARTING PLAYWRIGHT END-TO-END UI & I18N EVALUATION")
-    print(f"Target: {BASE_URL}")
+    print(f"Target: {base_url}")
     print("=" * 70)
 
     with sync_playwright() as p:
@@ -178,57 +199,67 @@ def run_all_tests():
             "/venues/1",
             "/login",
             "/register",
-            "/verify"
+            "/verify",
+            "/forgot-password",
+            "/reset-password",
         ]
         for route in unauth_routes:
-            test_page_both_langs(page, "Visitor", route, reporter)
+            evaluate_page_both_langs(page, "Visitor", route, reporter, base_url=base_url)
         context.close()
 
         # 2. Customer Crawl
         print("\n--- Testing Customer Routes (minh@example.com) ---")
         context = browser.new_context()
         page = context.new_page()
-        login_user(page, "minh@example.com", "sanbong1")
+        login_user(page, "minh@example.com", "sanbong1", base_url=base_url)
 
         customer_routes = [
             "/search",
             "/venues/1",
             "/booking/1",
             "/dashboard",
-            "/my-bookings"
+            "/my-bookings",
+            "/account/password",
         ]
         for route in customer_routes:
-            test_page_both_langs(page, "Customer", route, reporter)
+            evaluate_page_both_langs(page, "Customer", route, reporter, base_url=base_url)
+
+        # Mobile viewport overflow check (375x812)
+        page.set_viewport_size({"width": 375, "height": 812})
+        for route in ["/search", "/venues/1", "/my-bookings"]:
+            evaluate_page_both_langs(page, "Customer-Mobile", route, reporter, base_url=base_url)
         context.close()
 
         # 3. Owner Crawl
         print("\n--- Testing Owner Routes (lan.owner@example.com) ---")
         context = browser.new_context()
         page = context.new_page()
-        login_user(page, "lan.owner@example.com", "sanbong1")
+        login_user(page, "lan.owner@example.com", "sanbong1", base_url=base_url)
 
         owner_routes = [
             "/search",
             "/owner/venues",
+            "/owner/venues/new",
             "/owner/venues/1/schedule",
             "/owner/venues/1/pricing",
-            "/owner/bookings"
+            "/owner/bookings",
+            "/owner/analytics",
         ]
         for route in owner_routes:
-            test_page_both_langs(page, "Owner", route, reporter)
+            evaluate_page_both_langs(page, "Owner", route, reporter, base_url=base_url)
         context.close()
 
         # 4. Admin Crawl
         print("\n--- Testing Admin Routes (admin@example.com) ---")
         context = browser.new_context()
         page = context.new_page()
-        login_user(page, "admin@example.com", "sanbong1")
+        login_user(page, "admin@example.com", "sanbong1", base_url=base_url)
 
         admin_routes = [
             "/admin"
         ]
         for route in admin_routes:
-            test_page_both_langs(page, "Admin", route, reporter)
+            evaluate_page_both_langs(page, "Admin", route, reporter, base_url=base_url)
         context.close()
 
         browser.close()
@@ -255,6 +286,39 @@ def run_all_tests():
     else:
         print("\n✅ ALL UI & I18N CHECKS PASSED WITH 100% SUCCESS!")
         return 0
+
+
+def test_playwright_ui_and_i18n(tmp_path):
+    """Pytest entry point: starts an isolated live Flask server and runs all Playwright UI/i18n checks."""
+    import socket
+    import threading
+
+    from werkzeug.serving import make_server
+
+    from app import create_app
+    from db import connect
+    from init_db import seed
+
+    db_path = tmp_path / "playwright_ui.db"
+    with connect(db_path) as conn:
+        seed(conn)
+
+    app = create_app(database=db_path)
+    app.config["UPLOAD_DIR"] = tmp_path / "uploads"
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("127.0.0.1", 0))
+        port = s.getsockname()[1]
+
+    server = make_server("127.0.0.1", port, app)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        rc = run_all_tests(base_url=f"http://127.0.0.1:{port}")
+        assert rc == 0, "Playwright UI & i18n evaluation reported failures"
+    finally:
+        server.shutdown()
+
 
 if __name__ == "__main__":
     sys.exit(run_all_tests())

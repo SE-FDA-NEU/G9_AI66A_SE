@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 import pytest
 from werkzeug.security import check_password_hash
 
-import auth                                   # src/auth.py (rules, tokens, LANDING_PAGE)
+import auth  # src/auth.py (rules, tokens, LANDING_PAGE)
 from db import connect
 from errors import BusinessRuleError
 
@@ -29,7 +29,7 @@ OWNER = "lan.owner@example.com"
 WRONG_PASS = "wrong-pass1"
 
 VALID = {"email": "newcustomer@example.com", "password": "matkhau123",
-         "full_name": "Pham Van An", "phone": "0912345678"}
+         "full_name": "Pham Van An", "phone": "0912345679"}
 
 PW_TOO_SHORT = "abc123"        # 6 characters
 PW_ONE_SHORT = "abcdef1"       # 7 characters

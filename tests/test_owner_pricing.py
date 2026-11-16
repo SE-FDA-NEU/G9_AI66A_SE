@@ -1,10 +1,8 @@
 """Tests for US11 (US24: Venue owner sets peak-hour pricing).
 Business Rules: BR12, BR13.
 """
-from datetime import datetime
-import pytest
-from db import connect
 import pricing
+from db import connect
 
 
 def test_pricing_requires_owner_role(client, login):

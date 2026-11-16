@@ -151,9 +151,15 @@ def create_booking(conn, user, venue_id, day, start_hour, hours, now=None):
             conn.execute("INSERT INTO booking_slot (booking_id, venue_id, slot_start, price)"
                          " VALUES (?, ?, ?, ?)", (cur.lastrowid, venue["id"], slot_key(day, h),
                                                   prices[h]))
-    except sqlite3.IntegrityError:
+    except Exception as exc:
         conn.rollback()
-        raise BusinessRuleError("BR11", SLOT_TAKEN, 409)
+        if (
+            isinstance(exc, sqlite3.IntegrityError)
+            or type(exc).__name__ == "IntegrityError"
+            or getattr(exc, "pgcode", None) == "23505"
+        ):
+            raise BusinessRuleError("BR11", SLOT_TAKEN, 409)
+        raise
     except BaseException:
         conn.rollback()
         raise
@@ -163,9 +169,16 @@ def create_booking(conn, user, venue_id, day, start_hour, hours, now=None):
 
 def find_for_customer(conn, code, user):
     """One booking with its venue and price lines; only its own customer may read it (BR14)."""
+    import payment
+    payment.ensure_payment_table(conn)
     booking = conn.execute(
-        "SELECT b.*, v.name AS venue_name, v.address, v.sport FROM booking b"
-        " JOIN venue v ON v.id = b.venue_id WHERE b.code = ?", (code,)).fetchone()
+        "SELECT b.*, v.name AS venue_name, v.address, v.area, v.sport, v.latitude, v.longitude,"
+        " owner.full_name AS owner_name, owner.phone AS owner_phone,"
+        " ps.status AS payment_status, ps.paid_amount, ps.refunded_amount, ps.token AS payment_token"
+        " FROM booking b JOIN venue v ON v.id = b.venue_id"
+        " JOIN user owner ON owner.id = v.owner_id"
+        " LEFT JOIN payment_session ps ON ps.booking_code = b.code"
+        " WHERE b.code = ?", (code,)).fetchone()
     if booking is None:
         raise BusinessRuleError("BR14", "Booking not found", 404)
     if booking["customer_id"] != user["id"]:
@@ -180,29 +193,67 @@ def find_for_customer(conn, code, user):
 
 def upcoming(conn, user_id, now=None):
     """The customer's confirmed bookings that have not started yet, soonest first (BR14)."""
-    now = now or datetime.now()
+    now = now or vn_now()
     return conn.execute(
         "SELECT b.code, b.start_at, b.end_at, b.total_price, v.name AS venue_name FROM booking b"
         " JOIN venue v ON v.id = b.venue_id WHERE b.customer_id = ? AND b.status = 'confirmed'"
         " AND b.start_at > ? ORDER BY b.start_at", (user_id, now.strftime("%Y-%m-%d %H:%M"))).fetchall()
 
 
-def list_for_customer(conn, user_id, status_filter=None):
+def list_for_customer(conn, user_id, status_filter=None, now=None):
     """Chronological list of all bookings for customer user_id (BR14), newest created first."""
+    import payment
+    payment.ensure_payment_table(conn)
+    now = now or vn_now()
+    now_str = now.strftime("%Y-%m-%d %H:%M")
     base_sql = """
     SELECT b.id, b.code, b.customer_id, b.venue_id, b.start_at, b.end_at, b.total_price,
            b.status, b.refund_amount, b.created_at, b.cancelled_at,
-           v.name AS venue_name, v.address, v.sport
+           v.name AS venue_name, v.address, v.sport,
+           owner.full_name AS owner_name, owner.phone AS owner_phone,
+           ps.status AS payment_status, ps.paid_amount, ps.refunded_amount, ps.token AS payment_token
     FROM booking b
     JOIN venue v ON v.id = b.venue_id
+    JOIN user owner ON owner.id = v.owner_id
+    LEFT JOIN payment_session ps ON ps.booking_code = b.code
     WHERE b.customer_id = ?
     """
     params = [user_id]
-    if status_filter:
+    if status_filter == "completed":
+        base_sql += " AND (b.status = 'completed' OR (b.status = 'confirmed' AND b.end_at <= ?))"
+        params.append(now_str)
+    elif status_filter == "confirmed":
+        base_sql += " AND (b.status = 'confirmed' AND b.end_at > ?)"
+        params.append(now_str)
+    elif status_filter:
         base_sql += " AND b.status = ?"
         params.append(status_filter)
     base_sql += " ORDER BY b.created_at DESC, b.id DESC"
     return conn.execute(base_sql, tuple(params)).fetchall()
+
+
+def status_counts(conn, user_id, now=None):
+    """Return booking counts per status tab for customer user_id (BR14)."""
+    now = now or vn_now()
+    now_str = now.strftime("%Y-%m-%d %H:%M")
+    row = conn.execute(
+        """
+        SELECT
+            COUNT(*) AS all_count,
+            SUM(CASE WHEN status = 'confirmed' AND end_at > ? THEN 1 ELSE 0 END) AS confirmed_count,
+            SUM(CASE WHEN status = 'completed' OR (status = 'confirmed' AND end_at <= ?) THEN 1 ELSE 0 END) AS completed_count,
+            SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) AS cancelled_count
+        FROM booking
+        WHERE customer_id = ?
+        """,
+        (now_str, now_str, user_id),
+    ).fetchone()
+    return {
+        "all": row["all_count"] or 0,
+        "confirmed": row["confirmed_count"] or 0,
+        "completed": row["completed_count"] or 0,
+        "cancelled": row["cancelled_count"] or 0,
+    }
 
 
 def cancel_booking(conn, code, user, now=None):
@@ -214,40 +265,53 @@ def cancel_booking(conn, code, user, now=None):
     - Releases booking_slot rows immediately so others can book (BR15).
     """
     now = now or vn_now()
-    row = conn.execute(
-        "SELECT b.*, v.name AS venue_name FROM booking b"
-        " JOIN venue v ON v.id = b.venue_id WHERE b.code = ?", (code,)).fetchone()
-    if row is None:
-        raise BusinessRuleError("BR14", "Booking not found", 404)
-    if row["customer_id"] != user["id"]:
-        raise BusinessRuleError("BR14", "You do not have permission to cancel this booking", 403)
-    if row["status"] != "confirmed":
-        raise BusinessRuleError("BR15", "Only confirmed bookings can be cancelled", 400)
+    if conn.in_transaction:
+        conn.commit()
+    conn.execute("BEGIN IMMEDIATE")
+    try:
+        row = conn.execute(
+            "SELECT b.*, v.name AS venue_name FROM booking b"
+            " JOIN venue v ON v.id = b.venue_id WHERE b.code = ?", (code,)).fetchone()
+        if row is None:
+            raise BusinessRuleError("BR14", "Booking not found", 404)
+        if row["customer_id"] != user["id"]:
+            raise BusinessRuleError("BR14", "You do not have permission to cancel this booking", 403)
+        if row["status"] != "confirmed":
+            raise BusinessRuleError("BR15", "Only confirmed bookings can be cancelled", 400)
 
-    start_dt = datetime.strptime(str(row["start_at"])[:16], "%Y-%m-%d %H:%M")
-    diff_seconds = (start_dt - now).total_seconds()
-    diff_hours = diff_seconds / 3600.0
+        start_dt = datetime.strptime(str(row["start_at"])[:16], "%Y-%m-%d %H:%M")
+        diff_seconds = (start_dt - now).total_seconds()
+        diff_hours = diff_seconds / 3600.0
 
-    if diff_hours < 2:
-        raise BusinessRuleError("BR15", "Cannot cancel a booking less than 2 hours before start time", 400)
+        if diff_hours < 2:
+            raise BusinessRuleError("BR15", "Cannot cancel a booking less than 2 hours before start time", 400)
 
-    if diff_hours >= 24:
-        refund_amount = row["total_price"]
-        refund_pct = 100
-        message = (f"Booking cancelled successfully! You received a 100% refund "
-                   f"({refund_amount:,} VND)")
-    else:
-        refund_amount = row["total_price"] // 2
-        refund_pct = 50
-        message = (f"Booking cancelled. You received a 50% refund "
-                   f"({refund_amount:,} VND) in accordance with the cancellation policy.")
+        if diff_hours >= 24:
+            refund_amount = row["total_price"]
+            refund_pct = 100
+            message = (f"Booking cancelled successfully! You received a 100% refund "
+                       f"({refund_amount:,} VND)")
+        else:
+            refund_amount = row["total_price"] // 2
+            refund_pct = 50
+            message = (f"Booking cancelled. You received a 50% refund "
+                       f"({refund_amount:,} VND) in accordance with the cancellation policy.")
 
-    cancelled_at = now.strftime("%Y-%m-%d %H:%M:%S")
-    conn.execute(
-        "UPDATE booking SET status = 'cancelled', refund_amount = ?, cancelled_at = ? WHERE id = ?",
-        (refund_amount, cancelled_at, row["id"]))
-    conn.execute("DELETE FROM booking_slot WHERE booking_id = ?", (row["id"],))
+        cancelled_at = now.strftime("%Y-%m-%d %H:%M:%S")
+        cur = conn.execute(
+            "UPDATE booking SET status = 'cancelled', refund_amount = ?, cancelled_at = ?"
+            " WHERE id = ? AND status = 'confirmed'",
+            (refund_amount, cancelled_at, row["id"]))
+        if cur.rowcount == 0:
+            raise BusinessRuleError("BR15", "Only confirmed bookings can be cancelled", 400)
+        conn.execute("DELETE FROM booking_slot WHERE booking_id = ?", (row["id"],))
+    except BaseException:
+        conn.rollback()
+        raise
     conn.commit()
+
+    import payment
+    payment.auto_refund_for_booking(conn, code, refund_amount, row["total_price"], now)
 
     return {
         "code": code,

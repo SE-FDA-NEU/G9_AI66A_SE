@@ -1,18 +1,900 @@
 {% extends "base.html" %}
 {% block title %}Administration{% endblock %}
 {% block content %}
-<div class="admin-container">
-  <div class="admin-header-bar">
-    <div>
+{% set active_tab = active_tab|default(request.args.get('tab', 'overview')) %}
+{% set s = stats|default({}) %}
+{% set sport_list = sports|default(['Football', 'Badminton', 'Tennis', 'Pickleball']) %}
+{% set area_list = areas|default(['Cau Giay', 'Ba Dinh', 'Dong Da', 'Hai Ba Trung', 'Nam Tu Liem', 'Hoan Kiem', 'Tay Ho', 'Thanh Xuan']) %}
+{% set current_uid = current_user_id|default(g.user.id if g.user else none) %}
+
+<div class="container">
+  <header class="page-header">
+    <div class="page-header__title-row">
       <h1>Administration</h1>
-      <p class="subtitle">Community review moderation.</p>
+      <div class="page-header__actions">
+        <button type="button" class="btn-secondary" onclick="openCreateAccountModal('customer', '{{ active_tab }}')">New account</button>
+        <button type="button" class="btn-primary" onclick="openCreateAccountModal('owner', '{{ active_tab }}')">Add owner</button>
+      </div>
     </div>
-    <span class="admin-role-pill">Administrator</span>
+  </header>
+
+  <nav class="tabs" aria-label="Administration sections">
+    <a href="/admin?tab=overview" class="{% if active_tab == 'overview' %}is-active{% endif %}" {% if active_tab == 'overview' %}aria-current="page"{% endif %}>
+      Overview
+    </a>
+    <a href="/admin?tab=owners" class="{% if active_tab == 'owners' %}is-active{% endif %}" {% if active_tab == 'owners' %}aria-current="page"{% endif %}>
+      Owners <span class="tabs__count">{{ s.get('owners_count', 0) }}</span>
+    </a>
+    <a href="/admin?tab=venues" class="{% if active_tab == 'venues' %}is-active{% endif %}" {% if active_tab == 'venues' %}aria-current="page"{% endif %}>
+      Venues
+    </a>
+    <a href="/admin?tab=accounts" class="{% if active_tab == 'accounts' %}is-active{% endif %}" {% if active_tab == 'accounts' %}aria-current="page"{% endif %}>
+      Accounts
+    </a>
+    <a href="/admin?tab=moderation" class="{% if active_tab == 'moderation' %}is-active{% endif %}" {% if active_tab == 'moderation' %}aria-current="page"{% endif %}>
+      Moderation{% if s.get('pending_moderation_count', 0) > 0 %} <span class="tabs__count">{{ s.get('pending_moderation_count', 0) }}</span>{% endif %}
+    </a>
+  </nav>
+
+  {% if active_tab == 'overview' %}
+  <section class="section" aria-label="Overview and analytics">
+    <dl class="stats">
+      <div class="stat">
+        <dt>Total users</dt>
+        <dd>{{ s.get('total_users', 0) }}</dd>
+        <dd class="stat__sub">{{ s.get('owners_count', 0) }} owners &middot; {{ s.get('customers_count', 0) }} customers &middot; {{ s.get('suspended_users_count', 0) }} suspended</dd>
+      </div>
+      <div class="stat">
+        <dt>Active venues</dt>
+        <dd>{{ s.get('active_venues_count', 0) }}</dd>
+        <dd class="stat__sub">{{ s.get('inactive_venues_count', 0) }} inactive &middot; {{ s.get('venues_with_zero_bookings', 0) }} zero-booking</dd>
+      </div>
+      <div class="stat">
+        <dt>Total bookings</dt>
+        <dd>{{ s.get('total_bookings', 0) }}</dd>
+        <dd class="stat__sub">{{ s.get('confirmed_bookings', 0) }} confirmed &middot; {{ s.get('completed_bookings', 0) }} completed &middot; {{ s.get('cancelled_bookings', 0) }} cancelled ({{ s.get('cancellation_rate', 0) }}% cancel rate)</dd>
+      </div>
+      <div class="stat">
+        <dt>Net revenue</dt>
+        <dd>{{ "{:,}".format(s.get('net_revenue', 0)|int) }} VND</dd>
+        <dd class="stat__sub">Gross {{ "{:,}".format(s.get('gross_revenue', 0)|int) }} &middot; Refunded {{ "{:,}".format(s.get('total_refunded', 0)|int) }} VND</dd>
+      </div>
+      <div class="stat">
+        <dt>Average rating</dt>
+        <dd>{% if s.get('avg_rating') is not none %}★ {{ "%.1f"|format(s.get('avg_rating')|float) }}{% else %}&mdash;{% endif %}</dd>
+        <dd class="stat__sub">{{ s.get('total_reviews', 0) }} total reviews</dd>
+      </div>
+      <div class="stat">
+        <dt>Moderation queue</dt>
+        <dd>{{ s.get('pending_moderation_count', 0) }}</dd>
+        <dd class="stat__sub">{{ s.get('hidden_reviews_count', 0) }} pending hidden &middot; {{ s.get('reported_reviews_count', 0) }} reported</dd>
+      </div>
+    </dl>
+
+    <div class="section grid-2">
+      <div>
+        <div class="section__head">
+          <h2>Revenue &amp; bookings by sport</h2>
+        </div>
+        {% if sport_breakdown %}
+        <div class="table-scroll">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Sport</th>
+                <th class="num">Venues</th>
+                <th class="num">Bookings</th>
+                <th class="num">Net revenue (VND)</th>
+                <th>Share</th>
+                <th class="num">Rating</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in sport_breakdown %}
+              <tr>
+                <td>{{ row.sport }}</td>
+                <td class="num">{{ row.venue_count }}</td>
+                <td class="num">{{ row.booking_count }}</td>
+                <td class="num">{{ "{:,}".format(row.net_revenue|default(0)|int) }}</td>
+                <td>
+                  <div class="share-cell">
+                    <progress class="bar-progress" value="{{ [row.revenue_share_pct|default(0)|float, 100]|min }}" max="100" aria-hidden="true"></progress>
+                    <span class="num meta">{{ row.revenue_share_pct|default(0) }}%</span>
+                  </div>
+                </td>
+                <td class="num">{% if row.avg_rating is not none %}★ {{ "%.1f"|format(row.avg_rating|float) }}{% else %}&mdash;{% endif %}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="muted">No sport breakdown data available yet.</p>
+        {% endif %}
+      </div>
+
+      <div>
+        <div class="section__head">
+          <h2>Coverage by Hanoi area</h2>
+        </div>
+        {% if area_breakdown %}
+        {% set max_area_bookings = (area_breakdown|map(attribute='booking_count')|max)|default(1) %}
+        <div class="table-scroll">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Area</th>
+                <th class="num">Venues</th>
+                <th class="num">Bookings</th>
+                <th class="num">Net revenue (VND)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in area_breakdown %}
+              {% set area_pct = ((row.booking_count / max_area_bookings) * 100)|round(1) if max_area_bookings > 0 else 0 %}
+              <tr>
+                <td>
+                  <div>{{ row.area }}</div>
+                  <div class="bar-track--sm">
+                    <progress class="bar-progress" value="{{ [area_pct, 100]|min }}" max="100" aria-hidden="true"></progress>
+                  </div>
+                </td>
+                <td class="num">{{ row.venue_count }}</td>
+                <td class="num">{{ row.booking_count }}</td>
+                <td class="num">{{ "{:,}".format(row.net_revenue|default(0)|int) }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="muted">No area coverage data available yet.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section__head">
+        <h2>System operational insights</h2>
+      </div>
+      <ul class="list">
+        <li class="list__item split">
+          <div>
+            <strong class="num">{{ s.get('venues_with_zero_bookings', 0) }}</strong>
+            <span>venues currently have zero bookings</span>
+          </div>
+          <a href="/admin?tab=venues" class="small">View venues &rarr;</a>
+        </li>
+        <li class="list__item split">
+          <div>
+            <strong class="num">{{ s.get('pending_moderation_count', 0) }}</strong>
+            <span>reviews pending moderation</span>
+          </div>
+          <a href="/admin?tab=moderation&amp;mod_status=pending" class="small">Open moderation queue &rarr;</a>
+        </li>
+        <li class="list__item split">
+          <div>
+            <strong class="num">{{ s.get('unverified_users_count', 0) }}</strong>
+            <span>user accounts have not verified their email</span>
+          </div>
+          <a href="/admin?tab=accounts&amp;status=unverified" class="small">Review accounts &rarr;</a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section__head">
+        <h2>Recent bookings</h2>
+      </div>
+      {% if recent_bookings %}
+      <div class="table-scroll">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Venue</th>
+              <th>Customer</th>
+              <th>Start time</th>
+              <th class="num">Total (VND)</th>
+              <th>Status</th>
+              <th class="num">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in recent_bookings %}
+            <tr>
+              <td class="mono">{{ b.code }}</td>
+              <td>{{ b.venue_name }}</td>
+              <td>
+                <div>{{ b.customer_name }}</div>
+                <div class="cell-sub">{{ b.customer_email }}</div>
+              </td>
+              <td class="num">{{ b.start_at }}</td>
+              <td class="num">{{ "{:,}".format(b.total_price|default(0)|int) }}</td>
+              <td>
+                <span class="status {% if b.status == 'cancelled' %}status--danger{% elif b.status == 'completed' %}status--neutral{% else %}status--success{% endif %}">
+                  {{ b.status|capitalize }}
+                </span>
+              </td>
+              <td class="num">
+                <div class="row-actions">
+                  <form method="post" action="/admin/bookings/{{ b.id }}/delete" class="inline-form" onsubmit="return confirm('Delete this booking and its review permanently?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <button type="submit" class="btn-danger-outline btn-sm">Delete</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="muted">No bookings recorded yet.</p>
+      {% endif %}
+    </div>
+  </section>
+
+  {% elif active_tab == 'owners' %}
+  <section class="section" aria-label="Owners and KPIs">
+    <div class="section__head">
+      <h2>Venue owners &amp; portfolio KPIs</h2>
+    </div>
+
+    <dl class="stats">
+      <div class="stat">
+        <dt>Total owners</dt>
+        <dd>{{ s.get('owners_count', 0) }}</dd>
+        <dd class="stat__sub">Registered venue partners</dd>
+      </div>
+      <div class="stat">
+        <dt>Active venues</dt>
+        <dd>{{ s.get('active_venues_count', 0) }}</dd>
+        <dd class="stat__sub">{{ s.get('total_venues', 0) }} total venues listed</dd>
+      </div>
+      <div class="stat">
+        <dt>Total bookings</dt>
+        <dd>{{ s.get('total_bookings', 0) }}</dd>
+        <dd class="stat__sub">{{ s.get('confirmed_bookings', 0) }} confirmed &middot; {{ s.get('completed_bookings', 0) }} completed</dd>
+      </div>
+      <div class="stat">
+        <dt>Net revenue</dt>
+        <dd>{{ "{:,}".format(s.get('net_revenue', 0)|int) }} VND</dd>
+        <dd class="stat__sub">Gross {{ "{:,}".format(s.get('gross_revenue', 0)|int) }} &middot; Refunded {{ "{:,}".format(s.get('total_refunded', 0)|int) }} VND</dd>
+      </div>
+    </dl>
+
+    <section class="section">
+      <form method="get" action="/admin" class="filter-bar">
+        <input type="hidden" name="tab" value="owners" />
+        <div class="field">
+          <label for="owner-filter-status">Status</label>
+          <select id="owner-filter-status" name="status">
+            <option value="">All statuses</option>
+            <option value="active" {% if request.args.get('status') == 'active' %}selected{% endif %}>Active</option>
+            <option value="suspended" {% if request.args.get('status') == 'suspended' %}selected{% endif %}>Suspended</option>
+            <option value="unverified" {% if request.args.get('status') == 'unverified' %}selected{% endif %}>Unverified</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="owner-filter-q">Search</label>
+          <input id="owner-filter-q" type="search" name="q" value="{{ request.args.get('q', '') }}" placeholder="Owner name, email, phone, or venue..." />
+        </div>
+        <button type="submit" class="btn-primary">Apply filters</button>
+        <a href="/admin?tab=owners" class="btn-secondary">Reset</a>
+      </form>
+    </section>
+
+    {% if owner_analytics %}
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Owner</th>
+            <th>Venues portfolio</th>
+            <th class="num">Bookings &amp; utilization</th>
+            <th class="num">Revenue (VND)</th>
+            <th class="num">Rating</th>
+            <th class="num">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for o in owner_analytics %}
+          <tr>
+            <td>
+              <div>{{ o.full_name }}</div>
+              <div class="cell-sub">{{ o.email }} &middot; <span class="mono">{{ o.phone }}</span></div>
+              <div class="cell-sub">
+                {% if o.suspended %}
+                  <span class="status status--danger">Suspended</span>
+                  {% if o.suspended_reason %}
+                    <span class="sep">&middot;</span><span>{{ o.suspended_reason }}</span>
+                  {% endif %}
+                {% elif o.email_verified_at is defined and not o.email_verified_at %}
+                  <span class="status status--neutral">Unverified</span>
+                {% else %}
+                  <span class="status status--success">Active</span>
+                {% endif %}
+              </div>
+            </td>
+            <td>
+              <div class="num">{{ o.active_venues|default(0) }} / {{ o.total_venues|default(0) }} active venues</div>
+              {% if o.venues is defined and o.venues and o.venues is iterable and o.venues is not string %}
+                <div class="cell-sub">
+                  {% for v in o.venues %}
+                    {% if v is mapping and v.id is defined %}
+                      <a href="/venues/{{ v.id }}">{{ v.name }}</a>
+                    {% else %}
+                      <span>{{ v }}</span>
+                    {% endif %}{% if not loop.last %} &middot; {% endif %}
+                  {% endfor %}
+                </div>
+              {% elif o.venue_names is defined and o.venue_names %}
+                <div class="cell-sub">
+                  {% if o.venue_names is string %}
+                    {% for vname in o.venue_names.split(',') if vname.strip() %}
+                      <span>{{ vname.strip() }}</span>{% if not loop.last %} &middot; {% endif %}
+                    {% endfor %}
+                  {% elif o.venue_names is iterable %}
+                    {% for v in o.venue_names %}
+                      {% if v is mapping and v.id is defined %}
+                        <a href="/venues/{{ v.id }}">{{ v.name }}</a>
+                      {% else %}
+                        <span>{{ v }}</span>
+                      {% endif %}{% if not loop.last %} &middot; {% endif %}
+                    {% endfor %}
+                  {% endif %}
+                </div>
+              {% else %}
+                <div class="cell-sub">No venues listed yet</div>
+              {% endif %}
+            </td>
+            <td class="num">
+              <div>{{ o.total_bookings|default(0) }} bookings</div>
+              <div class="cell-sub">
+                {{ o.confirmed_bookings|default(0) }}C / {{ o.completed_bookings|default(0) }}D / {{ o.cancelled_bookings|default(0) }}X ({{ o.cancellation_rate|default(0) }}% cancel) &middot; {{ o.total_hours|default(0) }} h
+              </div>
+            </td>
+            <td class="num">
+              <div>Net {{ "{:,}".format(o.net_revenue|default(0)|int) }}</div>
+              <div class="cell-sub">
+                Gross {{ "{:,}".format(o.gross_revenue|default(0)|int) }} &middot; Refunded {{ "{:,}".format(o.total_refunded|default(0)|int) }}
+              </div>
+            </td>
+            <td class="num">
+              {% if o.avg_rating is not none %}
+                ★ {{ "%.1f"|format(o.avg_rating|float) }} <span class="muted">({{ o.review_count|default(0) }})</span>
+              {% else %}
+                &mdash;
+              {% endif %}
+            </td>
+            <td class="num">
+              <div class="row-actions">
+                <button
+                  type="button"
+                  class="btn-secondary btn-sm"
+                  data-id="{{ o.id }}"
+                  data-name="{{ o.full_name }}"
+                  data-email="{{ o.email }}"
+                  data-phone="{{ o.phone }}"
+                  data-role="{{ o.role|default('owner') }}"
+                  data-verified="{{ '1' if o.email_verified_at is not defined or o.email_verified_at else '0' }}"
+                  data-return-tab="owners"
+                  onclick="openEditUserModal(this)"
+                >Edit</button>
+                {% if o.id == current_uid %}
+                  <span class="meta">Current session</span>
+                {% elif o.suspended %}
+                  <form method="post" action="/admin/users/{{ o.id }}/unsuspend" class="inline-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <input type="hidden" name="return_tab" value="owners" />
+                    <button type="submit" class="btn-success-outline btn-sm">Unsuspend</button>
+                  </form>
+                {% else %}
+                  <form method="post" action="/admin/users/{{ o.id }}/suspend" class="inline-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <input type="hidden" name="return_tab" value="owners" />
+                    <input type="text" name="reason" placeholder="Reason (optional)" aria-label="Suspension reason for {{ o.full_name }}" class="input-compact" />
+                    <button type="submit" class="btn-danger-outline btn-sm">Suspend</button>
+                  </form>
+                {% endif %}
+                {% if o.id != current_uid and o.role|default('owner') != 'admin' %}
+                  <form method="post" action="/admin/users/{{ o.id }}/delete" class="inline-form" onsubmit="return confirm('Delete this owner and all their venues and bookings permanently?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <input type="hidden" name="return_tab" value="owners" />
+                    <button type="submit" class="btn-ghost btn-sm">Delete</button>
+                  </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty">
+      <p>No venue owners match the current filters.</p>
+    </div>
+    {% endif %}
+  </section>
+
+  {% elif active_tab == 'venues' %}
+  <section class="section" aria-label="Venues performance">
+    <form method="get" action="/admin" class="filter-bar">
+      <input type="hidden" name="tab" value="venues" />
+      <div class="field">
+        <label for="venue-filter-sport">Sport</label>
+        <select id="venue-filter-sport" name="sport">
+          <option value="">All sports</option>
+          {% for sp in sport_list %}
+          <option value="{{ sp }}" {% if request.args.get('sport') == sp %}selected{% endif %}>{{ sp }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="venue-filter-area">Area</label>
+        <select id="venue-filter-area" name="area">
+          <option value="">All areas</option>
+          {% for ar in area_list %}
+          <option value="{{ ar }}" {% if request.args.get('area') == ar %}selected{% endif %}>{{ ar }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="venue-filter-q">Search</label>
+        <input id="venue-filter-q" type="search" name="q" value="{{ request.args.get('q', '') }}" placeholder="Venue or owner name..." />
+      </div>
+      <button type="submit" class="btn-primary">Apply filters</button>
+      <a href="/admin?tab=venues" class="btn-secondary">Reset</a>
+    </form>
+
+    {% if venue_analytics %}
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Venue</th>
+            <th>Owner</th>
+            <th>Sport &amp; area</th>
+            <th class="num">Bookings</th>
+            <th class="num">Hours booked</th>
+            <th class="num">Net revenue (VND)</th>
+            <th class="num">Rating</th>
+            <th>Status</th>
+            <th class="num">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in venue_analytics %}
+          <tr>
+            <td>
+              {% if v.active %}
+                <a href="/venues/{{ v.id }}">{{ v.name }}</a>
+              {% else %}
+                <span>{{ v.name }}</span>
+              {% endif %}
+            </td>
+            <td>{{ v.owner_name }}</td>
+            <td>{{ v.sport }} &middot; {{ v.area }}</td>
+            <td class="num">
+              <div>{{ v.total_bookings }}</div>
+              <div class="cell-sub">{{ v.confirmed_count }}C / {{ v.completed_count }}D / {{ v.cancelled_count }}X</div>
+            </td>
+            <td class="num">{{ v.total_hours }} h</td>
+            <td class="num">{{ "{:,}".format(v.net_revenue|default(0)|int) }}</td>
+            <td class="num">{% if v.avg_rating is not none %}★ {{ "%.1f"|format(v.avg_rating|float) }}{% else %}&mdash;{% endif %} <span class="muted">({{ v.review_count|default(0) }})</span></td>
+            <td>
+              {% if v.active %}
+                <span class="status status--success">Active</span>
+              {% else %}
+                <span class="status status--neutral">Inactive</span>
+              {% endif %}
+            </td>
+            <td class="num">
+              <div class="row-actions">
+                <form method="post" action="/admin/venues/{{ v.id }}/toggle" class="inline-form">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                  <button type="submit" class="btn-secondary btn-sm">
+                    {{ 'Pause' if v.active else 'Activate' }}
+                  </button>
+                </form>
+                <form method="post" action="/admin/venues/{{ v.id }}/delete" class="inline-form" onsubmit="return confirm('Delete this venue and all its bookings and reviews permanently?');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                  <button type="submit" class="btn-ghost btn-sm">Delete</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty">
+      <p>No venues match the current filters.</p>
+    </div>
+    {% endif %}
+  </section>
+
+  {% elif active_tab == 'accounts' %}
+  <section class="section" aria-label="Accounts and owner onboarding">
+    <div class="section__head">
+      <h2>User accounts &amp; role governance</h2>
+    </div>
+
+    <form method="get" action="/admin" class="filter-bar">
+      <input type="hidden" name="tab" value="accounts" />
+      <div class="field">
+        <label for="acc-filter-role">Role</label>
+        <select id="acc-filter-role" name="role">
+          <option value="">All roles</option>
+          <option value="owner" {% if request.args.get('role') == 'owner' %}selected{% endif %}>Owner</option>
+          <option value="customer" {% if request.args.get('role') == 'customer' %}selected{% endif %}>Customer</option>
+          <option value="admin" {% if request.args.get('role') == 'admin' %}selected{% endif %}>Admin</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="acc-filter-status">Status</label>
+        <select id="acc-filter-status" name="status">
+          <option value="">All statuses</option>
+          <option value="active" {% if request.args.get('status') == 'active' %}selected{% endif %}>Active</option>
+          <option value="suspended" {% if request.args.get('status') == 'suspended' %}selected{% endif %}>Suspended</option>
+          <option value="unverified" {% if request.args.get('status') == 'unverified' %}selected{% endif %}>Unverified</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="acc-filter-q">Search</label>
+        <input id="acc-filter-q" type="search" name="q" value="{{ request.args.get('q', '') }}" placeholder="Name, email, or phone..." />
+      </div>
+      <button type="submit" class="btn-primary">Apply filters</button>
+      <a href="/admin?tab=accounts" class="btn-secondary">Reset</a>
+    </form>
+
+    {% if users %}
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Account</th>
+            <th>Phone</th>
+            <th>Role</th>
+            <th>Activity</th>
+            <th>Status</th>
+            <th class="num">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td>
+              <div>{{ u.full_name }}</div>
+              <div class="cell-sub">{{ u.email }}</div>
+            </td>
+            <td class="mono">{{ u.phone }}</td>
+            <td>{{ u.role|capitalize }}</td>
+            <td class="num">{{ u.venue_count|default(0) }} venues &middot; {{ u.booking_count|default(0) }} bookings</td>
+            <td>
+              {% if u.suspended %}
+                <span class="status status--danger">Suspended</span>
+                {% if u.suspended_reason %}
+                  <div class="cell-sub">{{ u.suspended_reason }}</div>
+                {% endif %}
+              {% elif not u.email_verified_at %}
+                <span class="status status--neutral">Unverified</span>
+              {% else %}
+                <span class="status status--success">Active</span>
+              {% endif %}
+            </td>
+            <td class="num">
+              <div class="row-actions">
+                <button
+                  type="button"
+                  class="btn-secondary btn-sm"
+                  data-id="{{ u.id }}"
+                  data-name="{{ u.full_name }}"
+                  data-email="{{ u.email }}"
+                  data-phone="{{ u.phone }}"
+                  data-role="{{ u.role }}"
+                  data-verified="{{ '1' if u.email_verified_at else '0' }}"
+                  data-return-tab="accounts"
+                  onclick="openEditUserModal(this)"
+                >Edit</button>
+                {% if u.id == current_uid %}
+                  <span class="meta">Current session</span>
+                {% elif u.suspended %}
+                  <form method="post" action="/admin/users/{{ u.id }}/unsuspend" class="inline-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <input type="hidden" name="return_tab" value="accounts" />
+                    <button type="submit" class="btn-success-outline btn-sm">Unsuspend</button>
+                  </form>
+                {% else %}
+                  <form method="post" action="/admin/users/{{ u.id }}/suspend" class="inline-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <input type="hidden" name="return_tab" value="accounts" />
+                    <input type="text" name="reason" placeholder="Reason (optional)" aria-label="Suspension reason for {{ u.full_name }}" class="input-compact" />
+                    <button type="submit" class="btn-danger-outline btn-sm">Suspend</button>
+                  </form>
+                {% endif %}
+                {% if u.id != current_uid and u.role != 'admin' %}
+                  <form method="post" action="/admin/users/{{ u.id }}/delete" class="inline-form" onsubmit="return confirm('Delete this user account and all associated data permanently?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <input type="hidden" name="return_tab" value="accounts" />
+                    <button type="submit" class="btn-ghost btn-sm">Delete</button>
+                  </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty">
+      <p>No accounts match the current filters.</p>
+    </div>
+    {% endif %}
+  </section>
+
+  {% elif active_tab == 'moderation' %}
+  {% set mod_filter = (mod_status|default(filters.mod_status if filters is defined else '')|default(request.args.get('mod_status', ''), true)) or 'all' %}
+  <section class="section" aria-label="Review moderation">
+    <nav class="mod-filters" aria-label="Moderation status filters">
+      <a href="/admin?tab=moderation&amp;mod_status=all" class="mod-filters__link {% if mod_filter == 'all' %}is-active{% endif %}">All</a>
+      <a href="/admin?tab=moderation&amp;mod_status=pending" class="mod-filters__link {% if mod_filter == 'pending' %}is-active{% endif %}">Pending (auto-hidden)</a>
+      <a href="/admin?tab=moderation&amp;mod_status=active" class="mod-filters__link {% if mod_filter == 'active' %}is-active{% endif %}">Active (reported)</a>
+      <a href="/admin?tab=moderation&amp;mod_status=approved" class="mod-filters__link {% if mod_filter == 'approved' %}is-active{% endif %}">Approved</a>
+      <a href="/admin?tab=moderation&amp;mod_status=rejected" class="mod-filters__link {% if mod_filter == 'rejected' %}is-active{% endif %}">Rejected</a>
+    </nav>
+
+    {% if moderation_reviews %}
+    <ul class="list">
+      {% for r in moderation_reviews %}
+      <li class="list__item">
+        <div class="split">
+          <div>
+            <a href="/venues/{{ r.venue_id }}">{{ r.venue_name }}</a>
+            <div class="meta">
+              <span>{{ r.author_name }} ({{ r.author_email }})</span>
+              {% if r.booking_code %} &middot; <span class="mono">{{ r.booking_code }}</span>{% endif %}
+            </div>
+          </div>
+          <div class="cluster">
+            <span class="small num" aria-label="Rating {{ r.rating }} out of 5">★ {{ r.rating }}/5</span>
+            <span class="sep">&middot;</span>
+            <span class="meta num">{{ r.report_count|default(0) }} reports</span>
+            <span class="sep">&middot;</span>
+            {% if r.moderation_status == 'approved' %}
+              <span class="status status--success">Approved</span>
+            {% elif r.moderation_status == 'rejected' %}
+              <span class="status status--danger">Rejected</span>
+            {% elif r.hidden %}
+              <span class="status status--warning">Auto-hidden</span>
+            {% else %}
+              <span class="status status--warning">Reported</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <p class="mod-item__comment">{{ r.comment or 'No written comment.' }}</p>
+
+        <div class="cluster">
+          <form method="post" action="/admin/reviews/{{ r.id }}/moderate" class="inline-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button type="submit" name="action" value="approve" class="btn-secondary btn-sm">Approve &amp; restore</button>
+            <button type="submit" name="action" value="reject" class="btn-danger-outline btn-sm">Keep hidden / reject</button>
+          </form>
+          <form method="post" action="/admin/reviews/{{ r.id }}/delete" class="inline-form" onsubmit="return confirm('Permanently delete this review?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button type="submit" class="btn-ghost btn-sm">Delete</button>
+          </form>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty">
+      <p>No reviews in this moderation queue.</p>
+    </div>
+    {% endif %}
+  </section>
+
+  {% else %}
+  <section class="section" aria-label="Unknown section">
+    <div class="empty">
+      <p>Unknown administration section.</p>
+      <p class="muted">The requested tab does not exist.</p>
+      <a href="/admin?tab=overview" class="btn-primary">Return to overview</a>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Create Account Modal -->
+  <div id="create-account-modal" class="modal js-modal" role="dialog" aria-modal="true" aria-labelledby="create-account-modal-title" aria-hidden="true" hidden>
+    <div class="modal__panel">
+      <div class="modal__head">
+        <h2 id="create-account-modal-title" class="modal__title">Create account</h2>
+        <button type="button" class="btn-ghost btn-sm" aria-label="Close modal" onclick="closeCreateAccountModal()">&times;</button>
+      </div>
+      <form method="post" action="/admin/users/create" class="form-grid">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <input type="hidden" id="create-return-tab" name="return_tab" value="{{ active_tab }}" />
+        <div class="field">
+          <label for="create-full-name">Full name</label>
+          <input id="create-full-name" type="text" name="full_name" required placeholder="Nguyen Van A" />
+        </div>
+        <div class="field">
+          <label for="create-email">Email address</label>
+          <input id="create-email" type="email" name="email" required placeholder="owner@example.com" />
+        </div>
+        <div class="field">
+          <label for="create-phone">Phone number</label>
+          <input id="create-phone" type="tel" name="phone" required pattern="0[0-9]{9}" placeholder="0912345678" />
+        </div>
+        <div class="field">
+          <label for="create-password">Password</label>
+          <input id="create-password" type="password" name="password" required minlength="8" placeholder="Min 8 chars, letter + digit" />
+        </div>
+        <div class="field">
+          <label for="create-role">Role</label>
+          <select id="create-role" name="role">
+            <option value="owner" selected>Owner</option>
+            <option value="customer">Customer</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="field field--full field--checkbox">
+          <input type="hidden" name="auto_verify" value="0" />
+          <input id="create-auto-verify" type="checkbox" name="auto_verify" value="1" checked />
+          <label for="create-auto-verify">Mark email as verified immediately</label>
+        </div>
+        <div class="modal__actions field--full">
+          <button type="button" class="btn-secondary" onclick="closeCreateAccountModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Create account</button>
+        </div>
+      </form>
+    </div>
   </div>
 
-  <section class="card admin-note-card">
-    <h2>Review moderation</h2>
-    <p>Reviews are hidden from public venue pages after receiving three reports. This demo does not provide a manual moderation queue.</p>
-  </section>
+  <!-- Edit Owner / Account Modal -->
+  <div id="edit-user-modal" class="modal js-modal" role="dialog" aria-modal="true" aria-labelledby="edit-user-modal-title" aria-hidden="true" hidden>
+    <div class="modal__panel">
+      <div class="modal__head">
+        <h2 id="edit-user-modal-title" class="modal__title">Edit account</h2>
+        <button type="button" class="btn-ghost btn-sm" aria-label="Close modal" onclick="closeEditUserModal()">&times;</button>
+      </div>
+      <form id="edit-user-form" method="post" action="/admin/users/0/edit" class="form-grid">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <input type="hidden" name="return_tab" id="edit-return-tab" value="{{ active_tab }}" />
+        <div class="field">
+          <label for="edit-full-name">Full name</label>
+          <input id="edit-full-name" type="text" name="full_name" required placeholder="Nguyen Van A" />
+        </div>
+        <div class="field">
+          <label for="edit-email">Email address</label>
+          <input id="edit-email" type="email" name="email" required placeholder="owner@example.com" />
+        </div>
+        <div class="field">
+          <label for="edit-phone">Phone number</label>
+          <input id="edit-phone" type="tel" name="phone" required pattern="0[0-9]{9}" placeholder="0912345678" />
+        </div>
+        <div class="field">
+          <label for="edit-role">Role</label>
+          <select id="edit-role" name="role">
+            <option value="owner">Owner</option>
+            <option value="customer">Customer</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="field field--full">
+          <label for="edit-password">New password (optional)</label>
+          <input id="edit-password" type="password" name="password" minlength="8" placeholder="Leave blank to keep current password" />
+        </div>
+        <div class="field field--full field--checkbox">
+          <input type="hidden" name="auto_verify" value="0" />
+          <input id="edit-auto-verify" type="checkbox" name="auto_verify" value="1" checked />
+          <label for="edit-auto-verify">Mark email as verified</label>
+        </div>
+        <div class="modal__actions field--full">
+          <button type="button" class="btn-secondary" onclick="closeEditUserModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Save changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
+
+<script>
+  (function() {
+    var createModal = document.getElementById('create-account-modal');
+    var editModal = document.getElementById('edit-user-modal');
+
+    window.openCreateAccountModal = function(defaultRole, returnTab) {
+      if (!createModal) return;
+      var roleSelect = document.getElementById('create-role');
+      if (roleSelect && defaultRole) {
+        roleSelect.value = defaultRole;
+      }
+      var returnTabInput = document.getElementById('create-return-tab');
+      if (returnTabInput && returnTab) {
+        returnTabInput.value = returnTab;
+      }
+      createModal.hidden = false;
+      createModal.classList.add('is-open');
+      createModal.setAttribute('aria-hidden', 'false');
+      var firstInput = document.getElementById('create-full-name');
+      if (firstInput) firstInput.focus();
+    };
+
+    window.closeCreateAccountModal = function() {
+      if (!createModal) return;
+      createModal.classList.remove('is-open');
+      createModal.setAttribute('aria-hidden', 'true');
+      createModal.hidden = true;
+    };
+
+    window.openEditUserModal = function(buttonEl) {
+      if (!editModal || !buttonEl) return;
+      var userId = buttonEl.getAttribute('data-id');
+      var form = document.getElementById('edit-user-form');
+      if (form && userId) {
+        form.action = '/admin/users/' + userId + '/edit';
+      }
+      var nameInput = document.getElementById('edit-full-name');
+      var emailInput = document.getElementById('edit-email');
+      var phoneInput = document.getElementById('edit-phone');
+      var roleSelect = document.getElementById('edit-role');
+      var passwordInput = document.getElementById('edit-password');
+      var verifyCheckbox = document.getElementById('edit-auto-verify');
+      var returnTabInput = document.getElementById('edit-return-tab');
+
+      if (nameInput) nameInput.value = buttonEl.getAttribute('data-name') || '';
+      if (emailInput) emailInput.value = buttonEl.getAttribute('data-email') || '';
+      if (phoneInput) phoneInput.value = buttonEl.getAttribute('data-phone') || '';
+      if (roleSelect) roleSelect.value = buttonEl.getAttribute('data-role') || 'owner';
+      if (passwordInput) passwordInput.value = '';
+      if (verifyCheckbox) {
+        verifyCheckbox.checked = buttonEl.getAttribute('data-verified') !== '0';
+      }
+      if (returnTabInput) {
+        returnTabInput.value = buttonEl.getAttribute('data-return-tab') || '{{ active_tab }}';
+      }
+
+      editModal.hidden = false;
+      editModal.classList.add('is-open');
+      editModal.setAttribute('aria-hidden', 'false');
+      if (nameInput) nameInput.focus();
+    };
+
+    window.closeEditUserModal = function() {
+      if (!editModal) return;
+      editModal.classList.remove('is-open');
+      editModal.setAttribute('aria-hidden', 'true');
+      editModal.hidden = true;
+    };
+
+    [createModal, editModal].forEach(function(modalEl) {
+      if (!modalEl) return;
+      modalEl.addEventListener('click', function(e) {
+        if (e.target === modalEl) {
+          modalEl.classList.remove('is-open');
+          modalEl.setAttribute('aria-hidden', 'true');
+          modalEl.hidden = true;
+        }
+      });
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        if (createModal && createModal.classList.contains('is-open')) {
+          window.closeCreateAccountModal();
+        }
+        if (editModal && editModal.classList.contains('is-open')) {
+          window.closeEditUserModal();
+        }
+      }
+    });
+  })();
+</script>
 {% endblock %}

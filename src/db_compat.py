@@ -18,7 +18,7 @@ class CompatRow:
     def _normalize(val):
         from datetime import date, datetime
         if isinstance(val, datetime):
-            return val.strftime("%Y-%m-%d %H:%M:%S") if val.second else val.strftime("%Y-%m-%d %H:%M")
+            return val.strftime("%Y-%m-%d %H:%M") if val.second == 0 else val.strftime("%Y-%m-%d %H:%M:%S")
         if isinstance(val, date):
             return val.isoformat()
         return val
@@ -106,9 +106,13 @@ class CompatCursor:
             flags=re.IGNORECASE,
         )
 
-        # Convert ? placeholders to %s
+        # Convert ? placeholders to %s outside single-quoted string literals
         if "?" in translated and params is not None and not isinstance(params, dict):
-            translated = translated.replace("?", "%s")
+            translated = re.sub(
+                r"'(?:''|[^'])*'|(\?)",
+                lambda m: "%s" if m.group(1) else m.group(0),
+                translated,
+            )
 
         # Convert :name placeholders to %(name)s (with negative lookbehind so ::typecasts are preserved)
         if isinstance(params, dict):
@@ -146,7 +150,7 @@ class CompatCursor:
         if re.match(r"\s*INSERT", translated, re.IGNORECASE):
             if self._backend == "postgres":
                 row = self._cursor.fetchone() if self._cursor.description is not None else None
-                self.lastrowid = row["id"] if isinstance(row, dict) else row[0] if row else None
+                self.lastrowid = row.get("id") if isinstance(row, dict) else row[0] if row else None
             else:
                 self.lastrowid = self._cursor.lastrowid
 
@@ -228,7 +232,7 @@ class CompatConnection:
             try:
                 import psycopg2.extensions
                 return self._conn.status == psycopg2.extensions.STATUS_IN_TRANSACTION
-            except Exception:
+            except Exception:  # noqa: BLE001
                 return False
         return getattr(self._conn, "in_transaction", False)
 

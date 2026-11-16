@@ -1,106 +1,201 @@
 {% extends "base.html" %}
 {% block title %}My Bookings{% endblock %}
+{% block style %}
+<style>
+  .tab-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 800;
+    margin-left: 6px;
+    background: rgba(15, 23, 42, 0.08);
+    color: inherit;
+  }
+  .tab-link.active .tab-count-badge {
+    background: rgba(255, 255, 255, 0.25);
+    color: #fff;
+  }
+  .booking-actions-col {
+    display: grid;
+    grid-template-columns: repeat(2, 168px);
+    gap: 8px;
+    align-items: center;
+    justify-content: end;
+  }
+  .booking-action-btn {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    white-space: nowrap;
+    width: 100%;
+    min-height: 36px !important;
+    height: 36px !important;
+    padding: 0 10px !important;
+    text-align: center;
+  }
+  .cancel-policy-caption {
+    grid-column: 1 / -1;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: right;
+    line-height: 1.3;
+  }
+  .review-details {
+    position: relative;
+    width: 100%;
+  }
+  .review-popover {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    z-index: 20;
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: var(--shadow-lg);
+    width: 280px;
+  }
+  @media (max-width: 640px) {
+    .booking-actions-col {
+      align-items: stretch;
+      width: 100%;
+    }
+    .booking-action-btn, .review-details {
+      width: 100%;
+    }
+    .cancel-policy-caption {
+      max-width: none;
+      text-align: left;
+    }
+    .review-popover {
+      left: 0;
+      right: 0;
+      width: 100%;
+    }
+  }
+</style>
+{% endblock %}
 {% block content %}
-<div class="dashboard-container" style="max-width: 1000px; margin: 0 auto; padding: 24px 16px;">
-  <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px;">
-    <div>
-      <h1 style="margin: 0 0 6px; font-size: 26px; font-weight: 800;">📅 My Bookings &middot; Match History</h1>
-      <p class="muted" style="margin: 0; font-size: 14px;">Manage your upcoming pitch reservations and view your match history.</p>
-    </div>
-    <a href="/search" class="button" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700;">
-      <span>➕</span> Book another venue
-    </a>
+<div class="dashboard-container">
+  <div class="owner-header-bar">
+    <h1 style="margin: 0;">My bookings</h1>
+    <a href="/search" class="button" style="font-weight: 700;">Book another venue</a>
   </div>
 
   <!-- Filter tabs -->
-  <div class="booking-tabs" style="display: flex; gap: 10px; margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; overflow-x: auto;">
-    <a href="/my-bookings" class="tab-link {% if current_filter == 'all' %}active{% endif %}" style="padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; text-decoration: none; border: 1px solid var(--border-color); color: var(--text-main); background: {% if current_filter == 'all' %}var(--brand); color:#fff; border-color:var(--brand);{% else %}#fff;{% endif %}">
-      All
+  <div class="booking-tabs" style="display: flex; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; overflow-x: auto;">
+    <a href="/my-bookings" class="tab-link {% if current_filter == 'all' %}active{% endif %}" style="padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 700; text-decoration: none; border: 1px solid {% if current_filter == 'all' %}var(--brand){% else %}var(--border-color){% endif %}; background: {% if current_filter == 'all' %}var(--brand){% else %}#fff{% endif %}; color: {% if current_filter == 'all' %}#fff{% else %}var(--text-main){% endif %};">
+      All{% if counts is defined and counts %}<span class="tab-count-badge">{{ counts.all|default(0) }}</span>{% endif %}
     </a>
-    <a href="/my-bookings?status=confirmed" class="tab-link {% if current_filter == 'confirmed' %}active{% endif %}" style="padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; text-decoration: none; border: 1px solid var(--border-color); color: var(--text-main); background: {% if current_filter == 'confirmed' %}var(--brand); color:#fff; border-color:var(--brand);{% else %}#fff;{% endif %}">
-      🟢 Upcoming (Confirmed)
+    <a href="/my-bookings?status=confirmed" class="tab-link {% if current_filter == 'confirmed' %}active{% endif %}" style="padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 700; text-decoration: none; border: 1px solid {% if current_filter == 'confirmed' %}var(--brand){% else %}var(--border-color){% endif %}; background: {% if current_filter == 'confirmed' %}var(--brand){% else %}#fff{% endif %}; color: {% if current_filter == 'confirmed' %}#fff{% else %}var(--text-main){% endif %};">
+      Upcoming{% if counts is defined and counts %}<span class="tab-count-badge">{{ counts.confirmed|default(0) }}</span>{% endif %}
     </a>
-    <a href="/my-bookings?status=completed" class="tab-link {% if current_filter == 'completed' %}active{% endif %}" style="padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; text-decoration: none; border: 1px solid var(--border-color); color: var(--text-main); background: {% if current_filter == 'completed' %}var(--brand); color:#fff; border-color:var(--brand);{% else %}#fff;{% endif %}">
-      🔵 Completed
+    <a href="/my-bookings?status=completed" class="tab-link {% if current_filter == 'completed' %}active{% endif %}" style="padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 700; text-decoration: none; border: 1px solid {% if current_filter == 'completed' %}var(--brand){% else %}var(--border-color){% endif %}; background: {% if current_filter == 'completed' %}var(--brand){% else %}#fff{% endif %}; color: {% if current_filter == 'completed' %}#fff{% else %}var(--text-main){% endif %};">
+      Completed{% if counts is defined and counts %}<span class="tab-count-badge">{{ counts.completed|default(0) }}</span>{% endif %}
     </a>
-    <a href="/my-bookings?status=cancelled" class="tab-link {% if current_filter == 'cancelled' %}active{% endif %}" style="padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; text-decoration: none; border: 1px solid var(--border-color); color: var(--text-main); background: {% if current_filter == 'cancelled' %}var(--brand); color:#fff; border-color:var(--brand);{% else %}#fff;{% endif %}">
-      🔴 Cancelled
+    <a href="/my-bookings?status=cancelled" class="tab-link {% if current_filter == 'cancelled' %}active{% endif %}" style="padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 700; text-decoration: none; border: 1px solid {% if current_filter == 'cancelled' %}var(--brand){% else %}var(--border-color){% endif %}; background: {% if current_filter == 'cancelled' %}var(--brand){% else %}#fff{% endif %}; color: {% if current_filter == 'cancelled' %}#fff{% else %}var(--text-main){% endif %};">
+      Cancelled{% if counts is defined and counts %}<span class="tab-count-badge">{{ counts.cancelled|default(0) }}</span>{% endif %}
     </a>
   </div>
 
   {% if not bookings %}
-  <div class="empty card" style="text-align: center; padding: 48px 20px; margin-top: 20px;">
-    <div style="font-size: 48px; margin-bottom: 12px;">🏟️</div>
+  <div class="empty card" style="text-align: center; padding: 44px 20px;">
     <h3 style="margin: 0 0 8px; font-size: 18px; font-weight: 700;">You have no bookings yet</h3>
-    <p class="muted" style="margin: 0 0 20px; font-size: 14px;">Find football pitches, badminton, tennis, and pickleball courts near you and reserve in seconds.</p>
+    <p class="muted" style="margin: 0 0 18px; font-size: 14px;">Choose a court and time slot to make your first reservation.</p>
     <a href="/search" class="button" style="font-weight: 700;">Find a venue now</a>
   </div>
   {% else %}
-  <div class="bookings-list" style="display: flex; flex-direction: column; gap: 16px;">
+  <div class="bookings-list" style="display: flex; flex-direction: column; gap: 14px;">
     {% for b in bookings %}
-    <div class="card booking-item-card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; padding: 22px; border-radius: 12px; border-left: 6px solid {% if b.status == 'confirmed' %}#10b981{% elif b.status == 'completed' %}#286b45{% else %}#ef4444{% endif %};">
-      <div style="flex: 1; min-width: 280px;">
-        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-          <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: var(--brand); background: #f0f9ff; padding: 3px 8px; border-radius: 6px; border: 1px solid #bae6fd;">{{ b.code }}</span>
-          <span style="font-size: 12px; font-weight: 700; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; {% if b.status == 'confirmed' %}background: #ecfdf5; color: #047857;{% elif b.status == 'completed' %}background: #f0fdf4; color: #15803d;{% else %}background: #fef2f2; color: #b91c1c;{% endif %}">
-            ● {{ b.status | capitalize }}
+    <div class="card booking-item-card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; padding: 20px 22px; border-radius: 12px; border-left: 5px solid {% if b.status == 'confirmed' %}#10b981{% elif b.status == 'completed' %}#286b45{% else %}#ef4444{% endif %};">
+      <div style="flex: 1 1 260px; min-width: 0; max-width: 100%;">
+        <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 6px;">
+          <span style="font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--brand); background: #f0f7f2; padding: 2px 8px; border-radius: 6px;">{{ b.code }}</span>
+          <span style="font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 4px; {% if b.status == 'confirmed' %}background: #ecfdf5; color: #047857;{% elif b.status == 'completed' %}background: #f0fdf4; color: #15803d;{% else %}background: #fef2f2; color: #b91c1c;{% endif %}">
+            {{ b.status | capitalize }}
           </span>
+          {% if b.payment_status in ('paid', 'refunded', 'partially_refunded') %}
+          <span style="font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: #DCFCE7; color: #15803D; border: 1px solid #86EFAC;">
+            Online QR Paid
+          </span>
+          {% endif %}
           <span class="muted" style="font-size: 12px;">Booked on {{ b.created_at[:16] }}</span>
         </div>
-        <h3 style="margin: 0 0 6px; font-size: 18px; font-weight: 800;">
+        <h3 style="margin: 0 0 4px; font-size: 18px; font-weight: 800;">
           <a href="/venues/{{ b.venue_id }}" style="text-decoration: none; color: inherit;">{{ b.venue_name }}</a>
         </h3>
-        <p class="muted" style="margin: 0 0 10px; font-size: 13px;">📍 {{ b.address }} &middot; 🏅 {{ b.sport }}</p>
+        <p class="muted" style="margin: 0 0 10px; font-size: 13px;">{{ b.address }} &middot; {{ b.sport }}</p>
         
-        <div style="display: flex; align-items: center; gap: 16px; font-size: 14px; background: #f8fafc; padding: 8px 14px; border-radius: 8px; border: 1px solid #e2e8f0; width: fit-content;">
-          <div><strong>🕒 Match Time:</strong> {{ b.start_at[8:10] }}/{{ b.start_at[5:7] }}/{{ b.start_at[:4] }} &middot; {{ b.start_at[11:] }} - {{ b.end_at[11:] }}</div>
+        <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 14px; font-size: 13px; background: #f8faf9; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border-color); width: fit-content; max-width: 100%;">
+          <div><strong>{{ b.start_at[8:10] }}/{{ b.start_at[5:7] }}/{{ b.start_at[:4] }}</strong> &middot; {{ b.start_at[11:] }}&ndash;{{ b.end_at[11:] }}</div>
           <div style="color: #cbd5e1;">|</div>
-          <div><strong>💰 Total:</strong> <span style="color: var(--brand); font-weight: 800;">{{ "{:,}".format(b.total_price) }} VND</span></div>
+          <div><strong style="color: var(--brand); font-family: var(--font-mono);">{{ "{:,}".format(b.total_price) }} VND</strong></div>
         </div>
 
-        {% if b.status == 'cancelled' %}
-        <div style="margin-top: 10px; font-size: 13px; color: #b91c1c; background: #fef2f2; padding: 6px 12px; border-radius: 6px; border: 1px solid #fecaca; display: inline-block;">
-          ⚠️ <strong>Cancelled:</strong> Refunded {{ "{:,}".format(b.refund_amount or 0) }} VND (Fair Policy)
+        {% set refunded = b.refunded_amount if b.refunded_amount is defined and b.refunded_amount is not none else (b.refund_amount or 0) %}
+        {% if refunded > 0 %}
+        <div style="margin-top: 8px; font-size: 12px; font-weight: 700; color: #b91c1c; background: #fef2f2; padding: 5px 10px; border-radius: 4px; border: 1px solid #fecaca; display: inline-block;">
+          Auto-Refunded: {{ "{:,}".format(refunded) }} VND
         </div>
         {% endif %}
       </div>
 
-      <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
-        <a href="/bookings/{{ b.code }}" class="button secondary" style="font-size: 13px; font-weight: 700; white-space: nowrap; width: 140px; text-align: center;">
-          🎟️ View Voucher
+      <div class="booking-actions-col">
+        <a href="/bookings/{{ b.code }}" class="button secondary booking-action-btn">
+          View Voucher
         </a>
 
+        {% if b.status == 'confirmed' %}
+        <a href="/my-bookings/{{ b.code }}/ics" class="button secondary booking-action-btn">
+          Add to Calendar (.ics)
+        </a>
+        <a href="/venues/{{ b.venue_id }}" class="button secondary booking-action-btn">
+          Book Again
+        </a>
+        {% endif %}
+
         {% if b.can_cancel %}
-        <form method="post" action="/my-bookings/{{ b.code }}/cancel" onsubmit="return confirmCancelBooking('{{ b.code }}');">
-          <button type="submit" class="button danger" style="font-size: 13px; font-weight: 700; background: #dc2626; color: #fff; width: 140px; text-align: center;">
+        <form method="post" action="/my-bookings/{{ b.code }}/cancel" data-code="{{ b.code }}" onsubmit="return confirmCancelBooking(this.dataset.code);" style="width: 100%;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <button type="submit" class="button danger booking-action-btn" style="background: #dc2626; color: #fff;">
             ✕ Cancel Booking
           </button>
         </form>
+        <span class="cancel-policy-caption">
+          {% if b.refund_pct == 100 %}100% refund (&ge;24h){% else %}50% refund (2h&ndash;24h){% endif %}
+        </span>
         {% elif b.match_state == 'starting_soon' %}
-        <button type="button" class="button secondary" disabled style="font-size: 11px; font-weight: 700; width: 140px; text-align: center; opacity: 0.65; cursor: not-allowed;" title="Cannot cancel less than 2 hours before match start time (BR15)">
+        <button type="button" class="button secondary booking-action-btn" disabled style="font-size: 11px; opacity: 0.65; cursor: not-allowed;">
           ✕ Non-cancellable (&lt;2h)
         </button>
+        <span class="cancel-policy-caption">Cannot cancel less than 2 hours before match start time</span>
         {% elif b.match_state == 'in_progress' %}
-        <span style="font-size: 12px; font-weight: 700; padding: 6px 10px; border-radius: 6px; background: #fef3c7; color: #92400e; width: 140px; text-align: center; display: inline-block;">
-          ⚽ Match in progress
+        <span class="booking-action-btn" style="font-size: 12px; padding: 6px 10px; border-radius: 6px; background: #fef3c7; color: #92400e; display: inline-block;">
+          Match in progress
         </span>
         {% elif b.status == 'completed' or b.match_state == 'completed' %}
-        <details style="width: 140px;">
-          <summary class="button secondary" style="font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; list-style: none;">
-            ⭐ Rate Venue
+        <details class="review-details">
+          <summary class="button secondary booking-action-btn" style="cursor: pointer; list-style: none;">
+            Rate Venue
           </summary>
-          <div style="position: absolute; right: 20px; z-index: 10; background: #fff; border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; box-shadow: var(--shadow-lg); width: 280px; margin-top: 6px;">
+          <div class="review-popover">
             <form method="post" action="/my-bookings/{{ b.code }}/review">
-              <label style="font-size: 13px; font-weight: 700; display: block; margin-bottom: 6px;">Rating:</label>
-              <select name="rating" style="width: 100%; padding: 6px; border-radius: 4px; margin-bottom: 10px;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+              <label for="rating-{{ b.code }}" style="font-size: 13px; font-weight: 700; display: block; margin-bottom: 6px;">Rating:</label>
+              <select id="rating-{{ b.code }}" name="rating" style="width: 100%; padding: 6px; border-radius: 4px; margin-bottom: 10px;">
                 <option value="5">★★★★★ (5 stars - Excellent)</option>
                 <option value="4">★★★★☆ (4 stars - Very Good)</option>
                 <option value="3">★★★☆☆ (3 stars - Average)</option>
                 <option value="2">★★☆☆☆ (2 stars - Below Average)</option>
                 <option value="1">★☆☆☆☆ (1 star - Poor)</option>
               </select>
-              <label style="font-size: 13px; font-weight: 700; display: block; margin-bottom: 6px;">Comment:</label>
-              <textarea name="comment" rows="3" placeholder="Pitch turf quality, lighting, staff service..." style="width: 100%; padding: 6px; font-size: 13px; border-radius: 4px; margin-bottom: 10px;"></textarea>
+              <label for="comment-{{ b.code }}" style="font-size: 13px; font-weight: 700; display: block; margin-bottom: 6px;">Comment:</label>
+              <textarea id="comment-{{ b.code }}" name="comment" rows="3" placeholder="Court condition, lighting..." style="width: 100%; padding: 6px; font-size: 13px; border-radius: 4px; margin-bottom: 10px;"></textarea>
               <button type="submit" class="button" style="width: 100%; font-size: 13px; font-weight: 700;">Submit Review</button>
             </form>
           </div>
@@ -127,5 +222,4 @@ function confirmCancelBooking(code) {
   return window.confirm(localized.join('\n'));
 }
 </script>
-
 {% endblock %}

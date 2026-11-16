@@ -3,30 +3,11 @@
 {% block content %}
 <div class="owner-container">
   <div class="owner-header-bar">
-    <div>
-      <h1>My venues</h1>
-      <p class="subtitle">Manage listed pitches, operating hours, hourly pricing, and gallery photos.</p>
-    </div>
-    <div>
-      <p><a class="button btn-add-venue" href="/owner/venues/new">+ Add a venue</a></p>
-    </div>
-  </div>
-
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-label">Total Listed Venues</div>
-      <div class="stat-value">{{ venues | length }}</div>
-      <div class="stat-meta">Ready for customer bookings</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Schedule management</div>
-      <div class="stat-value">Availability</div>
-      <div class="stat-meta">Update opening hours and mark unavailable times.</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Pricing rules</div>
-      <div class="stat-value">By day and time</div>
-      <div class="stat-meta">Set different hourly prices for selected periods.</div>
+    <h1>My venues</h1>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <a class="button secondary" href="/owner/analytics">Analytics</a>
+      <a class="button secondary" href="/owner/bookings/export.csv">Export CSV</a>
+      <a class="button btn-add-venue" href="/owner/venues/new">+ Add a venue</a>
     </div>
   </div>
 
@@ -59,12 +40,15 @@
           </td>
           <td class="num price-cell">{{ "{:,}".format(v.hourly_price) }}</td>
           <td class="num photos-cell">
-            <a href="/venues/{{ v.id }}" class="photo-badge" title="View venue photos">📷 {{ v.photo_count }}</a>
+            <a href="/venues/{{ v.id }}" class="photo-badge" title="View venue photos">{{ v.photo_count }}</a>
           </td>
           <td style="text-align: right; white-space: nowrap;">
-            <a href="/owner/venues/{{ v.id }}/schedule" class="button secondary" style="padding: 5px 10px; font-size: 12px; font-weight: 700;">📅 Schedule</a>
-            <a href="/owner/venues/{{ v.id }}/pricing" class="button secondary" style="padding: 5px 10px; font-size: 12px; font-weight: 700;">💰 Pricing</a>
-            <a href="/owner/bookings?venue_id={{ v.id }}" class="button secondary" style="padding: 5px 10px; font-size: 12px; font-weight: 700;">📋 Bookings</a>
+            <a href="/owner/venues/{{ v.id }}/schedule" class="button secondary btn-table-action">Schedule</a>
+            <a href="/owner/venues/{{ v.id }}/pricing" class="button secondary btn-table-action">Pricing</a>
+            <a href="/owner/bookings?venue_id={{ v.id }}" class="button secondary btn-table-action">Bookings</a>
+            <form method="post" action="/owner/venues/{{ v.id }}/delete" style="display:inline;" onsubmit="return confirm('Delete this venue and all its data?');">
+              <button type="submit" class="button btn-danger-outline btn-table-action">Delete</button>
+            </form>
           </td>
         </tr>
         {% endfor %}
@@ -73,8 +57,7 @@
   </div>
   {% else %}
   <div class="empty">
-    You have no venues yet. Add your first venue so customers can find and book
-    it.
+    You have no venues yet. Add your first venue so customers can find and book it.
   </div>
   {% endif %}
 </div>

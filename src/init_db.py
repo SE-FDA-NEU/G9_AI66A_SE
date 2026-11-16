@@ -10,18 +10,21 @@ from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash
 
 from db import ROOT, connect, database_path
+from hanoi_popular_venues import get_venue_coords
 from schema import SCHEMA
 
 load_dotenv()
 
 # Seed accounts. Password for every one of them: sanbong1 (8 characters, letter + digit, BR2).
 USERS = [
-    ("lan.owner@example.com",  "Nguyen Thi Lan",  "0912345678", "owner"),
-    ("hung.owner@example.com", "Tran Van Hung",   "0987654321", "owner"),
-    ("son.owner@example.com",  "Le Hoang Son",    "0934567890", "owner"),
-    ("minh@example.com",       "Pham Duc Minh",   "0901234567", "customer"),
-    ("trang@example.com",      "Do Thu Trang",    "0976543210", "customer"),
-    ("admin@example.com",      "Admin",           "0900000000", "admin"),
+    ("lan.owner@example.com",  "Nguyen Thi Lan",  "0912345678", "owner",    True),
+    ("hung.owner@example.com", "Tran Van Hung",   "0987654321", "owner",    True),
+    ("son.owner@example.com",  "Le Hoang Son",    "0934567890", "owner",    True),
+    ("minh@example.com",       "Pham Duc Minh",   "0901234567", "customer", True),
+    ("trang@example.com",      "Do Thu Trang",    "0976543210", "customer", True),
+    ("nam@example.com",        "Hoang Van Nam",   "0911223344", "customer", True),
+    ("linh@example.com",       "Vu Thuy Linh",    "0922334455", "customer", False),
+    ("admin@example.com",      "Admin",           "0900000000", "admin",    True),
 ]
 
 # (venue name, weekday 0=Mon, start_hour, end_hour, price) - peak evenings, BR12
@@ -52,39 +55,56 @@ BLOCKS = [
     ("Thong Nhat Football Pitch", f"{WEDNESDAY} 07:00"),
 ]
 
-# (code, customer email, venue name, date, start_hour, hours, status)
+# (code, customer email, venue name, date, start_hour, hours, status, refund_amount, cancelled_at)
 # On TUESDAY, Thong Nhat has 3 of its 16 hours booked: 13 free + 3 booked (US04 criterion 2).
 BOOKINGS = [
-    ("BK-000101", "minh@example.com",  "Thong Nhat Football Pitch", (TODAY - timedelta(days=30)).isoformat(), 18, 2, "completed"),
-    ("BK-000102", "trang@example.com", "Lan Anh Badminton Court",   (TODAY - timedelta(days=29)).isoformat(), 19, 1, "completed"),
-    ("BK-000103", "minh@example.com",  "Thong Nhat Football Pitch", TUESDAY, 19, 2, "confirmed"),
-    ("BK-000104", "trang@example.com", "Chua Boc Badminton Court",  (TODAY + timedelta(days=2)).isoformat(), 20, 1, "confirmed"),
-    ("BK-000105", "minh@example.com",  "My Dinh Football Pitch",    SATURDAY, 8, 2, "confirmed"),
-    ("BK-000106", "trang@example.com", "Thong Nhat Football Pitch", TUESDAY, 17, 1, "confirmed"),
+    ("BK-000101", "minh@example.com",  "Thong Nhat Football Pitch",   (TODAY - timedelta(days=30)).isoformat(), 18, 2, "completed", None, None),
+    ("BK-000102", "trang@example.com", "Lan Anh Badminton Court",     (TODAY - timedelta(days=29)).isoformat(), 19, 1, "completed", None, None),
+    ("BK-000103", "minh@example.com",  "Thong Nhat Football Pitch",   TUESDAY, 19, 2, "confirmed", None, None),
+    ("BK-000104", "trang@example.com", "Chua Boc Badminton Court",    (TODAY + timedelta(days=2)).isoformat(), 20, 1, "confirmed", None, None),
+    ("BK-000105", "minh@example.com",  "My Dinh Football Pitch",      SATURDAY, 8, 2, "confirmed", None, None),
+    ("BK-000106", "trang@example.com", "Thong Nhat Football Pitch",   TUESDAY, 17, 1, "confirmed", None, None),
+    ("BK-000107", "nam@example.com",   "Bach Khoa Tennis Court",      (TODAY - timedelta(days=20)).isoformat(), 16, 2, "completed", None, None),
+    ("BK-000108", "trang@example.com", "Times City Pickleball Court", (TODAY - timedelta(days=14)).isoformat(), 18, 2, "completed", None, None),
+    ("BK-000109", "nam@example.com",   "Royal City Tennis Court",     (TODAY - timedelta(days=5)).isoformat(), 16, 2, "cancelled", 500000, f"{(TODAY - timedelta(days=6)).isoformat()} 10:00:00"),
+    ("BK-000110", "minh@example.com",  "Ha Dong Football Pitch",      (TODAY - timedelta(days=3)).isoformat(), 18, 1, "cancelled", 125000, f"{(TODAY - timedelta(days=3)).isoformat()} 09:00:00"),
 ]
 
-REVIEWS = [("BK-000101", 5, "New turf, bright lights, friendly owner.")]
+# (booking_code, rating, comment, report_count, hidden, moderation_status)
+REVIEWS = [
+    ("BK-000101", 5, "New turf, bright lights, friendly owner.", 0, 0, "active"),
+    ("BK-000107", 2, "Court surface was wet and staff were unhelpful.", 3, 1, "pending"),
+    ("BK-000108", 4, "Good paddle court, slightly noisy on weekends.", 2, 0, "active"),
+]
 
 
 def seed(conn):
     conn.executescript(SCHEMA)
     pw = generate_password_hash("sanbong1")
-    for email, name, phone, role in USERS:
-        conn.execute(
-            "INSERT INTO user (email, password_hash, full_name, phone, role, email_verified_at)"
-            " VALUES (?, ?, ?, ?, ?, datetime('now'))",
-            (email, pw, name, phone, role),
-        )
+    for email, name, phone, role, verified in USERS:
+        if verified:
+            conn.execute(
+                "INSERT INTO user (email, password_hash, full_name, phone, role, email_verified_at)"
+                " VALUES (?, ?, ?, ?, ?, datetime('now'))",
+                (email, pw, name, phone, role),
+            )
+        else:
+            conn.execute(
+                "INSERT INTO user (email, password_hash, full_name, phone, role, email_verified_at)"
+                " VALUES (?, ?, ?, ?, ?, NULL)",
+                (email, pw, name, phone, role),
+            )
     user_id = {r["email"]: r["id"] for r in conn.execute("SELECT id, email FROM user")}
 
     with open(ROOT / "data" / "venues.csv", encoding="utf-8", newline="") as f:
         for row in csv.DictReader(f):
+            lat, lng = get_venue_coords(row["area"])
             conn.execute(
                 "INSERT INTO venue (owner_id, name, sport, area, address, hourly_price,"
-                " open_hour, close_hour) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                " open_hour, close_hour, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (user_id[row["owner_email"]], row["name"], row["sport"], row["area"],
                  row["address"], int(row["hourly_price"]), int(row["open_hour"]),
-                 int(row["close_hour"])),
+                 int(row["close_hour"]), lat, lng),
             )
     venue = {r["name"]: (r["id"], r["hourly_price"])
              for r in conn.execute("SELECT id, name, hourly_price FROM venue")}
@@ -98,26 +118,30 @@ def seed(conn):
         conn.execute("INSERT INTO blocked_slot (venue_id, slot_start) VALUES (?, ?)",
                      (venue[name][0], slot))
 
-    for code, email, name, day, start, hours, status in BOOKINGS:
+    for code, email, name, day, start, hours, status, refund_amount, cancelled_at in BOOKINGS:
         vid, standard = venue[name]
         weekday = date.fromisoformat(day).weekday()
         # BR12: each hour is priced on its own - peak if a rule covers it, standard otherwise
         prices = [next((p for n, w, s, e, p in PRICING if n == name and w == weekday and s <= h < e),
                        standard) for h in range(start, start + hours)]
         cur = conn.execute(
-            "INSERT INTO booking (code, customer_id, venue_id, start_at, end_at, total_price, status)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO booking (code, customer_id, venue_id, start_at, end_at, total_price, status, refund_amount, cancelled_at)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (code, user_id[email], vid, f"{day} {start:02d}:00", f"{day} {start + hours:02d}:00",
-             sum(prices), status))
-        for h, price in zip(range(start, start + hours), prices):
-            conn.execute(
-                "INSERT INTO booking_slot (booking_id, venue_id, slot_start, price) VALUES (?, ?, ?, ?)",
-                (cur.lastrowid, vid, f"{day} {h:02d}:00", price))
+             sum(prices), status, refund_amount, cancelled_at))
+        if status != "cancelled":
+            for h, price in zip(range(start, start + hours), prices):
+                conn.execute(
+                    "INSERT INTO booking_slot (booking_id, venue_id, slot_start, price) VALUES (?, ?, ?, ?)",
+                    (cur.lastrowid, vid, f"{day} {h:02d}:00", price))
 
-    for code, rating, comment in REVIEWS:
+    for code, rating, comment, report_count, hidden, mod_status in REVIEWS:
         bid = conn.execute("SELECT id FROM booking WHERE code = ?", (code,)).fetchone()["id"]
-        conn.execute("INSERT INTO review (booking_id, rating, comment) VALUES (?, ?, ?)",
-                     (bid, rating, comment))
+        conn.execute(
+            "INSERT INTO review (booking_id, rating, comment, report_count, hidden, moderation_status)"
+            " VALUES (?, ?, ?, ?, ?, ?)",
+            (bid, rating, comment, report_count, hidden, mod_status),
+        )
     conn.commit()
 
 

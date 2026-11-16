@@ -1,16 +1,23 @@
 """Customer reviews and ratings (US12, BR18, BR19)."""
 from errors import BusinessRuleError
+from time_utils import vn_now
 
 
-def submit_review(conn, booking_code, user, rating, comment=""):
+def submit_review(conn, booking_code, user, rating, comment="", now=None):
     """Customer submits a review for their completed booking (BR18)."""
+    now = now or vn_now()
+    now_str = now.strftime("%Y-%m-%d %H:%M")
     booking = conn.execute(
-        "SELECT id, customer_id, status FROM booking WHERE code = ?", (booking_code,)).fetchone()
+        "SELECT id, customer_id, status, end_at FROM booking WHERE code = ?", (booking_code,)).fetchone()
     if booking is None:
         raise BusinessRuleError(404, "Booking not found")
     if booking["customer_id"] != user["id"]:
         raise BusinessRuleError(403, "You do not have permission to review this booking", "BR14")
-    if booking["status"] != "completed":
+    is_completed = (
+        booking["status"] == "completed"
+        or (booking["status"] == "confirmed" and booking["end_at"] <= now_str)
+    )
+    if not is_completed:
         raise BusinessRuleError(400, "Only completed bookings can be reviewed", "BR18")
 
     try:
@@ -65,14 +72,30 @@ def venue_rating_summary(conn, venue_id):
 
 def report_review(conn, review_id):
     """Report a review for abuse; automatically hide after 3 reports (BR19)."""
-    rev = conn.execute("SELECT id, report_count FROM review WHERE id = ?", (review_id,)).fetchone()
-    if rev is None:
+    cur = conn.execute(
+        """
+        UPDATE review
+        SET report_count = report_count + 1,
+            hidden = CASE
+                WHEN moderation_status = 'approved' THEN hidden
+                WHEN moderation_status = 'rejected' THEN 1
+                WHEN report_count + 1 >= 3 THEN 1
+                ELSE hidden
+            END,
+            moderation_status = CASE
+                WHEN moderation_status IN ('approved', 'rejected') THEN moderation_status
+                WHEN report_count + 1 >= 3 THEN 'pending'
+                ELSE moderation_status
+            END
+        WHERE id = ?
+        """,
+        (review_id,),
+    )
+    if cur.rowcount == 0:
         raise BusinessRuleError(404, "Review not found")
-
-    new_count = rev["report_count"] + 1
-    hidden = 1 if new_count >= 3 else 0
-    conn.execute(
-        "UPDATE review SET report_count = ?, hidden = ? WHERE id = ?",
-        (new_count, hidden, review_id))
     conn.commit()
-    return {"id": review_id, "report_count": new_count, "hidden": bool(hidden)}
+    row = conn.execute(
+        "SELECT report_count, hidden FROM review WHERE id = ?",
+        (review_id,),
+    ).fetchone()
+    return {"id": review_id, "report_count": row["report_count"], "hidden": bool(row["hidden"])}

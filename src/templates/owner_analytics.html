@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Owner Analytics{% endblock %}
+{% block content %}
+<div class="owner-container">
+  <div class="owner-header-bar">
+    <h1>Revenue &amp; Venue Analytics</h1>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <a class="button secondary" href="/owner/venues">My Venues</a>
+      <a class="button secondary" href="/owner/bookings">Bookings</a>
+      <a class="button" href="/owner/bookings/export.csv">Export Bookings CSV</a>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Active / Total Venues</div>
+      <div class="stat-value">{{ summary.active_venues }} / {{ summary.total_venues }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Bookings</div>
+      <div class="stat-value">{{ summary.total_bookings }}</div>
+      <div class="stat-meta">{{ summary.confirmed_bookings }} confirmed &middot; {{ summary.completed_bookings }} completed &middot; {{ summary.cancelled_bookings }} cancelled</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Cancellation Rate</div>
+      <div class="stat-value">{{ summary.cancellation_rate }}%</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Gross Revenue</div>
+      <div class="stat-value">{{ "{:,}".format(summary.gross_revenue) }} VND</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Refunded</div>
+      <div class="stat-value">{{ "{:,}".format(summary.total_refunded) }} VND</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Net Revenue</div>
+      <div class="stat-value" style="color: #286b45;">{{ "{:,}".format(summary.net_revenue) }} VND</div>
+    </div>
+  </div>
+
+  {% if summary.per_venue %}
+  <div class="table-responsive-wrapper">
+    <table class="owner-table">
+      <thead>
+        <tr>
+          <th>Venue</th>
+          <th>Sport</th>
+          <th>Area</th>
+          <th class="num">Total Bookings</th>
+          <th class="num">Net Revenue (VND)</th>
+          <th class="num">Rating</th>
+          <th style="text-align: right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for v in summary.per_venue %}
+        <tr>
+          <td class="venue-cell">
+            <a href="/venues/{{ v.id }}" class="venue-title-link">{{ v.name }}</a>
+          </td>
+          <td><span class="sport-badge-pill">{{ v.sport }}</span></td>
+          <td><span class="area-badge-pill">{{ v.area }}</span></td>
+          <td class="num">{{ v.total_bookings }}</td>
+          <td class="num price-cell">{{ "{:,}".format(v.net_revenue) }}</td>
+          <td class="num">
+            {% if v.avg_rating is not none %}
+              ★ {{ v.avg_rating }} ({{ v.review_count }})
+            {% else %}
+              <span class="muted">No reviews</span>
+            {% endif %}
+          </td>
+          <td style="text-align: right; white-space: nowrap;">
+            <a href="/owner/venues/{{ v.id }}/schedule" class="button secondary btn-table-action">Schedule</a>
+            <a href="/owner/bookings?venue_id={{ v.id }}" class="button secondary btn-table-action">Bookings</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty">
+    You have no venues yet. <a href="/owner/venues/new">Add your first venue</a> to start tracking analytics.
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

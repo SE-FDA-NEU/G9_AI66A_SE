@@ -17,6 +17,8 @@ def hour_prices(conn, venue_id, day):
         day = date.fromisoformat(day)
     venue = conn.execute("SELECT hourly_price, open_hour, close_hour FROM venue WHERE id = ?",
                          (venue_id,)).fetchone()
+    if venue is None:
+        return {}
     rules = conn.execute("SELECT start_hour, end_hour, price_per_hour FROM pricing_rule"
                          " WHERE venue_id = ? AND weekday = ?", (venue_id, day.weekday())).fetchall()
     prices = {}
@@ -82,6 +84,52 @@ def add_pricing_rule(conn, venue_id, weekday, start_hour, end_hour, price_per_ho
         " VALUES (?, ?, ?, ?, ?)", (venue_id, weekday, start_hour, end_hour, price_per_hour))
     conn.commit()
     return cur.lastrowid
+
+
+def update_pricing_rule(conn, venue_id, rule_id, weekday, start_hour, end_hour, price_per_hour):
+    """Update an existing peak pricing rule with overlap prevention (US11, BR12, BR13)."""
+    venue = conn.execute("SELECT open_hour, close_hour FROM venue WHERE id = ?", (venue_id,)).fetchone()
+    if venue is None:
+        raise BusinessRuleError(404, "Venue not found")
+
+    existing = conn.execute(
+        "SELECT id FROM pricing_rule WHERE id = ? AND venue_id = ?",
+        (rule_id, venue_id),
+    ).fetchone()
+    if existing is None:
+        raise BusinessRuleError(404, "Pricing rule not found")
+
+    if not 0 <= weekday <= 6:
+        raise BusinessRuleError(400, "Please choose a valid weekday (0-6)", "BR12")
+    if not (venue["open_hour"] <= start_hour < end_hour <= venue["close_hour"]):
+        raise BusinessRuleError(
+            400,
+            f"Time range must be within opening hours ({venue['open_hour']:02d}:00 - {venue['close_hour']:02d}:00)",
+            "BR12",
+        )
+    if not (1000 <= price_per_hour <= 100_000_000):
+        raise BusinessRuleError(400, "Hourly price must be between 1,000 and 100,000,000 VND", "BR13")
+
+    conflict = conn.execute(
+        """
+        SELECT 1 FROM pricing_rule
+        WHERE venue_id = ? AND weekday = ? AND id != ?
+          AND NOT (end_hour <= ? OR start_hour >= ?)
+        """,
+        (venue_id, weekday, rule_id, start_hour, end_hour),
+    ).fetchone()
+    if conflict:
+        raise BusinessRuleError(409, "Pricing rules cannot overlap on the same weekday", "BR12")
+
+    conn.execute(
+        """
+        UPDATE pricing_rule
+        SET weekday = ?, start_hour = ?, end_hour = ?, price_per_hour = ?
+        WHERE id = ? AND venue_id = ?
+        """,
+        (weekday, start_hour, end_hour, price_per_hour, rule_id, venue_id),
+    )
+    conn.commit()
 
 
 def delete_pricing_rule(conn, rule_id, venue_id):

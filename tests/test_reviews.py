@@ -2,7 +2,6 @@
 Business Rules: BR18, BR19.
 """
 from db import connect
-import reviews
 
 
 def test_submit_review_for_completed_booking(client, login, db):

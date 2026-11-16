@@ -2,12 +2,15 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-import pytest
 import sys
+
+import pytest
+
 sys.path.insert(0, 'G9_AI66A_SE/src')
 from app import create_app
 from db import connect
 from init_db import seed
+
 
 @pytest.fixture
 def db(tmp_path):
@@ -21,6 +24,7 @@ def db(tmp_path):
 @pytest.fixture
 def client(db, tmp_path):
     app = create_app(database=db)
+    app.config["TESTING"] = True
     app.config["UPLOAD_DIR"] = tmp_path / "uploads"
     return app.test_client()
 

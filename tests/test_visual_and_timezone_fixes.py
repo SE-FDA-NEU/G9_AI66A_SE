@@ -7,16 +7,15 @@ Covers:
 4. Customer my_bookings correctly marks past/imminent bookings as non-cancellable or completed.
 5. booking_done.html renders @media print CSS and proper h1 white color contrast.
 """
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
 import booking as svc
+import time_utils
 from app import create_app
 from db import connect
 from errors import BusinessRuleError
-import time_utils
-
 
 # -----------------------------------------------------------------------------
 # Fixtures & Helpers
@@ -28,6 +27,7 @@ def _user(conn, email):
 
 def _make_app(db, now_fn=None):
     app = create_app(database=db)
+    app.config["TESTING"] = True
     if now_fn:
         app.config["NOW"] = now_fn
     return app
@@ -61,7 +61,7 @@ def test_time_utils_vn_now_returns_valid_naive_utc_plus_7():
     assert offset == timedelta(hours=7)
 
     # Verify vn_now is within 2 seconds of UTC now + 7 hours
-    utc_now = datetime.now(timezone.utc).replace(tzinfo=None)
+    utc_now = datetime.now(UTC).replace(tzinfo=None)
     expected_vn = utc_now + timedelta(hours=7)
     diff = abs((vn_now - expected_vn).total_seconds())
     assert diff < 2.0, f"vn_now ({vn_now}) deviates from expected UTC+7 ({expected_vn}) by {diff}s"
@@ -129,7 +129,7 @@ def test_check_request_rejects_past_hour_on_today(db):
         assert exc_info_earlier.value.message == "This time slot has already started"
 
         # Future slot starting at 15:00 -> accepted
-        v, d, s, h = svc.check_request(conn, u, 1, today, start_hour=15, hours=1, now=simulated_vn_now)
+        _v, _d, s, h = svc.check_request(conn, u, 1, today, start_hour=15, hours=1, now=simulated_vn_now)
         assert s == 15
         assert h == 1
 
@@ -307,7 +307,7 @@ def test_my_bookings_marks_imminent_booking_as_starting_soon(db):
 
     # Imminent booking should display disabled Non-cancellable (<2h) button
     assert "Non-cancellable (&lt;2h)" in html or "Non-cancellable (<2h)" in html
-    assert "Cannot cancel less than 2 hours before match start time (BR15)" in html
+    assert "Cannot cancel less than 2 hours before match start time" in html
 
 
 def test_my_bookings_marks_in_progress_booking(db):

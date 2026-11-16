@@ -8,7 +8,6 @@ import pytest
 import booking as svc
 from db import connect
 
-
 _BASE_DAY = date.today() + timedelta(days=20)
 NOW = datetime.combine(_BASE_DAY, datetime.min.time()).replace(hour=9, minute=0, second=0)
 DAY_1 = (_BASE_DAY + timedelta(days=1)).isoformat()
@@ -22,6 +21,7 @@ SCHEDULE_DAY = DAY_1
 def app_with_now(db):
     from app import create_app
     app = create_app(database=db)
+    app.config["TESTING"] = True
     app.config["NOW"] = lambda: NOW
     return app
 

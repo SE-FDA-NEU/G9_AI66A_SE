@@ -99,7 +99,16 @@
         <div class="ticket-kicker">Booking confirmation</div>
         <h1 id="ticket-title">Your court is reserved</h1>
       </div>
-      <div class="ticket-status">{{ booking.status|capitalize }}</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+        {% set refunded = booking.refunded_amount if booking.refunded_amount is defined and booking.refunded_amount is not none else (booking.refund_amount or 0) %}
+        {% if booking.payment_status in ('paid', 'refunded', 'partially_refunded') %}
+        <div class="ticket-status" style="background: #15803D; border-color: #86EFAC; color: #FFFFFF; border-radius: 4px;">Online QR Paid</div>
+        {% endif %}
+        {% if refunded > 0 %}
+        <div class="ticket-status" style="background: #FEF2F2; border-color: #FECACA; color: #B91C1C; border-radius: 4px;">Auto-Refunded: {{ "{:,}".format(refunded) }} VND</div>
+        {% endif %}
+        <div class="ticket-status">{{ booking.status|capitalize }}</div>
+      </div>
     </div>
     <div class="ticket-body">
       <div class="ticket-code-row">
@@ -111,7 +120,15 @@
       </div>
 
       <div class="ticket-facts">
-        <div><p class="ticket-label">Venue</p><strong>{{ booking.venue_name }}</strong><span class="muted">{{ booking.address }}</span></div>
+        <div>
+          <p class="ticket-label">Venue</p>
+          <strong>{{ booking.venue_name }}</strong>
+          <span class="muted">{{ booking.address }}{% if booking.area %}, {{ booking.area }}{% endif %}</span>
+          {% set ticket_gmap_q = (booking.latitude ~ ',' ~ booking.longitude) if (booking.latitude is not none and booking.longitude is not none) else (booking.address ~ (', ' ~ booking.area if booking.area else '') ~ ', Hanoi, Vietnam') %}
+          <div>
+            <a class="map-link" href="https://www.google.com/maps/search/?api=1&query={{ ticket_gmap_q | urlencode }}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; font-size: 12px; font-weight: 700; color: var(--brand); text-decoration: none;">Get Directions (Google Maps) &#8599;</a>
+          </div>
+        </div>
         <div><p class="ticket-label">Date</p><strong>{{ booking.start_at[8:10] }}/{{ booking.start_at[5:7] }}/{{ booking.start_at[:4] }}</strong></div>
         <div><p class="ticket-label">Time</p><strong>{{ booking.start_at[11:] }}–{{ booking.end_at[11:] }}</strong></div>
       </div>
@@ -128,7 +145,11 @@
           </tbody>
         </table>
       </div>
-      <div class="ticket-note">This demo does not collect online payments. Please confirm payment arrangements with the venue.</div>
+      {% if booking.payment_status in ('paid', 'refunded', 'partially_refunded') %}
+      <div class="ticket-note">Payment confirmed via Online QR. Cancellations trigger automatic instant refunds.</div>
+      {% else %}
+      <div class="ticket-note">Payment pending or settled directly with the venue.</div>
+      {% endif %}
       <div class="ticket-actions">
         <a href="/my-bookings">View my bookings</a>
         <button class="button secondary" type="button" onclick="window.print()">Print booking</button>

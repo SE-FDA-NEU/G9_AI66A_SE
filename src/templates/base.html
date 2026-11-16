@@ -4,20 +4,47 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% block title %}{% endblock %} - Sports Venue Booking</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23d3eb7b'/%3E%3Crect x='5' y='7.5' width='22' height='17' rx='3' fill='none' stroke='%230f291e' stroke-width='2.2'/%3E%3Cline x1='16' y1='7.5' x2='16' y2='24.5' stroke='%230f291e' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3.5' fill='none' stroke='%230f291e' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='1.3' fill='%230f291e'/%3E%3C/svg%3E" />
     <link
       rel="stylesheet"
-      href="{{ url_for('static', filename='style.css') }}"
+      href="{{ url_for('static', filename='style.css', v='20261116g') }}"
     />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
+    <style>
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: 8px;
+        z-index: 9999;
+        padding: 8px 14px;
+        background: #0f291e;
+        color: #ffffff;
+        font-weight: 700;
+        border-radius: 6px;
+        text-decoration: none;
+      }
+      .skip-link:focus {
+        left: 12px;
+      }
+    </style>
     {% block style %}{% endblock %}
   </head>
   <body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
     <header class="top">
       <a class="brand" href="/search" aria-label="Sports Arena, home">
         <span class="brand-icon" aria-hidden="true">
-          <img src="{{ url_for('static', filename='images/sports-icon.png') }}" alt="Sports Arena icon" width="22" height="22" style="display:block; filter: brightness(0) invert(1);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" focusable="false">
+            <rect x="2.5" y="4.5" width="19" height="15" rx="2.75" stroke="currentColor" stroke-width="2"/>
+            <line x1="12" y1="4.5" x2="12" y2="19.5" stroke="currentColor" stroke-width="1.75"/>
+            <circle cx="12" cy="12" r="3.1" stroke="currentColor" stroke-width="1.75"/>
+            <circle cx="12" cy="12" r="1.2" fill="currentColor"/>
+            <path d="M2.5 9.25H4.9C6.28 9.25 7.4 10.48 7.4 12C7.4 13.52 6.28 14.75 4.9 14.75H2.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+            <path d="M21.5 9.25H19.1C17.72 9.25 16.6 10.48 16.6 12C16.6 13.52 17.72 14.75 19.1 14.75H21.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+          </svg>
         </span>
         <span class="brand-text"><span class="brand-name">Sports Arena<span class="brand-period">.</span></span><small>HANOI COURT BOOKING</small></span>
       </a>
@@ -25,32 +52,41 @@
         <a href="/search" class="nav-link">Find a venue</a>
         {% if g.user %}
           {% if g.user.role == 'customer' %}
-            <a href="/dashboard" class="nav-link">👤 My page</a>
-            <a href="/my-bookings" class="nav-link">📅 My bookings</a>
+            <a href="/my-bookings" class="nav-link">My bookings</a>
           {% elif g.user.role == 'owner' %}
-            <a href="/owner/venues" class="nav-link">💼 My venues</a>
-            <a href="/owner/bookings" class="nav-link">📋 Bookings</a>
+            <a href="/owner/venues" class="nav-link">My venues</a>
+            <a href="/owner/bookings" class="nav-link">Bookings</a>
+            <a href="/owner/analytics" class="nav-link">Analytics</a>
+            <a href="/account/password" class="nav-link">Password</a>
           {% else %}
-            <a href="/admin" class="nav-link">⚙️ Administration</a>
+            <a href="/admin" class="nav-link">Administration</a>
+            <a href="/account/password" class="nav-link">Password</a>
           {% endif %}
+          {% if g.user.role == 'customer' %}
+          <a href="/dashboard" class="user-profile-badge" title="Account &amp; Password" style="text-decoration:none;">
+            <span class="user-avatar">{{ g.user.full_name[0] | upper }}</span>
+            <span class="who">{{ g.user.full_name }}</span>
+          </a>
+          {% else %}
           <div class="user-profile-badge">
             <span class="user-avatar">{{ g.user.full_name[0] | upper }}</span>
             <span class="who">{{ g.user.full_name }}</span>
           </div>
-          <button class="link btn-logout" type="button" onclick="document.getElementById('signout-modal').style.display='flex'" aria-haspopup="dialog">Sign out</button>
+          {% endif %}
+          <button class="link btn-logout" type="button" onclick="openSignoutModal()" aria-haspopup="dialog" aria-controls="signout-modal">Sign out</button>
         {% else %}
           <a href="/login" class="nav-link btn-login">Sign in</a>
           <a href="/register" class="nav-link btn-register-nav">Register</a>
         {% endif %}
 
         <div class="lang-switcher" id="langSwitcher" title="Language Switcher">
-          <button type="button" class="lang-btn active" data-lang="en" onclick="setLanguage('en')">🇬🇧 EN</button>
-          <button type="button" class="lang-btn" data-lang="vi" onclick="setLanguage('vi')">🇻🇳 VI</button>
+          <button type="button" class="lang-btn active" data-lang="en" aria-pressed="true" onclick="setLanguage('en')">EN</button>
+          <button type="button" class="lang-btn" data-lang="vi" aria-pressed="false" onclick="setLanguage('vi')">VI</button>
         </div>
       </nav>
     </header>
 
-    <main>
+    <main id="main-content" tabindex="-1">
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
           {% if category == "verify-link" %}
@@ -61,8 +97,16 @@
                 <a href="{{ message }}" class="verify-action-link">Verify my email &rarr;</a>
               </div>
             </div>
+          {% elif category == "reset-link" %}
+            <div class="flash flash-verify" role="status">
+              <span class="flash-icon">🔑</span>
+              <div>
+                <strong>Password Reset Link:</strong> No email server is configured on this test instance. Use this link directly: 
+                <a href="{{ message }}" class="verify-action-link">Reset my password &rarr;</a>
+              </div>
+            </div>
           {% else %}
-            <div class="flash {{ category }}" role="status">
+            <div class="flash {{ category }}" role="{{ 'alert' if category == 'error' else 'status' }}">
               {% if category == 'success' %}
                 <span class="flash-icon">✓</span>
               {% elif category == 'error' %}
@@ -115,22 +159,41 @@
         "Verify my email →": "Xác minh email →",
         "Verify my email &rarr;": "Xác minh email →",
         "Verification Link:": "Liên kết xác minh:",
+        "Password Reset Link:": "Liên kết đặt lại mật khẩu:",
+        "Reset my password →": "Đặt lại mật khẩu →",
+        "Reset my password &rarr;": "Đặt lại mật khẩu →",
+        "Skip to main content": "Chuyển đến nội dung chính",
+        "📊 Analytics": "📊 Thống kê",
+        "Analytics": "Thống kê",
+        "🔑 Password": "🔑 Mật khẩu",
 
         // Hero & Search Page
-        "HANOI SPORTS VENUES · VERIFIED": "SÂN THỂ THAO · HÀ NỘI · ĐÃ XÁC THỰC",
         "Great matches start": "Kèo hay bắt đầu",
         "with the right": "từ một chiếc sân",
         "court.": "đúng ý.",
         "Great matches start with the right court.": "Kèo hay bắt đầu từ một chiếc sân đúng ý.",
+        "Live schedules and hourly rates for football, badminton, tennis, and pickleball across Hanoi.": "Lịch trống và giá thuê theo giờ cho sân bóng đá, cầu lông, tennis, pickleball tại Hà Nội.",
+        "Live Aerial": "Toàn cảnh sân",
         "Find football pitches, badminton, tennis and pickleball courts near you. Check live availability, compare prices, and book in seconds.": "Tìm sân bóng đá, cầu lông, tennis và pickleball gần bạn. Xem giờ trống, so sánh giá và đặt lịch thuận tiện.",
         "venues taking bookings": "sân đang nhận đặt",
-        "Choose a sport · pick an area · find your slot": "Chọn môn chơi · chọn khu vực · chọn giờ phù hợp",
         "Sport discipline": "Môn thể thao",
         "Sport Discipline": "Môn thể thao",
         "Area (district)": "Khu vực",
         "Area (District)": "Khu vực",
         "Area (district of Hanoi)": "Khu vực",
         "Venue name or address": "Tên sân hoặc địa chỉ",
+        "Sort by": "Sắp xếp",
+        "Recommended": "Đề xuất",
+        "Price: Low to High": "Giá: Thấp đến cao",
+        "Price: High to Low": "Giá: Cao đến thấp",
+        "Top Rated": "Đánh giá cao",
+        "Name: A–Z": "Tên: A–Z",
+        "⚙ Price range & time slot filters": "⚙ Lọc theo khoảng giá & khung giờ",
+        "Min price (VND/hr)": "Giá tối thiểu (VND/giờ)",
+        "Max price (VND/hr)": "Giá tối đa (VND/giờ)",
+        "Start hour": "Giờ bắt đầu",
+        "Any hour": "Mọi khung giờ",
+        "New": "Mới",
         "Search venues": "Tìm sân",
         "Find venues": "Tìm sân",
         "Clear filters": "Xóa lọc",
@@ -146,64 +209,93 @@
         "Live availability by date": "Lịch trống xem theo ngày",
         "Live slot availability by date": "Lịch trống xem theo ngày",
         "No venues found": "Không tìm thấy sân phù hợp",
+        "Try another filter or sport discipline.": "Thử đổi bộ lọc hoặc chọn môn thể thao khác.",
         "Try adjusting your search criteria or selecting another sport discipline.": "Thử đổi từ khóa, khu vực hoặc môn thể thao rồi tìm lại.",
         "View All Venues": "Xem tất cả sân",
         "Illustrative photo": "Ảnh minh họa",
         "View venue": "Xem sân",
         "View Slots": "Xem giờ trống",
         "Show table view": "Hiện danh sách dạng bảng",
-        "Book a venue in a few steps": "Đặt sân gọn trong vài bước",
-        "Opening hours and prices are shown before you confirm.": "Thông tin giờ mở cửa và giá được hiển thị trước khi bạn xác nhận.",
-        "Find courts near you": "Tìm sân quanh bạn",
-        "Filter by sport, area or venue name across Hanoi.": "Lọc theo môn thể thao, khu vực hoặc tên sân.",
-        "Choose a time slot": "Chọn khung giờ",
-        "Check availability by date and review the price before booking.": "Xem giờ còn trống theo ngày và kiểm tra mức giá trước khi đặt.",
-        "Confirm your booking": "Xác nhận lịch",
-        "Use your booking code to find your reservation in My bookings.": "Mã đặt sân giúp bạn tra cứu lịch trong mục Đơn của tôi.",
-        "Instant confirmation": "Xác nhận tức thì",
-        "Receive your booking pass immediately to check in at the pitch.": "Nhận vé xác nhận điện tử tức thì để check-in tại sân.",
         "VND/hour": "VND/giờ",
         "Price / hour (VND)": "Giá / giờ (VND)",
+        "venue(s) found": "sân phù hợp",
 
         // Venue Details & Slots
+        "← Back to venue search": "← Quay lại tìm sân",
+        "&larr; Back to venue search": "← Quay lại tìm sân",
         "Book This Venue": "Đặt sân này",
+        "Address": "Địa chỉ",
         "Location & Address": "Địa chỉ sân",
+        "Get Directions (Google Maps) ↗": "Chỉ đường (Google Maps) ↗",
+        "View on Map ↗": "Xem bản đồ ↗",
         "Operating Hours": "Giờ hoạt động",
         "Opening hours": "Giờ mở cửa",
+        "Base rate": "Giá tiêu chuẩn",
         "Standard Hourly Rate": "Giá tiêu chuẩn mỗi giờ",
         "Standard price": "Giá tiêu chuẩn",
-        "Live Availability & Free Hours": "Lịch hoạt động & Khung giờ trống",
-        "Click any green slot to proceed directly to instant checkout.": "Nhấp vào bất kỳ khung giờ màu xanh để tiến hành đặt sân ngay.",
-        "Free (Bookable)": "Trống (Có thể đặt)",
+        "Available hours": "Khung giờ trống",
+        "Live Availability & Free Hours": "Khung giờ trống",
+        "Free": "Trống",
+        "free": "trống",
+        "Free (Bookable)": "Trống",
         "Booked": "Đã đặt",
+        "booked": "đã đặt",
         "Closed": "Đã đóng",
         "Blocked": "Bảo trì",
+        "blocked": "bảo trì",
         "Past": "Đã qua",
-        "Peak Pricing Notice:": "Lưu ý giá giờ cao điểm:",
-        "Slots between 17:00 and 21:00 apply evening rates. Transparently itemized in your price quote.": "Các khung giờ từ 17:00 đến 21:00 áp dụng mức giá buổi tối. Chi tiết sẽ hiển thị minh bạch trong bảng báo giá.",
+        "past": "đã qua",
+        "closed for maintenance": "bảo trì",
+        "No free hours on": "Không còn giờ trống ngày",
+        "every hour is booked, closed or over. Try another date.": "tất cả các giờ đã đặt, đóng cửa hoặc đã qua. Hãy thử chọn ngày khác.",
+        "Click to select": "Nhấn để chọn",
+        "Select": "Chọn",
+        "Peak": "Cao điểm",
+        "Standard": "Tiêu chuẩn",
+        "Fetching live quote…": "Đang tính giá…",
+        "Calculating quote...": "Đang tính giá...",
         "Select Date": "Chọn ngày",
         "Loading free hours…": "Đang tải giờ trống…",
         "Loading free hours&hellip;": "Đang tải giờ trống…",
         "Try again": "Thử lại",
-        "⭐ Player Reviews & Ratings": "⭐ Đánh giá & Nhận xét của người chơi",
-        "Player Reviews & Ratings": "Đánh giá & Nhận xét của người chơi",
-        "Verified feedback from players who completed matches at this venue.": "Nhận xét đã xác thực từ những người chơi đã thi đấu tại sân.",
-        "No reviews for this venue yet. Book a session and be the first to share your experience!": "Chưa có đánh giá nào cho sân này. Hãy đặt sân và chia sẻ cảm nhận đầu tiên của bạn!",
+        "Clear": "Bỏ chọn",
+        "Book Selected Slots →": "Đặt khung giờ đã chọn →",
+        "Book Selected Slots &rarr;": "Đặt khung giờ đã chọn →",
+        "Cancellation Policy": "Chính sách hoàn hủy",
+        "Cancellation Policy:": "Chính sách hoàn hủy:",
+        "≥ 24h: 100% refund": "≥ 24h: Hoàn 100%",
+        "2h–24h: 50% refund": "2h–24h: Hoàn 50%",
+        "< 2h: Non-refundable": "< 2h: Không hoàn tiền",
+        "100% refund": "Hoàn 100%",
+        "50% refund": "Hoàn 50%",
+        "Non-refundable": "Không hoàn tiền",
+        "≥ 24h before start: 100% refund": "≥ 24h trước giờ chơi: Hoàn 100%",
+        "2h–24h before start: 50% refund": "2h–24h trước giờ chơi: Hoàn 50%",
+        "< 2h before start: Non-refundable": "< 2h trước giờ chơi: Không hoàn tiền",
+        "100% refund (≥24h)": "Hoàn 100% (≥24h)",
+        "50% refund (2h–24h)": "Hoàn 50% (2h–24h)",
+        "Reviews": "Đánh giá",
+        "⭐ Player Reviews & Ratings": "Đánh giá",
+        "Player Reviews & Ratings": "Đánh giá",
+        "No reviews yet.": "Chưa có đánh giá nào.",
+        "No written comment provided.": "Không có nội dung bình luận.",
         "Report": "Báo cáo",
         "Flag": "Báo vi phạm",
         "This page needs JavaScript to show the free hours.": "Trang này cần bật JavaScript để hiển thị giờ trống.",
         "per hour": "mỗi giờ",
+        "/ hour": "/ giờ",
         "VND per hour": "VND mỗi giờ",
 
         // Booking Flow
         "Choose a time to play": "Chọn thời gian thi đấu",
         "Check the venue and price, then confirm your reservation.": "Kiểm tra thông tin sân và giá tiền trước khi xác nhận đặt chỗ.",
-        "Pick date and time": "1. Chọn ngày & giờ",
-        "Review price": "2. Kiểm tra giá",
-        "Confirm booking": "3. Xác nhận đặt sân",
+        "Pick date and time": "Chọn ngày & giờ",
+        "Review price": "Kiểm tra giá",
+        "Confirm booking": "Xác nhận đặt sân",
         "Choose date": "Chọn ngày",
         "Start time": "Giờ bắt đầu",
-        "Duration": "Thời lượng",
+        "Playing hours": "Số giờ chơi",
+        "Duration": "Số giờ chơi",
         "Check price": "Xem giá",
         "Change date": "Đổi ngày",
         "Time": "Thời gian",
@@ -228,19 +320,20 @@
         "Print booking": "In phiếu đặt sân",
 
         // My Bookings
-        "📅 My Bookings · Match History": "📅 Lịch sử đặt sân · Trận đấu của tôi",
-        "Manage your upcoming pitch reservations and view your match history.": "Quản lý các trận đấu sắp diễn ra và tra cứu lịch sử đặt sân của bạn.",
         "Book another venue": "Đặt thêm sân khác",
         "All": "Tất cả",
-        "🟢 Upcoming (Confirmed)": "🟢 Sắp diễn ra",
-        "🔵 Completed": "🔵 Đã hoàn thành",
-        "🔴 Cancelled": "🔴 Đã hủy",
+        "Upcoming": "Sắp diễn ra",
         "You have no bookings yet": "Bạn chưa có đơn đặt sân nào",
-        "Find football pitches, badminton, tennis, and pickleball courts near you and reserve in seconds.": "Tìm sân bóng đá, cầu lông, tennis, pickleball gần bạn và giữ chỗ chỉ trong vài giây.",
+        "Choose a court and time slot to make your first reservation.": "Chọn sân và khung giờ trống để đặt lịch đầu tiên của bạn.",
         "Find a venue now": "Tìm sân ngay",
-        "🎟️ View Voucher": "🎟️ Xem vé điện tử",
+        "View Voucher": "Xem vé điện tử",
+        "Add to Calendar (.ics)": "Thêm vào Lịch (.ics)",
+        "Book Again": "Đặt lại sân này",
         "✕ Cancel Booking": "✕ Hủy đặt sân",
-        "⭐ Rate Venue": "⭐ Đánh giá sân",
+        "✕ Non-cancellable (<2h)": "✕ Không thể hủy (<2h)",
+        "Cannot cancel less than 2 hours before match start time": "Không thể hủy dưới 2 giờ trước giờ bóng lăn",
+        "Match in progress": "Trận đấu đang diễn ra",
+        "Rate Venue": "Đánh giá sân",
         "Submit Review": "Gửi đánh giá",
         "Rating:": "Đánh giá:",
         "Comment:": "Nhận xét:",
@@ -256,14 +349,22 @@
 
         // Auth
         "Sign in to your account": "Đăng nhập tài khoản",
-        "Access your sports bookings and pitch schedule": "Xem lịch đặt sân và quản lý trận đấu",
         "Email Address": "Địa chỉ Email",
         "Password": "Mật khẩu",
-        "Demo sign-in · shared password": "Tài khoản dùng thử · mật khẩu chung",
+        "Demo accounts · password": "Tài khoản dùng thử · mật khẩu",
         "Create your account": "Tạo tài khoản mới",
-        "Join Hanoi's amateur sports network to book pitches in seconds": "Tham gia mạng lưới thể thao Hà Nội để đặt sân trong vài giây",
         "Full Name": "Họ và tên",
         "Phone Number": "Số điện thoại",
+        "10 digits starting with 0": "10 chữ số, bắt đầu bằng số 0",
+        "At least 8 characters, with a letter and a digit": "Tối thiểu 8 ký tự, gồm chữ và số",
+        "At least 8 characters, with a letter and a digit.": "Tối thiểu 8 ký tự, gồm chữ và số.",
+        "Enter your account email to receive a reset link.": "Nhập email tài khoản để nhận liên kết đặt lại mật khẩu.",
+        "← Back to sign in": "← Quay lại đăng nhập",
+        "&larr; Back to sign in": "← Quay lại đăng nhập",
+        "Register →": "Đăng ký →",
+        "Register &rarr;": "Đăng ký →",
+        "Sign in →": "Đăng nhập →",
+        "Sign in &rarr;": "Đăng nhập →",
         "Already registered?": "Đã có tài khoản?",
         "Don't have an account?": "Chưa có tài khoản?",
         "Create an account": "Tạo tài khoản",
@@ -275,52 +376,57 @@
         "Account temporarily locked. Try again in 15 minutes": "Tài khoản tạm khóa. Vui lòng thử lại sau 15 phút",
         "Your session has expired": "Phiên làm việc đã hết hạn",
         "You do not have permission to access this page": "Bạn không có quyền truy cập trang này",
+        "This email is already in use": "Email này đã được sử dụng",
+        "This phone number is already in use": "Số điện thoại này đã được sử dụng",
 
         // Dashboard
-        "Manage your venue reservations, profile details, and account preferences.": "Quản lý lịch đặt sân, thông tin cá nhân và cài đặt tài khoản.",
         "Verified": "Đã xác thực",
         "Action Required": "Cần xác thực",
         "Verification pending:": "Chưa xác thực email:",
-        "Verify your email before booking. This demo does not send email; use the verification link shown on the sign-in page.": "Vui lòng xác thực email trước khi đặt sân. Bản demo này không gửi email; hãy sử dụng liên kết xác thực trên trang đăng nhập.",
+        "Please verify your email before booking. Use the verification link shown on the sign-in page.": "Vui lòng xác thực email trước khi đặt sân bằng liên kết trên trang đăng nhập.",
         "Send a new link": "Gửi liên kết mới",
-        "Service area": "Khu vực hoạt động",
         "Hanoi": "Hà Nội",
-        "Browse local venue listings": "Xem danh sách sân tại địa phương",
-        "Upcoming Matches": "Trận sắp tới",
-        "Confirmed reservations": "Lịch đã xác nhận",
-        "Your reservations": "Đơn đặt của bạn",
-        "Booking codes": "Mã đặt sân",
-        "Find the details for each reservation in your booking list.": "Xem chi tiết từng đơn đặt trong danh sách của bạn.",
+        "Upcoming reservations": "Lịch đặt sắp tới",
         "Your Upcoming Reservations": "Lịch sắp tới của bạn",
-        "View all match history →": "Xem toàn bộ lịch sử trận đấu →",
-        "View all match history &rarr;": "Xem toàn bộ lịch sử trận đấu →",
+        "All bookings →": "Tất cả đơn đặt →",
+        "All bookings &rarr;": "Tất cả đơn đặt →",
+        "No upcoming bookings.": "Chưa có lịch đặt sắp tới.",
+        "Browse available courts →": "Tìm sân ngay →",
+        "Browse available courts &rarr;": "Tìm sân ngay →",
         "View Voucher →": "Xem vé điện tử →",
         "View Voucher &rarr;": "Xem vé điện tử →",
-        "Ready for your next match?": "Sẵn sàng cho trận tiếp theo?",
-        "Browse venues around Hanoi, compare listed hourly prices, and check available times before booking.": "Khám phá các cụm sân tại Hà Nội, so sánh giá theo giờ và kiểm tra khung giờ trống trước khi đặt.",
-        "Find a venue to book": "Tìm sân để đặt",
-        "📅 My Match History": "📅 Lịch sử trận đấu của tôi",
-        "Fair Cancellation Policy": "Chính sách hủy minh bạch",
-        "Cancel at least 24 hours before your booking for a full refund. Cancellations 2–24 hours before the start receive a 50% refund.": "Hủy trước ít nhất 24 giờ được hoàn tiền 100%. Hủy trong khoảng 2–24 giờ trước giờ chơi được hoàn 50%.",
+        "Transparent Peak Pricing": "Bảng giá giờ cao điểm minh bạch",
+        "Real-time slot rate breakdown with transparent evening rates computed before final confirmation.": "Chi tiết giá theo từng khung giờ được tính toán rõ ràng, minh bạch trước khi bạn xác nhận đặt sân.",
+        "Accurate Court Details": "Thông tin sân chính xác",
+        "Each listing shows its location, opening hours, and prices provided by the venue owner.": "Mỗi cụm sân hiển thị đầy đủ vị trí, giờ mở cửa và bảng giá do chính chủ sân cung cấp.",
 
         // Owner Portal
-        "Manage listed pitches, operating hours, hourly pricing, and gallery photos.": "Quản lý sân, khung giờ hoạt động, giá theo giờ và hình ảnh sân.",
         "+ Add a venue": "+ Thêm sân mới",
         "Add a venue": "Thêm sân mới",
-        "Total Listed Venues": "Tổng số sân đang quản lý",
-        "Schedule management": "Quản lý lịch sân",
-        "Pricing rules": "Quy tắc giá",
-        "Ready for customer bookings": "Sẵn sàng nhận khách đặt",
-        "Availability": "Lịch hoạt động",
-        "Update opening hours and mark unavailable times.": "Cập nhật giờ mở cửa và đánh dấu khung giờ bận.",
-        "By day and time": "Theo ngày và giờ",
-        "Set different hourly prices for selected periods.": "Cài đặt mức giá theo giờ cho từng khung thời gian.",
-        "List your sports arena on the Hanoi booking network and receive online player reservations.": "Đăng ký cụm sân trên mạng lưới thể thao Hà Nội để nhận lịch đặt trực tuyến.",
+        "Export CSV": "Xuất CSV",
+        "Export Bookings CSV": "Xuất CSV đơn đặt",
+        "My Venues": "Cụm sân của tôi",
+        "Schedule": "Lịch sân",
+        "Pricing": "Giá thuê",
+        "Pricing Rules": "Quy tắc giá",
+        "Add Peak Pricing Rule": "Thêm khung giá cao điểm",
+        "Active Rules": "Quy tắc đang áp dụng",
+        "View Public Page": "Xem trang sân",
+        "Unblock Slot": "Mở lại giờ này",
+        "Block": "Khóa giờ",
+        "Batch Block (Multi-day)": "Khóa lịch nhiều ngày",
+        "Confirm Batch Block": "Xác nhận khóa lịch",
+        "From Date": "Từ ngày",
+        "To Date": "Đến ngày",
+        "Start Hour": "Giờ bắt đầu",
+        "End Hour": "Giờ kết thúc",
+        "Reason": "Lý do",
         "Street address": "Địa chỉ chi tiết",
         "Hourly base price (VND)": "Giá thuê cơ bản (VND/giờ)",
         "Opens at": "Giờ mở cửa",
         "Closes at": "Giờ đóng cửa",
         "Venue Photo (optional)": "Ảnh sân bãi (tùy chọn)",
+        "JPG or PNG, max 5 MB.": "Định dạng JPG hoặc PNG, tối đa 5 MB.",
         "Choose a sport": "Chọn môn thể thao",
         "Choose an area": "Chọn khu vực",
         "Are you sure?": "Bạn có chắc không?",
@@ -331,14 +437,7 @@
         "Scroll back to top": "Lên đầu trang",
         "Cards": "Thẻ",
         "Table": "Bảng",
-        "🗂️ Cards": "🗂️ Thẻ",
-        "📋 Table": "📋 Bảng",
         "Add venue": "Thêm sân",
-        "📋 Owner Bookings · Daily Reservations": "📋 Quản lý đơn đặt sân · Theo ngày",
-        "Review all customer bookings across your venues and manage player check-ins.": "Theo dõi các đơn đặt sân tại các cụm sân của bạn và quản lý đón khách.",
-        "💼 My Venues": "💼 Cụm sân của tôi",
-        "📅 Select Date:": "📅 Chọn ngày:",
-        "🏟️ Filter by Venue:": "🏟️ Lọc theo sân:",
         "All Venues": "Tất cả các sân",
         "View Schedule": "Xem lịch đặt",
         "Time Slot": "Khung giờ",
@@ -360,21 +459,114 @@
         "➕ Add Peak Pricing Rule": "➕ Thêm quy tắc giá cao điểm",
         "Configure dynamic rates by weekday and time slot. Rules must not overlap on the same day.": "Cài đặt giá linh hoạt theo thứ và khung giờ. Các quy tắc không được trùng nhau trong cùng một ngày.",
         "Weekday:": "Thứ trong tuần:",
+        "Weekday": "Thứ trong tuần",
         "From:": "Từ:",
+        "From": "Từ",
         "To:": "Đến:",
+        "To": "Đến",
         "Hourly Rate (VND):": "Giá mỗi giờ (VND):",
+        "Hourly Rate (VND)": "Giá mỗi giờ (VND)",
+        "Standard Rate:": "Giá tiêu chuẩn:",
         "Save Pricing Rule": "Lưu quy tắc giá",
         "Active Peak Pricing Rules": "Các quy tắc giá đang áp dụng",
         "Applied Rate (VND/hour)": "Mức giá áp dụng (VND/giờ)",
         "Delete": "Xóa",
+        "Date:": "Chọn ngày:",
+        "Past slot": "Đã qua",
+        "Select another date above to check reservations.": "Chọn ngày khác ở trên để kiểm tra lịch đặt.",
+        "You have no venues yet. Add your first venue so customers can find and book it.": "Bạn chưa có sân nào. Hãy thêm sân đầu tiên để khách hàng tìm và đặt lịch.",
         "&larr; Back to Bookings List": "← Quay lại danh sách đặt sân",
+        "← Back to Bookings List": "← Quay lại danh sách đặt sân",
+        "← Back to My Venues": "← Quay lại sân của tôi",
         "Reservation Voucher": "Phiếu xác nhận đặt sân",
+        "Venue:": "Sân thể thao:",
+        "Reserved Slot:": "Khung giờ đặt:",
+        "Customer:": "Người đặt:",
+        "Total Amount Paid:": "Tổng tiền đã thanh toán:",
+        "Booking Cancelled": "Lịch đặt đã hủy",
         "🏟️ Venue:": "🏟️ Sân thể thao:",
         "🕒 Reserved Slot:": "🕒 Khung giờ đặt:",
         "👤 Customer:": "👤 Người đặt:",
         "💰 Total Amount Paid:": "💰 Tổng tiền đã thanh toán:",
 
         // Admin & Footer
+        "Platform analytics, owner onboarding, venue oversight, and review moderation.": "Phân tích nền tảng, cấp tài khoản chủ sân, giám sát sân và kiểm duyệt đánh giá.",
+        "Overview & Analytics": "Tổng quan & Phân tích",
+        "Venues Performance": "Hiệu suất sân",
+        "Accounts & Owner Onboarding": "Tài khoản & Chủ sân",
+        "Review Moderation": "Kiểm duyệt đánh giá",
+        "Total Users": "Tổng người dùng",
+        "Active Venues": "Sân đang hoạt động",
+        "Total Bookings": "Tổng đơn đặt sân",
+        "Net Revenue": "Doanh thu ròng",
+        "Average Rating": "Đánh giá trung bình",
+        "Moderation Queue": "Hàng chờ kiểm duyệt",
+        "Revenue & Bookings by Sport": "Doanh thu & Lượt đặt theo môn",
+        "Coverage by Hanoi Area": "Độ phủ theo khu vực Hà Nội",
+        "System Operational Insights": "Cảnh báo vận hành hệ thống",
+        "venues currently have zero bookings": "sân hiện chưa có lượt đặt nào",
+        "reviews pending moderation": "đánh giá đang chờ kiểm duyệt",
+        "user accounts have not verified their email": "tài khoản chưa xác minh email",
+        "View venues →": "Xem danh sách sân →",
+        "View venues &rarr;": "Xem danh sách sân →",
+        "Open moderation queue →": "Mở hàng chờ kiểm duyệt →",
+        "Open moderation queue &rarr;": "Mở hàng chờ kiểm duyệt →",
+        "Review accounts →": "Kiểm tra tài khoản →",
+        "Review accounts &rarr;": "Kiểm tra tài khoản →",
+        "All sports": "Tất cả môn",
+        "All areas": "Tất cả khu vực",
+        "All roles": "Tất cả vai trò",
+        "All statuses": "Tất cả trạng thái",
+        "Apply Filters": "Lọc kết quả",
+        "Reset": "Đặt lại",
+        "Venue or owner name...": "Tên sân hoặc chủ sân...",
+        "Name, email, or phone...": "Tên, email hoặc số điện thoại...",
+        "Hours Booked": "Số giờ đặt",
+        "Net Revenue (VND)": "Doanh thu ròng (VND)",
+        "Share": "Tỷ trọng",
+        "Rating": "Đánh giá",
+        "Pause": "Tạm dừng",
+        "Activate": "Kích hoạt",
+        "Create Account": "Tạo tài khoản",
+        "Onboard a new venue owner, customer, or administrator account.": "Tạo mới tài khoản chủ sân, khách hàng hoặc quản trị viên.",
+        "Full Name": "Họ và tên",
+        "Email Address": "Địa chỉ Email",
+        "Phone Number": "Số điện thoại",
+        "Password": "Mật khẩu",
+        "Min 8 chars, letter + digit": "Tối thiểu 8 ký tự, gồm chữ và số",
+        "Role": "Vai trò",
+        "Owner": "Chủ sân",
+        "Customer": "Khách hàng",
+        "Admin": "Quản trị viên",
+        "Mark email as verified immediately": "Đánh dấu email đã xác minh ngay",
+        "Account": "Tài khoản",
+        "Activity": "Hoạt động",
+        "Current session": "Phiên hiện tại",
+        "Reason (optional)": "Lý do (tùy chọn)",
+        "Suspend": "Khóa tài khoản",
+        "Unsuspend": "Mở khóa",
+        "Active": "Hoạt động",
+        "Inactive": "Tạm dừng",
+        "Suspended": "Bị khóa",
+        "Unverified": "Chưa xác minh",
+        "Pending (Auto-hidden)": "Chờ duyệt (Tự động ẩn)",
+        "Reported": "Bị báo cáo",
+        "Approved": "Đã duyệt",
+        "Rejected": "Từ chối",
+        "Auto-hidden": "Tự động ẩn",
+        "Approve & Restore": "Duyệt & Khôi phục",
+        "Keep Hidden / Reject": "Giữ ẩn / Từ chối",
+        "Venues": "Số sân",
+        "Area": "Khu vực",
+        "Sport & Area": "Môn & Khu vực",
+        "Action": "Thao tác",
+        "Actions": "Thao tác",
+        "No written comment.": "Không có nội dung bình luận.",
+        "No reviews in this moderation queue.": "Không có đánh giá nào trong hàng chờ này.",
+        "No venues match the current filters.": "Không có sân nào khớp bộ lọc hiện tại.",
+        "No accounts match the current filters.": "Không có tài khoản nào khớp bộ lọc hiện tại.",
+        "No sport breakdown data available yet.": "Chưa có dữ liệu phân tích theo môn thể thao.",
+        "No area coverage data available yet.": "Chưa có dữ liệu độ phủ theo khu vực.",
         "Community review moderation.": "Quản trị kiểm duyệt đánh giá cộng đồng.",
         "Review moderation": "Kiểm duyệt đánh giá",
         "Reviews are hidden from public venue pages after receiving three reports. This demo does not provide a manual moderation queue.": "Đánh giá sẽ tự động ẩn khỏi trang công khai sau khi nhận 3 báo cáo vi phạm. Bản demo này không có hàng chờ duyệt thủ công.",
@@ -413,15 +605,73 @@
         "● Cancelled": "● Đã hủy",
         "🟢 Free": "🟢 Trống",
         "🔴 Booked": "🔴 Đã đặt",
-        "⚪ Blocked": "⚪ Bảo trì"
+        "⚪ Blocked": "⚪ Bảo trì",
+
+        // Password & Analytics
+        "Change password": "Đổi mật khẩu",
+        "🔑 Change password": "🔑 Đổi mật khẩu",
+        "Update your account password (at least 8 characters with a letter and a digit).": "Cập nhật mật khẩu tài khoản (ít nhất 8 ký tự gồm chữ và số).",
+        "Current Password": "Mật khẩu hiện tại",
+        "New Password": "Mật khẩu mới",
+        "Confirm New Password": "Xác nhận mật khẩu mới",
+        "Update password": "Cập nhật mật khẩu",
+        "← Back": "← Quay lại",
+        "&larr; Back": "← Quay lại",
+        "Forgot password": "Quên mật khẩu",
+        "Forgot your password?": "Bạn quên mật khẩu?",
+        "Enter your account email and we'll send you a reset link.": "Nhập email tài khoản của bạn để nhận liên kết đặt lại mật khẩu.",
+        "Send reset link": "Gửi liên kết đặt lại",
+        "Remembered your password?": "Đã nhớ mật khẩu?",
+        "Back to sign in →": "Quay lại đăng nhập →",
+        "Back to sign in &rarr;": "Quay lại đăng nhập →",
+        "Reset password": "Đặt lại mật khẩu",
+        "Reset your password": "Đặt lại mật khẩu",
+        "Choose a strong password (at least 8 characters with a letter and a digit).": "Chọn mật khẩu mạnh (ít nhất 8 ký tự gồm chữ và số).",
+        "Request a new reset link": "Yêu cầu liên kết mới",
+        "Owner Analytics": "Thống kê chủ sân",
+        "📊 Revenue & Venue Analytics": "📊 Thống kê doanh thu & sân",
+        "Revenue & Venue Analytics": "Thống kê doanh thu & sân",
+        "Track bookings, cancellations, net revenue, and ratings across your venues.": "Theo dõi lượt đặt, tỷ lệ hủy, doanh thu ròng và đánh giá tại các sân của bạn.",
+        "⬇️ Export Bookings CSV": "⬇️ Xuất CSV đơn đặt",
+        "Active / Total Venues": "Sân hoạt động / Tổng số sân",
+        "Listed under your owner account": "Thuộc tài khoản chủ sân của bạn",
+        "Cancellation Rate": "Tỷ lệ hủy sân",
+        "Gross Revenue": "Tổng doanh thu",
+        "Confirmed & completed bookings": "Các đơn đã xác nhận & hoàn thành",
+        "Total Refunded": "Tổng tiền hoàn",
+        "Issued under cancellation tiers": "Hoàn tiền theo chính sách hủy sân",
+        "Total billed minus refunds": "Tổng thu trừ tiền hoàn",
+        "No reviews": "Chưa có đánh giá",
+        "📅 Schedule": "📅 Lịch sân",
+        "You have no venues yet.": "Bạn chưa có sân nào.",
+        "Add your first venue": "Thêm sân đầu tiên",
+        "to start tracking analytics.": "để bắt đầu theo dõi thống kê.",
+
+        // Location & Recommendation
+        "Nearest to me": "Gần tôi nhất",
+        "Want recommendations near you? Share your location to find nearby courts with great prices and open slots.": "Bạn muốn xem gợi ý gần mình? Chia sẻ vị trí để tìm sân gần nhất với giá tốt và còn giờ trống.",
+        "Use my location": "Dùng vị trí của tôi",
+        "Not now": "Để sau",
+        "Showing recommendations near your location": "Đang hiển thị gợi ý gần vị trí của bạn",
+        "Clear location": "Xóa vị trí",
+        "Nearby": "Gần bạn",
+        "Top rated": "Đánh giá cao",
+        "Great value & open": "Giá tốt & còn giờ",
+        "Popular choice": "Được đặt nhiều",
+        "Available today": "Còn giờ hôm nay",
+        "Fully booked": "Đã kín lịch"
       };
 
       const PATTERNS_EN_VI = [
+        { pattern: /^([\d.]+)\s+km$/i, replace: (m, n) => `${n} km` },
         { pattern: /^(\d+)\s+venue\(s\)\s+found$/i, replace: (m, n) => `${n} sân được tìm thấy` },
+        { pattern: /^(\d+)\s+free\s+today$/i, replace: (m, n) => `${n} giờ trống hôm nay` },
+        { pattern: /^(\d+)\s+free$/i, replace: (m, n) => `${n} giờ trống` },
         { pattern: /^Showing\s+(\d+)\s+venues?\s+(currently\s+)?taking\s+bookings\.?$/i, replace: (m, n) => `Đang hiển thị ${n} sân đang nhận đặt lịch.` },
         { pattern: /^Open\s+(\d{2}:\d{2})[–-](\d{2}:\d{2})$/i, replace: (m, s, e) => `Mở ${s}–${e}` },
         { pattern: /^(\d{2}:\d{2})[–-](\d{2}:\d{2})$/i, replace: (m, s, e) => `${s}–${e}` },
         { pattern: /^Photo\s+(\d+)\s+of\s+(.*)$/i, replace: (m, n, name) => `Ảnh ${n} của ${name}` },
+        { pattern: /^Photo\s+of\s+(.*)$/i, replace: (m, name) => `Ảnh của ${name}` },
         { pattern: /^Illustrative\s+photo\s*·?\s*(.*)$/i, replace: (m, s) => s ? `Ảnh minh họa · ${DICT_EN_VI[s] || s}` : "Ảnh minh họa" },
         { pattern: /^Illustrative\s+photo$/i, replace: () => "Ảnh minh họa" },
         { pattern: /^★\s*([\d.]+)\s*·\s*(\d+)\s*reviews?$/i, replace: (m, rating, count) => `★ ${rating} · ${count} đánh giá` },
@@ -431,6 +681,7 @@
         { pattern: /^No\s+bookings\s+on\s+(.*)$/i, replace: (m, date) => `Không có lịch đặt ngày ${date}` },
         { pattern: /^(\d+)\s+bookings?\s+on\s+(.*)$/i, replace: (m, n, date) => `${n} lịch đặt ngày ${date}` },
         { pattern: /^Booked\s+by\s+Customer\s*\(\s*Code:\s*(.*?)\s*\)$/i, replace: (m, code) => `Đã có khách đặt (Mã: ${code})` },
+        { pattern: /^Booked\s*\(\s*(.*?)\s*\)$/i, replace: (m, code) => `Đã đặt (${code})` },
         { pattern: /^Are\s+you\s+sure\s+you\s+want\s+to\s+cancel\s+booking\s+(.*?)\??$/i, replace: (m, code) => `Bạn có chắc muốn hủy lịch đặt ${code}?` },
         { pattern: /^Booked\s+on\s+(.*)$/i, replace: (m, dt) => `Đặt lúc ${dt}` },
         { pattern: /^This\s+venue\s+is\s+fully\s+booked\s+on\s+(.*)$/i, replace: (m, date) => `Sân đã kín lịch ngày ${date}` },
@@ -442,8 +693,20 @@
         { pattern: /^(\d+)\s+stars?\s*-\s*(.*)$/i, replace: (m, n, desc) => `${n} sao - ${DICT_EN_VI[desc] || desc}` },
         { pattern: /^Blocked\s*-\s*(.*)$/i, replace: (m, reason) => `Bảo trì - ${reason}` },
         { pattern: /^Refunded\s+(.*?)\s+VND\s*\(Fair Policy\)$/i, replace: (m, amt) => `Hoàn tiền ${amt} VND (Chính sách minh bạch)` },
+        { pattern: /^Refunded\s+(.*?)\s+VND$/i, replace: (m, amt) => `Đã hoàn ${amt} VND` },
         { pattern: /^Booking\s+Cancelled\s+on\s+(.*?)\.\s*Refund\s+amount:\s*(.*?)\s*VND\.?$/i, replace: (m, dt, amt) => `Lịch đặt đã hủy vào ${dt}. Số tiền hoàn: ${amt} VND.` },
-        { pattern: /^Booking\s+code\s+(.*?)\s+copied$/i, replace: (m, code) => `Đã sao chép mã đặt ${code}` }
+        { pattern: /^Booking\s+code\s+(.*?)\s+copied$/i, replace: (m, code) => `Đã sao chép mã đặt ${code}` },
+        { pattern: /^No\s+peak-hour\s+rules\s+configured\.\s*Standard\s+rate\s+of\s+(.*?)\s*VND\/hour\s+applies\.?$/i, replace: (m, rate) => `Chưa cài đặt quy tắc giờ cao điểm. Áp dụng giá tiêu chuẩn ${rate} VND/giờ.` },
+        { pattern: /^(\d+)\s+reports?$/i, replace: (m, n) => `${n} báo cáo` },
+        { pattern: /^(\d+)\s+total\s+reviews?$/i, replace: (m, n) => `${n} tổng đánh giá` },
+        { pattern: /^(\d+)\s+owners?\s*·\s*(\d+)\s+customers?\s*·\s*(\d+)\s+suspended$/i, replace: (m, o, c, s) => `${o} chủ sân · ${c} khách hàng · ${s} bị khóa` },
+        { pattern: /^(\d+)\s+inactive\s*·\s*(\d+)\s+zero-booking$/i, replace: (m, i, z) => `${i} tạm dừng · ${z} chưa có đơn` },
+        { pattern: /^(\d+)\s+confirmed\s*·\s*(\d+)\s+completed\s*·\s*(\d+)\s+cancelled$/i, replace: (m, cf, cp, cc) => `${cf} đã xác nhận · ${cp} hoàn thành · ${cc} đã hủy` },
+        { pattern: /^(\d+)\s+confirmed\s*·\s*(\d+)\s+completed\s*·\s*(\d+)\s+cancelled\s*\(([\d.]+)%\s*cancel\s+rate\)$/i, replace: (m, cf, cp, cc, r) => `${cf} đã xác nhận · ${cp} hoàn thành · ${cc} đã hủy (${r}% tỷ lệ hủy)` },
+        { pattern: /^Gross\s+([\d,]+)\s*·\s*Refunded\s+([\d,]+)\s+VND$/i, replace: (m, g, r) => `Tổng thu ${g} · Đã hoàn ${r} VND` },
+        { pattern: /^(\d+)\s+pending\s+hidden\s*·\s*(\d+)\s+reported$/i, replace: (m, p, r) => `${p} chờ duyệt ẩn · ${r} bị báo cáo` },
+        { pattern: /^(\d+)\s+venues?\s*·\s*(\d+)\s+bookings?$/i, replace: (m, v, b) => `${v} sân · ${b} lượt đặt` },
+        { pattern: /^Rating\s+([\d.]+)\s+out\s+of\s+5$/i, replace: (m, n) => `Đánh giá ${n} trên 5` }
       ];
 
       function translateValue(value, lang) {
@@ -521,7 +784,9 @@
         document.documentElement.lang = lang;
         document.title = translateValue(sourceTitle, lang);
         document.querySelectorAll(".lang-btn").forEach(btn => {
-          btn.classList.toggle("active", btn.getAttribute("data-lang") === lang);
+          const isActive = btn.getAttribute("data-lang") === lang;
+          btn.classList.toggle("active", isActive);
+          btn.setAttribute("aria-pressed", isActive ? "true" : "false");
         });
         translateTree(document.body, lang);
       };
@@ -531,7 +796,9 @@
         document.documentElement.lang = savedLang;
         document.title = translateValue(sourceTitle, savedLang);
         document.querySelectorAll(".lang-btn").forEach(btn => {
-          btn.classList.toggle("active", btn.getAttribute("data-lang") === savedLang);
+          const isActive = btn.getAttribute("data-lang") === savedLang;
+          btn.classList.toggle("active", isActive);
+          btn.setAttribute("aria-pressed", isActive ? "true" : "false");
         });
         if (savedLang === "vi") {
           translateTree(document.body, "vi");
@@ -548,9 +815,10 @@
         <p style="margin:0 0 28px; color:#64748b; font-size:14px;">You'll be signed out of your account.</p>
         <div style="display:flex; gap:12px; justify-content:center;">
           <form method="post" action="/logout" style="margin:0;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" style="padding:10px 28px; background:linear-gradient(135deg,#f43f5e,#e11d48); color:#fff; border:none; border-radius:9px; font-size:15px; font-weight:700; cursor:pointer;">Confirm</button>
           </form>
-          <button type="button" onclick="document.getElementById('signout-modal').style.display='none'" style="padding:10px 28px; background:#f1f5f9; color:#334155; border:1px solid #e2e8f0; border-radius:9px; font-size:15px; font-weight:700; cursor:pointer;">Cancel</button>
+          <button id="signout-cancel-btn" type="button" onclick="closeSignoutModal()" style="padding:10px 28px; background:#f1f5f9; color:#334155; border:1px solid #e2e8f0; border-radius:9px; font-size:15px; font-weight:700; cursor:pointer;">Cancel</button>
         </div>
       </div>
     </div>
@@ -572,16 +840,58 @@
       }, { passive: true });
     })();
 
-    // Close signout modal on backdrop click
+    // Sign-out modal focus management and close handlers
     var modal = document.getElementById('signout-modal');
+    window.openSignoutModal = function() {
+      if (!modal) return;
+      modal.style.display = 'flex';
+      var cancelBtn = document.getElementById('signout-cancel-btn');
+      if (cancelBtn) cancelBtn.focus();
+    };
+    window.closeSignoutModal = function() {
+      if (!modal) return;
+      modal.style.display = 'none';
+      var trigger = document.querySelector('.btn-logout');
+      if (trigger) trigger.focus();
+    };
     if (modal) {
       modal.addEventListener('click', function(e) {
-        if (e.target === modal) modal.style.display = 'none';
+        if (e.target === modal) window.closeSignoutModal();
       });
       document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') modal.style.display = 'none';
+        if (modal.style.display === 'none') return;
+        if (e.key === 'Escape') {
+          window.closeSignoutModal();
+          return;
+        }
+        if (e.key === 'Tab') {
+          var focusables = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+          if (!focusables.length) return;
+          var first = focusables[0];
+          var last = focusables[focusables.length - 1];
+          if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
       });
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      var token = {{ csrf_token() | tojson }};
+      document.querySelectorAll('form').forEach(function(form) {
+        if ((form.getAttribute('method') || '').toLowerCase() === 'post' && !form.querySelector('input[name="csrf_token"]')) {
+          var input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = 'csrf_token';
+          input.value = token;
+          form.appendChild(input);
+        }
+      });
+    });
     </script>
   </body>
 </html>

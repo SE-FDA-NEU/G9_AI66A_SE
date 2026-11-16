@@ -2,41 +2,41 @@
 
 **Date:** 20/10/2026  
 **Reference Platforms:** Playo (Global), SportyNation, WeSport (VN), PlaySpace (VN), ModunSport (VN).  
-**Document Purpose:** Kiến trúc và bộ tiêu chuẩn thiết kế UI/UX thực tế hướng thương mại hóa, thoát khỏi cảm giác "bài tập mẫu / máy móc" mà vẫn đảm bảo 100% tiêu chí chấm điểm và Business Rules của đồ án.
+**Document Purpose:** Commercial-grade UI/UX design architecture and standards that move beyond a "template / mechanical assignment" feel while maintaining 100% compliance with grading criteria and project Business Rules.
 
 ---
 
-## 1. Phân tích các sản phẩm thương mại thực tế (Market Benchmarks)
+## 1. Analysis of Commercial Products (Market Benchmarks)
 
-### A. Tại sao các giao diện "bài tập máy móc" gây cảm giác nhàm chán?
-1. **Thiếu tính định danh hình ảnh (Visual Hierarchy):** Dùng bảng dữ liệu thô (`<table>`) như file Excel, không có ảnh thực tế của sân bóng/sân cầu lông.
-2. **Thiếu cảm xúc thể thao (Athletic Energy):** Màu sắc nhạt nhòa hoặc dùng màu xám buồn tẻ, không có màu sắc năng động (Sport Green, Electric Blue, Energetic Orange).
-3. **Trải nghiệm chọn giờ thô sơ:** Bắt người dùng tự nhớ hoặc nhìn danh sách dài, thay vì một thanh chọn ngày trực quan (Horizontal Date Strip) và các thẻ giờ có thể bấm chọn ngay lập tức.
-4. **Thiếu các thẻ thông tin quan trọng (Social Proof & Amenity Badges):** Đánh giá sao (4.8 ★), số lượt đặt trong tuần, các tiện ích dạng huy hiệu (Bãi đỗ ô tô, Căng tin nước, Cho thuê vợt, Đèn LED ban đêm).
+### A. Why do "mechanical assignment" interfaces feel dull?
+1. **Lack of Visual Hierarchy:** Using raw data tables (`<table>`) like an Excel spreadsheet without real photos of football pitches or badminton courts.
+2. **Lack of Athletic Energy:** Washed-out colors or dull grays instead of energetic, sport-oriented palettes (Sport Green, Electric Blue, Energetic Orange).
+3. **Clunky Time-Slot Selection:** Forcing users to remember times or scan long lists instead of providing an intuitive Horizontal Date Strip and immediately clickable time-slot cards.
+4. **Missing Social Proof & Amenity Badges:** Missing star ratings (4.8 ★), weekly booking counts, and amenity badges (Car Parking, Refreshment Canteen, Racket Rental, Night LED Floodlights).
 
-### B. Bài học từ Playo & WeSport (Thương mại hóa)
+### B. Lessons from Playo & WeSport (Commercialization)
 1. **Discovery / Card-first Architecture:**
-   - Người dùng tìm sân bằng mắt qua **Thẻ sân (Venue Cards)**: có ảnh đại diện chất lượng cao, tên sân, loại sân (Sân 7 người cỏ nhân tạo, Sân cầu lông thảm Yonex tiêu chuẩn), khoảng cách/quận, giá khởi điểm dạng badge nổi bật và nút CTA hành động rõ ràng.
-2. **Thanh lọc nhanh thể thao (Sport Filter Pills):**
-   - Không chỉ dùng ô dropdown chọn ẩn bên trong, mà đưa các bộ môn phổ biến ra ngoài dạng thẻ chip/pill có icon sống động (⚽ Bóng đá, 🏸 Cầu lông, 🎾 Tennis, 🏀 Bóng rổ, 🏓 Bóng bàn, Pickleball).
-3. **Lưới khung giờ thông minh (Time Slot Matrix):**
-   - Phân biệt rõ ràng bằng màu sắc cảm giác:
-     - **Màu xanh ngọc / Emerald Green:** Còn trống - Đặt ngay.
-     - **Màu cam nhạt / Sunset Orange:** Giờ cao điểm (Peak hours) - Kèm nhãn giá rõ ràng.
-     - **Màu xám mờ (Muted Grey):** Đã kín lịch (Booked).
-4. **Quy trình đặt và tóm tắt chi phí (Sticky Order Summary):**
-   - Thiết kế dạng hóa đơn hiện đại (Booking Summary Card): tóm tắt số giờ, đơn giá theo từng khung giờ, chính sách hủy sân minh bạch và nút thanh toán lớn, tự tin.
+   - Users browse venues visually through **Venue Cards** featuring high-quality cover photos, venue names, court/pitch types (7-a-side artificial turf pitch, Yonex-standard badminton court), distance/district, prominent starting price badges, and clear call-to-action (CTA) buttons.
+2. **Sport Filter Pills:**
+   - Instead of hiding sports inside a dropdown menu, surface popular sports as interactive chips/pills with clear icons (⚽ Football, 🏸 Badminton, 🎾 Tennis, 🏀 Basketball, 🏓 Table Tennis, Pickleball).
+3. **Time Slot Matrix:**
+   - Differentiate slot states clearly with intuitive colors:
+     - **Emerald Green:** Available - Book now.
+     - **Sunset Orange:** Peak hours - Accompanied by clear price labels.
+     - **Muted Grey:** Booked / Unavailable.
+4. **Booking Flow & Sticky Order Summary:**
+   - Design a modern receipt-style **Booking Summary Card**: summarizing total hours, per-slot unit prices, transparent cancellation policy, and a prominent, confident checkout button.
 
 ---
 
-## 2. Tiêu chuẩn áp dụng vào Codebase của G9
+## 2. Standards Applied to the G9 Codebase
 
-Để đảm bảo vừa đẹp thương mại, vừa **không làm vỡ bất kỳ test nào trong 88 bài test của thầy**:
-1. **Giao diện tìm kiếm ([`src/templates/search.html`](src/templates/search.html)):**
-   - Cung cấp chế độ xem dạng **Lưới thẻ thương mại (Card Grid)** song song hoặc bọc dữ liệu để vừa giữ đúng các `data-text`, id `#count`, `#results`, thẻ `table` cho robot kiểm tra, vừa mang lại trải nghiệm thị giác sống động cho con người khi mở trình duyệt.
-   - Thêm ảnh chụp sân thể thao thật, nhãn sao đánh giá, và tiện ích sân.
-2. **Giao diện chi tiết sân ([`src/templates/venue.html`](src/templates/venue.html)):**
-   - Tích hợp Hero Section với banner ảnh sân thực tế, huy hiệu địa điểm và tiện ích.
-   - Giữ nguyên các ID trạng thái (`#loading`, `#error`, `#empty`, `#data`) để đảm bảo yêu cầu Milestone 3.
-3. **Màu sắc và hiệu ứng ([`src/static/style.css`](src/static/style.css)):**
-   - Sử dụng bảng màu thể thao hiện đại, bóng đổ sâu (Soft 3D Shadow), hiệu ứng chuyển động mượt mà khi rê chuột.
+To ensure both commercial visual polish and **zero regressions across the automated test suite**:
+1. **Search Interface ([`src/templates/search.html`](src/templates/search.html)):**
+   - Provide a **Commercial Card Grid** view alongside or wrapping the data so that required `data-text` attributes, `#count`, `#results`, and `table` elements remain intact for automated checks while delivering a rich visual experience for human users in the browser.
+   - Include real sports venue photos, star rating labels, and venue amenities.
+2. **Venue Detail Interface ([`src/templates/venue.html`](src/templates/venue.html)):**
+   - Integrate a Hero Section with a real venue photo banner, location badges, and amenities.
+   - Preserve all state element IDs (`#loading`, `#error`, `#empty`, `#data`) to satisfy Milestone 3 requirements.
+3. **Colors and Effects ([`src/static/style.css`](src/static/style.css)):**
+   - Use a modern sports color palette, Soft 3D Shadows, and smooth hover transitions.

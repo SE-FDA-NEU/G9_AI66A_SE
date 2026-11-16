@@ -7,14 +7,8 @@
   {% if errors.get(name) %}aria-invalid="true" aria-describedby="{{ name }}-error"{% endif %}
 {%- endmacro %}
 {% block content %}
-<div class="card form-hero-card" style="max-width:680px; margin: 0 auto;">
-  <div class="form-header-badge">
-    <span class="badge-icon">🏟️</span>
-    <div>
-      <h1>Add a venue</h1>
-      <p class="subtitle">List your sports arena on the Hanoi booking network and receive online player reservations.</p>
-    </div>
-  </div>
+<div class="card form-hero-card" style="max-width:640px; margin: 0 auto;">
+  <h1 style="margin: 0 0 20px;">Add a venue</h1>
 
   {% if errors %}
     <div class="flash error" role="alert">
@@ -27,7 +21,6 @@
       <span class="label-title">Venue name <span class="required">*</span></span>
       <input name="name" value="{{ form.get('name', '') }}" maxlength="100" placeholder="e.g., Thong Nhat Football Pitch" {{ invalid('name') }}>
       {{ error_for('name') }}
-      <span class="hint">3 to 100 characters, in English - for example Thong Nhat Football Pitch</span>
     </label>
 
     <div class="form-row-2col">
@@ -54,24 +47,23 @@
       <span class="label-title">Street address <span class="required">*</span></span>
       <input name="address" value="{{ form.get('address', '') }}" placeholder="12 Tran Thai Tong" {{ invalid('address') }}>
       {{ error_for('address') }}
-      <span class="hint">Exact address assists players in finding your pitch easily.</span>
     </label>
 
     <label>
       <span class="label-title">Hourly base price (VND) <span class="required">*</span></span>
       <input name="hourly_price" value="{{ form.get('hourly_price', '') }}" inputmode="numeric" placeholder="250,000" {{ invalid('hourly_price') }}>
       {{ error_for('hourly_price') }}
-      <span class="hint">From 1,000 to 100,000,000 VND per hour</span>
     </label>
 
     <div class="form-row-2col">
       <label>
         <span class="label-title">Opens at <span class="required">*</span></span>
-        <select name="open_hour">
+        <select name="open_hour" {{ invalid('open_hour') }}>
           {% for h in hours[:-1] %}
             <option value="{{ h }}" {% if h == form.open_hour|int %}selected{% endif %}>{{ '%02d:00' % h }}</option>
           {% endfor %}
         </select>
+        {{ error_for('open_hour') }}
       </label>
 
       <label>
@@ -89,7 +81,7 @@
       <span class="label-title">Venue Photo (optional)</span>
       <input type="file" name="photo" accept=".jpg,.jpeg,.png" {{ invalid('photo') }}>
       {{ error_for('photo') }}
-      <span class="hint">JPG or PNG, at most 5 MB. Showcases pitch surface &amp; lighting to players.</span>
+      <span class="hint">JPG or PNG, max 5 MB.</span>
     </label>
 
     <div class="form-actions-bar">

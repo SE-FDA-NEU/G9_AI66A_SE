@@ -3,7 +3,7 @@ from db import connect
 
 
 def test_health_reports_seeded_venues(client):
-    assert client.get("/health").get_json() == {"status": "ok", "venues": 24}
+    assert client.get("/health").get_json() == {"status": "ok", "venues": 48}
 
 
 def test_root_page_shows_venue_search(client):
@@ -14,7 +14,7 @@ def test_root_page_shows_venue_search(client):
 
 def test_search_lists_all_seeded_venues(client):
     page = client.get("/search").get_data(as_text=True)
-    assert 'id="count">24</strong> venue(s) found' in page
+    assert 'id="count">48</strong> venue(s) found' in page
 
 
 # --- Normal cases -----------------------------------------------------------
@@ -125,15 +125,15 @@ def test_search_empty_and_whitespace_query(client):
     """Boundary: Empty or whitespace-only query parameters return all active venues."""
     # Blank query
     page_blank = client.get("/search?q=").get_data(as_text=True)
-    assert 'id="count">24</strong> venue(s) found' in page_blank
+    assert 'id="count">48</strong> venue(s) found' in page_blank
 
     # Whitespace-only query
     page_spaces = client.get("/search?q=%20%20%20").get_data(as_text=True)
-    assert 'id="count">24</strong> venue(s) found' in page_spaces
+    assert 'id="count">48</strong> venue(s) found' in page_spaces
 
     # API blank filters
     api_data = client.get("/api/venues?sport=&area=&q=").get_json()
-    assert len(api_data["venues"]) == 24
+    assert len(api_data["venues"]) == 48
 
 
 def test_search_query_character_length_boundaries(client):

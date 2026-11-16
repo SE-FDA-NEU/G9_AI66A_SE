@@ -10,19 +10,38 @@ approved.
 | `/` | Home page, search by sport and area, entry to sign in and register | G | P0 | F1 Access | #16 | #30 | Done |
 | `/register` | Create a customer account | G | P0 | F1 Access | #14 | #27 | Done |
 | `/verify` | Verify the email address with the link sent at registration (BR4) | G | P0 | F1 Access | #14 | - | Done |
+| `/verify/resend` | Re-issue a fresh email verification link for unverified accounts (BR4) | G | P0 | F1 Access | #14 | - | Done |
 | `/login` | Sign in, route by role | G | P0 | F1 Access | #15 | #39 | Done |
+| `/logout` | End the current user session and redirect to home | U | P0 | F1 Access | #15 | #39 | Done |
+| `/forgot-password` | Request a single-use password reset link | G | P1 | F1 Access | - | - | Done |
+| `/reset-password` | Set a new password using a valid reset token (BR2) | G | P1 | F1 Access | - | - | Done |
+| `/account/password` | Change password while signed in (BR2) | U | P1 | F1 Access | - | - | Done |
 | `/search` | Search results, filter by sport, area, time slot and price | G | P0 | F2 Discovery | #16 | #30 | Done |
 | `/venues/{id}` | Venue detail: photos, price, facilities, free-slot grid, reviews | G | P0 | F2 Discovery | #17, #25 | #31, #33 | Done |
+| `/venues/{id}/photos/{photo_id}` | Serve an uploaded photo belonging to the venue | G | P0 | F2 Discovery | #17 | #31 | Done |
+| `/venues/{id}/reviews/{review_id}/report` | Report an abusive review (BR19) | U | P2 | F4 Booking management | #25 | #33 | Done |
 | `/booking/{venueId}` | Confirm a booking: pick a slot, see the segmented price, confirm | U | P0 | F3 Booking | #18, #24 | #29, #28 | Done |
+| `/api/quote/{venue_id}` | Calculate segmented price quote for a date, start hour, and duration (BR12) | G | P0 | F3 Booking | #18, #24 | - | Done |
 | `/bookings/{code}` | The booking just confirmed: code, hours, price lines (BR14: own bookings only) | U | P0 | F3 Booking | #18 | - | Done |
 | `/dashboard` | The customer's page after signing in | U | P1 | F4 Booking management | #15 | #39 | Done |
 | `/my-bookings` | My bookings: upcoming, history, cancel, review after playing | U | P1 | F4 Booking management | #19, #20, #25 | #36, #35, #33 | Done |
+| `/my-bookings/{code}/cancel` | Cancel an upcoming booking with tiered refund (BR14, BR15) | U | P1 | F4 Booking management | #19 | #36 | Done |
+| `/my-bookings/{code}/review` | Submit a rating and comment for a completed booking (BR14, BR18) | U | P2 | F4 Booking management | #25 | #33 | Done |
+| `/my-bookings/{code}/ics` | Download iCalendar (.ics) file for a booking (BR14) | U | P2 | F4 Booking management | #20 | - | Done |
 | `/owner/venues` | The owner's list of venues | U | P0 | F5 Venue management | #21 | #32 | Done |
 | `/owner/venues/new` | Add a new venue | U | P0 | F5 Venue management | #21 | #32 | Done |
 | `/owner/venues/{id}/schedule` | Venue schedule: block and unblock hours for maintenance | U | P1 | F5 Venue management | #22 | #37 | Done |
+| `/owner/venues/{id}/schedule/block` | Block a single hour slot for maintenance (BR14, BR16, BR17) | U | P1 | F5 Venue management | #22 | #37 | Done |
+| `/owner/venues/{id}/schedule/unblock` | Unblock a maintenance slot (BR14, BR16) | U | P1 | F5 Venue management | #22 | #37 | Done |
+| `/owner/venues/{id}/schedule/batch-block` | Batch block hours across a date range (BR14, BR16, BR17) | U | P1 | F5 Venue management | #22 | #37 | Done |
 | `/owner/venues/{id}/pricing` | Configure peak and off-peak pricing | U | P2 | F6 Pricing | #24 | #28 | Done |
+| `/owner/venues/{id}/pricing/{rule_id}/delete` | Delete a peak pricing rule (BR12, BR14) | U | P2 | F6 Pricing | #24 | #28 | Done |
 | `/owner/bookings` | Day-by-day list of bookings across the owner's venues | U | P1 | F5 Venue management | #23 | #38 | Done |
-| `/admin` | Moderate reported reviews, suspend offending accounts | A | P2 | F7 Administration | - | - | Not started |
+| `/owner/bookings/{code}` | View details of a specific booking at an owner's venue (BR14) | U | P1 | F5 Venue management | #23 | #38 | Done |
+| `/owner/analytics` | Owner revenue, booking, and per-venue analytics dashboard | U | P2 | F5 Venue management | - | - | Done |
+| `/owner/bookings/export.csv` | Download CSV export of bookings across the owner's venues | U | P2 | F5 Venue management | - | - | Done |
+| `/admin` | Platform analytics, owner onboarding, venue oversight, and BR19 review moderation | A | P2 | F7 Administration | - | - | Done |
+| `/health` | Public health and database reachability probe | G | P0 | Operations | - | - | Done |
 
 **Access codes:** G = guest (not signed in) · U = authenticated user · A = administrator
 
@@ -47,12 +66,19 @@ match section 2.
 
 | Story | Screen | Endpoint | Table |
 |---|---|---|---|
-| US01 Customer registration (#14) | `/register`, `/verify` | `POST /api/auth/register`<br>`GET /api/auth/verify` | `user` |
-| US02 User login (#15) | `/login` | `POST /api/auth/login`<br>`POST /api/auth/logout` | `user` |
+| US01 Customer registration (#14) | `/register`, `/verify`, `/verify/resend` | `POST /api/auth/register`<br>`GET /api/auth/verify`<br>`POST /verify/resend` | `user` |
+| US02 User login & password management (#15) | `/login`, `/logout`, `/forgot-password`, `/reset-password`, `/account/password` | `POST /api/auth/login`<br>`POST /api/auth/logout`<br>`POST /logout`<br>`POST /forgot-password`<br>`POST /reset-password`<br>`POST /account/password` | `user` |
 | US03 Customer searches for venues (#16) | `/search` | `GET /api/venues` | `venue` |
-| US04 Customer views venue details and availability (#17) | `/venues/{id}` | `GET /api/venues/{id}` | `venue`, `venue_photo`, `booking_slot`, `blocked_slot` |
-| US05 Customer books a venue (#18) | `/booking/{venueId}`, `/bookings/{code}` | `POST /api/bookings` | `booking`, `booking_slot`, `user`, `venue`, `pricing_rule`, `blocked_slot` |
+| US04 Customer views venue details and availability (#17) | `/venues/{id}`, `/venues/{id}/photos/{photo_id}` | `GET /api/venues/{id}`<br>`GET /venues/{id}/photos/{photo_id}` | `venue`, `venue_photo`, `booking_slot`, `blocked_slot`, `review` |
+| US05 Customer books a venue (#18) | `/booking/{venueId}`, `/bookings/{code}` | `POST /api/bookings`<br>`GET /api/quote/{venue_id}` | `booking`, `booking_slot`, `user`, `venue`, `pricing_rule`, `blocked_slot` |
 | US06 Venue owner adds a new venue (#21) | `/owner/venues`, `/owner/venues/new` | `GET /api/owner/venues`<br>`POST /api/owner/venues` | `venue`, `venue_photo`, `user` |
+| US07-08 Customer booking management (#19, #20) | `/my-bookings`, `/dashboard` | `GET /api/bookings/my-history`<br>`POST /api/bookings/{code}/cancel`<br>`POST /my-bookings/{code}/cancel`<br>`GET /my-bookings/{code}/ics` | `booking`, `booking_slot`, `venue` |
+| US09 Owner schedule management (#22) | `/owner/venues/{id}/schedule` | `POST /owner/venues/{id}/schedule/block`<br>`POST /owner/venues/{id}/schedule/unblock`<br>`POST /owner/venues/{id}/schedule/batch-block`<br>`POST /api/owner/venues/{id}/block`<br>`POST /api/owner/venues/{id}/unblock` | `blocked_slot`, `booking_slot`, `venue` |
+| US10 Owner bookings & analytics (#23) | `/owner/bookings`, `/owner/bookings/{code}`, `/owner/analytics` | `GET /api/owner/bookings`<br>`GET /owner/bookings/{code}`<br>`GET /owner/analytics`<br>`GET /owner/bookings/export.csv` | `booking`, `booking_slot`, `venue`, `user` |
+| US11 Owner peak pricing (#24) | `/owner/venues/{id}/pricing` | `POST /owner/venues/{id}/pricing`<br>`POST /owner/venues/{id}/pricing/{rule_id}/delete` | `pricing_rule`, `venue` |
+| US12 Reviews & abuse moderation (#25) | `/my-bookings`, `/venues/{id}` | `POST /my-bookings/{code}/review`<br>`POST /venues/{id}/reviews/{review_id}/report` | `review`, `booking`, `venue` |
+| US26-28 Platform administration (F7) | `/admin` | `GET /admin`<br>`POST /admin/users/create`<br>`POST /admin/users/{id}/edit`<br>`POST /admin/users/{id}/suspend`<br>`POST /admin/users/{id}/unsuspend`<br>`POST /admin/venues/{id}/toggle`<br>`POST /admin/reviews/{id}/moderate`<br>`GET /api/admin/stats`<br>`GET /api/admin/owners`<br>`POST /api/admin/users`<br>`POST /api/admin/users/{id}/edit`<br>`POST /api/admin/users/{id}/suspend`<br>`POST /api/admin/users/{id}/unsuspend`<br>`POST /api/admin/venues/{id}/toggle`<br>`POST /api/admin/reviews/{id}/moderate` | `user`, `venue`, `booking`, `booking_slot`, `review` |
+| Operations & health monitoring | `/health` | `GET /health` | `venue` |
 
 ## Business rules
 
