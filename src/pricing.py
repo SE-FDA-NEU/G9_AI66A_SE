@@ -17,6 +17,8 @@ def hour_prices(conn, venue_id, day):
         day = date.fromisoformat(day)
     venue = conn.execute("SELECT hourly_price, open_hour, close_hour FROM venue WHERE id = ?",
                          (venue_id,)).fetchone()
+    if venue is None:
+        return {}
     rules = conn.execute("SELECT start_hour, end_hour, price_per_hour FROM pricing_rule"
                          " WHERE venue_id = ? AND weekday = ?", (venue_id, day.weekday())).fetchall()
     prices = {}
